@@ -1,0 +1,7 @@
+node_modules/
+.next/
+.env
+*.log
+frontend-check.png
+server/.env
+client/rent_khata/
