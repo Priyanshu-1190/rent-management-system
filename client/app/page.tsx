@@ -1,18 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+
+function formatKolkataTime(timestamp: string) {
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  }).format(new Date(timestamp));
+}
 
 export default function Home() {
   const [data, setData] = useState("Loading database timestamp...");
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/db-test")
-      .then((res) => setData(res.data[0].now))
+    fetch("/api/db-test")
+      .then(async (res) => {
+        const body = await res.json();
+
+        if (!res.ok) {
+          throw new Error(body.error || "Backend request failed");
+        }
+
+        return body;
+      })
+      .then((res) => setData(formatKolkataTime(res.data[0].now)))
       .catch((err) => {
         console.error(err);
-        setData("Unable to reach backend database test endpoint.");
+        setData(err.message || "Unable to reach backend database test endpoint.");
       });
   }, []);
 
