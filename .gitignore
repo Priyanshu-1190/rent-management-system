@@ -5,3 +5,5 @@ node_modules/
 frontend-check.png
 server/.env
 client/rent_khata/
+postman/
+.postman/
