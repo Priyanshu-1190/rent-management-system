@@ -1,5 +1,8 @@
-const { Pool } = require("pg");
+const { Pool, types } = require("pg");
 require("dotenv").config();
+
+// Keep SQL DATE columns as YYYY-MM-DD strings so tenancy dates do not shift by timezone.
+types.setTypeParser(1082, (value) => value);
 
 const pool = new Pool({
   user: process.env.DB_USER,
