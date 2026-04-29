@@ -12,6 +12,7 @@ A full-stack rent management application for landlords to manage properties, uni
 | Backend   | Express 5, Node.js (CommonJS)                  |
 | Database  | PostgreSQL (via `pg`)                           |
 | Auth      | JWT (`jsonwebtoken`) + bcrypt                   |
+| PDFs      | PDFKit                                          |
 | Dev tools | Nodemon, ESLint, PostCSS                       |
 
 ---
@@ -41,7 +42,9 @@ rent-management-system/
 │   │   │   ├── property/       # CRUD properties
 │   │   │   ├── unit/           # Add units to properties
 │   │   │   ├── tenancy/        # Create tenancies
-│   │   │   └── rent/           # Generate & pay rent
+│   │   │   ├── rent/           # Generate & pay rent
+│   │   │   ├── dashboard/      # Owner and tenant dashboards
+│   │   │   └── receipt/        # Payment receipt PDFs
 │   │   ├── routes/
 │   │   │   └── test.route.js   # /db-test health check
 │   │   └── utils/
@@ -93,6 +96,19 @@ Each backend module follows the **controller → service → routes** pattern fo
 | ------ | -------------- | ---- | ------------------------ |
 | POST   | `/generate`    | ✓    | Generate rent entries    |
 | POST   | `/pay/:id`     | ✓    | Mark a rent entry as paid |
+
+### Dashboards (`/api/dashboard`)
+
+| Method | Path      | Auth | Description                                      |
+| ------ | --------- | ---- | ------------------------------------------------ |
+| GET    | `/owner`  | ✓    | Owner totals, property overview, payment status  |
+| GET    | `/tenant` | ✓    | Tenant rent history, paid amount, receipt links  |
+
+### Receipts (`/api/receipts`)
+
+| Method | Path   | Auth | Description                         |
+| ------ | ------ | ---- | ----------------------------------- |
+| GET    | `/:id` | ✓    | Download a payment receipt as a PDF |
 
 ### Health
 

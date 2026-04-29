@@ -1,3 +1,12 @@
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('owner', 'tenant')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS properties (
     id SERIAL PRIMARY KEY,
     owner_id INT REFERENCES users(id) ON DELETE CASCADE,
@@ -27,3 +36,25 @@ CREATE TABLE IF NOT EXISTS tenancies (
 CREATE UNIQUE INDEX IF NOT EXISTS tenancies_one_active_unit_idx
 ON tenancies (unit_id)
 WHERE is_active = TRUE;
+
+CREATE TABLE IF NOT EXISTS rent_schedules (
+    id SERIAL PRIMARY KEY,
+    tenancy_id INT REFERENCES tenancies(id) ON DELETE CASCADE,
+    month INT CHECK (month BETWEEN 1 AND 12),
+    year INT,
+    amount NUMERIC NOT NULL,
+    due_date DATE,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'partial', 'paid')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (tenancy_id, month, year)
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+    id SERIAL PRIMARY KEY,
+    rent_schedule_id INT REFERENCES rent_schedules(id) ON DELETE CASCADE,
+    amount NUMERIC NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    payment_method VARCHAR(50),
+    transaction_id VARCHAR(255),
+    status VARCHAR(20) DEFAULT 'success'
+);

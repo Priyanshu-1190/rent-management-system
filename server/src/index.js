@@ -21,6 +21,8 @@ const unitRoutes = require("./modules/unit/unit.routes");
 const tenancyRoutes = require("./modules/tenancy/tenancy.routes");
 const { protect } = require("./middleware/auth.middleware");
 const rentRoutes = require("./modules/rent/rent.routes");
+const dashboardRoutes = require("./modules/dashboard/dashboard.routes");
+const receiptRoutes = require("./modules/receipt/receipt.routes");
 
 app.use("/db-test", testRoute);
 app.use("/api/auth", authRoutes);
@@ -28,6 +30,8 @@ app.use("/api/properties", propertyRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/tenancies", tenancyRoutes);
 app.use("/api/rent", rentRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/receipts", receiptRoutes);
 
 app.get("/protected", protect, (req, res) => {
   res.json({ message: "Protected route", user: req.user });
