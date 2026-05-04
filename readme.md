@@ -158,6 +158,10 @@ DB_PASSWORD=your_pg_password
 DB_PORT=5432
 PORT=5000
 JWT_SECRET=your_jwt_secret
+CLIENT_URL=http://localhost:3000
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+SCHEDULER_TIMEZONE=Asia/Kolkata
 ```
 
 ### 4. Set up the database

@@ -1,33 +1,17 @@
-const validateRegister = (body) => {
-  const { name, email, password, role } = body;
+const { z } = require("zod");
 
-  if (!name || name.trim().length < 2) {
-    return "Name must be at least 2 characters.";
-  }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return "A valid email is required.";
-  }
-  if (!password || password.length < 6) {
-    return "Password must be at least 6 characters.";
-  }
-  if (!role || !["owner", "tenant"].includes(role)) {
-    return "Role must be either owner or tenant.";
-  }
+const registerSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("A valid email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["owner", "tenant"], {
+    errorMap: () => ({ message: "Role must be either owner or tenant" }),
+  }),
+});
 
-  return null;
-};
+const loginSchema = z.object({
+  email: z.string().email("A valid email is required"),
+  password: z.string().min(1, "Password is required"),
+});
 
-const validateLogin = (body) => {
-  const { email, password } = body;
-
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return "A valid email is required.";
-  }
-  if (!password) {
-    return "Password is required.";
-  }
-
-  return null;
-};
-
-module.exports = { validateRegister, validateLogin };
+module.exports = { registerSchema, loginSchema };

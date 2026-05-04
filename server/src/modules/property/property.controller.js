@@ -1,6 +1,6 @@
 const { createProperty, getOwnerProperties } = require("./property.service");
 
-const addProperty = async (req, res) => {
+const addProperty = async (req, res, next) => {
   try {
     if (req.user.role !== "owner") {
       return res.status(403).json({ error: "Access denied" });
@@ -18,11 +18,11 @@ const addProperty = async (req, res) => {
 
     return res.status(201).json(property);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return next(error);
   }
 };
 
-const listProperties = async (req, res) => {
+const listProperties = async (req, res, next) => {
   try {
     if (req.user.role !== "owner") {
       return res.status(403).json({ error: "Access denied" });
@@ -31,7 +31,7 @@ const listProperties = async (req, res) => {
     const properties = await getOwnerProperties(req.user.id);
     return res.json(properties);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return next(error);
   }
 };
 

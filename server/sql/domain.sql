@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS rent_schedules (
     year INT,
     amount NUMERIC NOT NULL,
     due_date DATE,
+    late_fee NUMERIC DEFAULT 0,
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'partial', 'paid')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (tenancy_id, month, year)

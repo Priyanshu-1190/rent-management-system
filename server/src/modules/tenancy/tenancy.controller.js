@@ -5,7 +5,7 @@ const {
   assignTenant,
 } = require("./tenancy.service");
 
-const createTenancy = async (req, res) => {
+const createTenancy = async (req, res, next) => {
   try {
     if (req.user.role !== "owner") {
       return res.status(403).json({ error: "Access denied" });
@@ -59,7 +59,7 @@ const createTenancy = async (req, res) => {
       return res.status(409).json({ error: "Unit already has an active tenant" });
     }
 
-    return res.status(500).json({ error: error.message });
+    return next(error);
   }
 };
 

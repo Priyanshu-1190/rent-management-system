@@ -1,6 +1,6 @@
 const { getOwnerPropertyById, createUnit } = require("./unit.service");
 
-const addUnit = async (req, res) => {
+const addUnit = async (req, res, next) => {
   try {
     if (req.user.role !== "owner") {
       return res.status(403).json({ error: "Access denied" });
@@ -37,7 +37,7 @@ const addUnit = async (req, res) => {
 
     return res.status(201).json(unit);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return next(error);
   }
 };
 

@@ -1,29 +1,18 @@
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../../utils/jwt");
 const { registerUser, findUserByEmail } = require("./auth.service");
-const { validateRegister, validateLogin } = require("./auth.validation");
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
-    const error = validateRegister(req.body);
-    if (error) {
-      return res.status(400).json({ error });
-    }
-
     const user = await registerUser(req.body);
     return res.status(201).json(user);
   } catch (err) {
-    return res.status(err.status || 500).json({ error: err.message });
+    return next(err);
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
-    const error = validateLogin(req.body);
-    if (error) {
-      return res.status(400).json({ error });
-    }
-
     const { email, password } = req.body;
     const user = await findUserByEmail(email);
 
@@ -43,7 +32,7 @@ const login = async (req, res) => {
       user: { id: user.id, email: user.email, role: user.role },
     });
   } catch (err) {
-    return res.status(err.status || 500).json({ error: err.message });
+    return next(err);
   }
 };
 
