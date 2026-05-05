@@ -112,27 +112,17 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-function decodeToken(token: string): User | null {
-  try {
-    const payload = token.split(".")[1];
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const decoded = JSON.parse(window.atob(normalized));
 
-    if (!["owner", "tenant"].includes(decoded.role)) return null;
-
-    return {
-      id: Number(decoded.id),
-      role: decoded.role,
-    };
-  } catch {
-    return null;
-  }
-}
 
 export default function Home() {
-  const [apiStatus, setApiStatus] = useState("Checking backend...");
+  const [apiStatus, setApiStatus] = useState("");
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regRole, setRegRole] = useState<Role>("tenant");
   const [token, setToken] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [ownerDashboard, setOwnerDashboard] = useState<OwnerDashboard | null>(null);
@@ -223,17 +213,53 @@ export default function Home() {
     }
   };
 
-  const handleTokenLoad = async () => {
-    const decodedUser = decodeToken(token);
+  const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setNotice("");
 
-    if (!decodedUser) {
-      setNotice("Token is invalid or missing a supported role.");
-      return;
+    try {
+      const regResponse = await fetch(`${backendUrl}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: regName,
+          email: regEmail,
+          password: regPassword,
+          role: regRole,
+        }),
+      });
+      const regBody = await regResponse.json();
+
+      if (!regResponse.ok) {
+        throw new Error(regBody.error || regBody.message || "Registration failed");
+      }
+
+      // Auto-login after successful registration
+      const loginResponse = await fetch(`${backendUrl}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: regEmail, password: regPassword }),
+      });
+      const loginBody = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        setNotice("Registered! Please switch to Login to sign in.");
+        setAuthMode("login");
+        return;
+      }
+
+      setToken(loginBody.token);
+      setUser(loginBody.user);
+      await loadDashboard(loginBody.token, loginBody.user.role);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Registration failed");
+    } finally {
+      setLoading(false);
     }
-
-    setUser(decodedUser);
-    await loadDashboard(token, decodedUser.role);
   };
+
+
 
   const downloadReceipt = async (paymentId: number) => {
     setNotice("");
@@ -272,82 +298,129 @@ export default function Home() {
             </p>
             <h1 className="mt-2 text-3xl font-semibold">Dashboard</h1>
           </div>
-          <div className="text-sm text-[#60715f]">
-            <p>{apiStatus}</p>
-            {user ? <p>Signed in as {user.role} #{user.id}</p> : null}
-          </div>
+          {(apiStatus || user) ? (
+            <div className="text-sm text-[#60715f]">
+              {apiStatus ? <p>{apiStatus}</p> : null}
+              {user ? <p>Signed in as {user.role} #{user.id}</p> : null}
+            </div>
+          ) : null}
         </header>
 
         <section className="grid gap-4 lg:grid-cols-[1fr_1.5fr]">
-          <form
-            onSubmit={handleLogin}
-            className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm"
-          >
-            <h2 className="text-lg font-semibold">Login</h2>
-            <div className="mt-4 grid gap-3">
-              <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                Email
-                <input
-                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                />
-              </label>
-              <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                Password
-                <input
-                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-              </label>
+          <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+            <div className="flex gap-1 rounded-md bg-[#eef0eb] p-1">
               <button
-                className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
-                type="submit"
-                disabled={loading}
+                type="button"
+                className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+                  authMode === "login"
+                    ? "bg-white text-[#1b1f1d] shadow-sm"
+                    : "text-[#60715f] hover:text-[#435146]"
+                }`}
+                onClick={() => { setAuthMode("login"); setNotice(""); }}
               >
                 Login
               </button>
+              <button
+                type="button"
+                className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+                  authMode === "register"
+                    ? "bg-white text-[#1b1f1d] shadow-sm"
+                    : "text-[#60715f] hover:text-[#435146]"
+                }`}
+                onClick={() => { setAuthMode("register"); setNotice(""); }}
+              >
+                Register
+              </button>
             </div>
-          </form>
 
-          <section className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <label className="grid flex-1 gap-1 text-sm font-medium text-[#435146]">
-                JWT Token
-                <textarea
-                  className="min-h-24 rounded-md border border-[#c9d0c5] px-3 py-2 font-mono text-xs text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                  value={token}
-                  onChange={(event) => setToken(event.target.value)}
-                />
-              </label>
-              <div className="flex gap-2">
+            {authMode === "login" ? (
+              <form onSubmit={handleLogin} className="mt-4 grid gap-3">
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Email
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Password
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                  />
+                </label>
                 <button
-                  className="rounded-md border border-[#2f6f5e] px-4 py-2 font-semibold text-[#2f6f5e] disabled:cursor-not-allowed disabled:border-[#98aaa1] disabled:text-[#98aaa1]"
-                  type="button"
-                  onClick={handleTokenLoad}
+                  className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                  type="submit"
                   disabled={loading}
                 >
-                  Load
+                  Login
                 </button>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="mt-4 grid gap-3">
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Name
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="text"
+                    value={regName}
+                    onChange={(event) => setRegName(event.target.value)}
+                    required
+                    minLength={2}
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Email
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="email"
+                    value={regEmail}
+                    onChange={(event) => setRegEmail(event.target.value)}
+                    required
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Password
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="password"
+                    value={regPassword}
+                    onChange={(event) => setRegPassword(event.target.value)}
+                    required
+                    minLength={6}
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Role
+                  <select
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    value={regRole}
+                    onChange={(event) => setRegRole(event.target.value as Role)}
+                  >
+                    <option value="tenant">Tenant</option>
+                    <option value="owner">Owner</option>
+                  </select>
+                </label>
                 <button
-                  className="rounded-md border border-[#2f6f5e] px-4 py-2 font-semibold text-[#2f6f5e] disabled:cursor-not-allowed disabled:border-[#98aaa1] disabled:text-[#98aaa1]"
-                  type="button"
-                  onClick={() => loadDashboard()}
+                  className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                  type="submit"
                   disabled={loading}
                 >
-                  Refresh
+                  Register
                 </button>
-              </div>
-            </div>
+              </form>
+            )}
             {notice ? (
               <p className="mt-3 rounded-md border border-[#e0b15c] bg-[#fff9eb] px-3 py-2 text-sm text-[#6b4c18]">
                 {notice}
               </p>
             ) : null}
-          </section>
+          </div>
         </section>
 
         {ownerDashboard ? (

@@ -10,8 +10,8 @@ if (!command) {
 }
 
 const memoryByCommand = {
-  dev: "768",
-  build: "1024",
+  dev: "1536",
+  build: "1536",
   start: "512",
 };
 
@@ -23,9 +23,7 @@ const hasPortArg = forwardedArgs.some(
   (arg) => arg === "--port" || arg === "-p" || arg.startsWith("--port=")
 );
 
-if (command === "dev") {
-  nextArgs.push("--webpack");
-}
+
 
 if ((command === "dev" || command === "start") && !hasPortArg) {
   nextArgs.push("--port", process.env.PORT || "3000");
