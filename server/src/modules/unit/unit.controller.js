@@ -20,7 +20,8 @@ const addUnit = async (req, res, next) => {
       return res.status(400).json({ error: "Rent amount must be greater than 0" });
     }
 
-    if (!Number.isInteger(Number(due_day)) || Number(due_day) < 1 || Number(due_day) > 31) {
+    const safeDueDay = due_day != null ? Number(due_day) : 1;
+    if (!Number.isInteger(safeDueDay) || safeDueDay < 1 || safeDueDay > 31) {
       return res.status(400).json({ error: "Due day must be between 1 and 31" });
     }
 
@@ -32,7 +33,7 @@ const addUnit = async (req, res, next) => {
     const unit = await createUnit(propertyId, {
       name: String(name).trim(),
       rent_amount: Number(rent_amount),
-      due_day: Number(due_day),
+      due_day: safeDueDay,
     });
 
     return res.status(201).json(unit);

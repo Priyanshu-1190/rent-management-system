@@ -11,6 +11,7 @@ type User = {
   id: number;
   email?: string;
   role: Role;
+  name?: string;
 };
 
 type OwnerDashboard = {
@@ -72,6 +73,21 @@ type TenantDashboard = {
   }>;
 };
 
+type Property = {
+  id: number;
+  name: string;
+  address: string | null;
+  created_at: string;
+};
+
+type Unit = {
+  id: number;
+  property_id: number;
+  name: string;
+  rent_amount: number;
+  due_day: number;
+};
+
 function formatKolkataTime(timestamp: string) {
   return new Intl.DateTimeFormat("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -129,6 +145,15 @@ export default function Home() {
   const [tenantDashboard, setTenantDashboard] = useState<TenantDashboard | null>(null);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Owner property management state
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [propName, setPropName] = useState("");
+  const [propAddress, setPropAddress] = useState("");
+  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
+  const [unitName, setUnitName] = useState("");
+  const [unitRent, setUnitRent] = useState("");
+  const [propertyUnits, setPropertyUnits] = useState<Unit[]>([]);
 
   useEffect(() => {
     fetch("/api/db-test")
@@ -206,6 +231,7 @@ export default function Home() {
       setToken(body.token);
       setUser(body.user);
       await loadDashboard(body.token, body.user.role);
+      if (body.user.role === "owner") await loadProperties(body.token);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -252,6 +278,7 @@ export default function Home() {
       setToken(loginBody.token);
       setUser(loginBody.user);
       await loadDashboard(loginBody.token, loginBody.user.role);
+      if (loginBody.user.role === "owner") await loadProperties(loginBody.token);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -259,6 +286,70 @@ export default function Home() {
     }
   };
 
+  // ── Owner: load properties ──
+  const loadProperties = async (authToken = token) => {
+    try {
+      const res = await fetch(`${backendUrl}/api/properties`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to load properties");
+      setProperties(body);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to load properties");
+    }
+  };
+
+  // ── Owner: add property ──
+  const handleAddProperty = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`${backendUrl}/api/properties`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: propName, address: propAddress || undefined }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to add property");
+      setPropName("");
+      setPropAddress("");
+      await loadProperties();
+      await loadDashboard();
+      setNotice(`Property "${body.name}" created!`);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to add property");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Owner: add unit ──
+  const handleAddUnit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedPropertyId) { setNotice("Select a property first"); return; }
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`${backendUrl}/api/units/${selectedPropertyId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: unitName, rent_amount: Number(unitRent) }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to add unit");
+      setUnitName("");
+      setUnitRent("");
+      setPropertyUnits((prev) => [...prev, body]);
+      await loadDashboard();
+      setNotice(`Unit "${body.name}" added with rent ${formatMoney(body.rent_amount)}`);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to add unit");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const downloadReceipt = async (paymentId: number) => {
@@ -422,6 +513,82 @@ export default function Home() {
             ) : null}
           </div>
         </section>
+
+        {/* ── Owner: Property & Unit Management ── */}
+        {user?.role === "owner" && token ? (
+          <section className="grid gap-4 lg:grid-cols-2">
+            {/* Add Property Card */}
+            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold">Add Property</h2>
+              <form onSubmit={handleAddProperty} className="mt-3 grid gap-3">
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Property Name
+                  <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="text" value={propName} onChange={(e) => setPropName(e.target.value)} required minLength={2} placeholder="e.g. Sunrise Apartments" />
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Address <span className="font-normal text-[#8a9a88]">(optional)</span>
+                  <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="text" value={propAddress} onChange={(e) => setPropAddress(e.target.value)} placeholder="e.g. 42 MG Road, Kolkata" />
+                </label>
+                <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading}>Add Property</button>
+              </form>
+
+              {properties.length > 0 && (
+                <div className="mt-4 border-t border-[#e3e8df] pt-3">
+                  <p className="text-sm font-semibold text-[#435146]">Your Properties</p>
+                  <ul className="mt-2 grid gap-1">
+                    {properties.map((p) => (
+                      <li key={p.id} className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm">
+                        <span className="font-medium">{p.name}</span>
+                        {p.address && <span className="text-[#60715f]">{p.address}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Add Unit Card */}
+            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold">Add Unit</h2>
+              {properties.length === 0 ? (
+                <p className="mt-3 text-sm text-[#60715f]">Add a property first to create units.</p>
+              ) : (
+                <form onSubmit={handleAddUnit} className="mt-3 grid gap-3">
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Property
+                    <select className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" value={selectedPropertyId ?? ""} onChange={(e) => { setSelectedPropertyId(Number(e.target.value) || null); setPropertyUnits([]); }} required>
+                      <option value="">Select property…</option>
+                      {properties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Unit Name
+                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="text" value={unitName} onChange={(e) => setUnitName(e.target.value)} required placeholder="e.g. Flat 101" />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Monthly Rent (₹)
+                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="number" min="1" step="1" value={unitRent} onChange={(e) => setUnitRent(e.target.value)} required placeholder="e.g. 12000" />
+                  </label>
+                  <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading || !selectedPropertyId}>Add Unit</button>
+                </form>
+              )}
+
+              {propertyUnits.length > 0 && (
+                <div className="mt-4 border-t border-[#e3e8df] pt-3">
+                  <p className="text-sm font-semibold text-[#435146]">Recently Added Units</p>
+                  <ul className="mt-2 grid gap-1">
+                    {propertyUnits.map((u) => (
+                      <li key={u.id} className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm">
+                        <span className="font-medium">{u.name}</span>
+                        <span className="text-[#2f6f5e] font-semibold">{formatMoney(u.rent_amount)}/mo</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+        ) : null}
 
         {ownerDashboard ? (
           <section className="grid gap-4">
