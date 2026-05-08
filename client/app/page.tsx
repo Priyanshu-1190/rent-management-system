@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+
 
 type Role = "owner" | "tenant";
 
@@ -139,7 +139,7 @@ export default function Home() {
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regRole, setRegRole] = useState<Role>("tenant");
-  const [token, setToken] = useState("");
+
   const [user, setUser] = useState<User | null>(null);
   const [ownerDashboard, setOwnerDashboard] = useState<OwnerDashboard | null>(null);
   const [tenantDashboard, setTenantDashboard] = useState<TenantDashboard | null>(null);
@@ -159,15 +159,23 @@ export default function Home() {
   const [deletingProperty, setDeletingProperty] = useState<{ id: number; name: string } | null>(null);
   const [deletingUnit, setDeletingUnit] = useState<{ id: number; name: string } | null>(null);
 
+  // Restore session from httpOnly cookie on mount
   useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then(async (data) => {
+        if (data.user) {
+          setUser(data.user);
+          await loadDashboard(data.user.role);
+          if (data.user.role === "owner") await loadProperties();
+        }
+      })
+      .catch(() => {});
+
     fetch("/api/db-test")
       .then(async (res) => {
         const body = await res.json();
-
-        if (!res.ok) {
-          throw new Error(body.error || "Backend request failed");
-        }
-
+        if (!res.ok) throw new Error(body.error || "Backend request failed");
         return body;
       })
       .then((res) => setApiStatus(`Database online: ${formatKolkataTime(res.data[0].now)}`))
@@ -175,11 +183,13 @@ export default function Home() {
         console.error(err);
         setApiStatus(err.message || "Unable to reach backend database test endpoint.");
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadDashboard = async (authToken = token, role = user?.role) => {
-    if (!authToken || !role) {
-      setNotice("Login or add a valid token first.");
+  const loadDashboard = async (role?: Role) => {
+    const currentRole = role || user?.role;
+    if (!currentRole) {
+      setNotice("Login first.");
       return;
     }
 
@@ -187,19 +197,15 @@ export default function Home() {
     setNotice("");
 
     try {
-      const path = role === "owner" ? "/api/dashboard/owner" : "/api/dashboard/tenant";
-      const response = await fetch(`${backendUrl}${path}`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
+      const path = currentRole === "owner" ? "/api/proxy/dashboard/owner" : "/api/proxy/dashboard/tenant";
+      const response = await fetch(path);
       const body = await response.json();
 
       if (!response.ok) {
         throw new Error(body.error || "Dashboard request failed");
       }
 
-      if (role === "owner") {
+      if (currentRole === "owner") {
         setOwnerDashboard(body);
         setTenantDashboard(null);
       } else {
@@ -219,11 +225,9 @@ export default function Home() {
     setNotice("");
 
     try {
-      const response = await fetch(`${backendUrl}/api/auth/login`, {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       const body = await response.json();
@@ -232,10 +236,9 @@ export default function Home() {
         throw new Error(body.error || "Login failed");
       }
 
-      setToken(body.token);
       setUser(body.user);
-      await loadDashboard(body.token, body.user.role);
-      if (body.user.role === "owner") await loadProperties(body.token);
+      await loadDashboard(body.user.role);
+      if (body.user.role === "owner") await loadProperties();
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -249,7 +252,7 @@ export default function Home() {
     setNotice("");
 
     try {
-      const regResponse = await fetch(`${backendUrl}/api/auth/register`, {
+      const regResponse = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -266,7 +269,7 @@ export default function Home() {
       }
 
       // Auto-login after successful registration
-      const loginResponse = await fetch(`${backendUrl}/api/auth/login`, {
+      const loginResponse = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: regEmail, password: regPassword }),
@@ -279,10 +282,9 @@ export default function Home() {
         return;
       }
 
-      setToken(loginBody.token);
       setUser(loginBody.user);
-      await loadDashboard(loginBody.token, loginBody.user.role);
-      if (loginBody.user.role === "owner") await loadProperties(loginBody.token);
+      await loadDashboard(loginBody.user.role);
+      if (loginBody.user.role === "owner") await loadProperties();
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -291,11 +293,9 @@ export default function Home() {
   };
 
   // ── Owner: load properties ──
-  const loadProperties = async (authToken = token) => {
+  const loadProperties = async () => {
     try {
-      const res = await fetch(`${backendUrl}/api/properties`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+      const res = await fetch("/api/proxy/properties");
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to load properties");
       setProperties(body);
@@ -310,9 +310,9 @@ export default function Home() {
     setLoading(true);
     setNotice("");
     try {
-      const res = await fetch(`${backendUrl}/api/properties`, {
+      const res = await fetch("/api/proxy/properties", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: propName, address: propAddress || undefined }),
       });
       const body = await res.json();
@@ -330,11 +330,9 @@ export default function Home() {
   };
 
   // ── Owner: load units for a property ──
-  const loadUnits = async (propertyId: number, authToken = token) => {
+  const loadUnits = async (propertyId: number) => {
     try {
-      const res = await fetch(`${backendUrl}/api/units/property/${propertyId}`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+      const res = await fetch(`/api/proxy/units/property/${propertyId}`);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to load units");
       setPropertyUnits(body);
@@ -350,9 +348,9 @@ export default function Home() {
     setLoading(true);
     setNotice("");
     try {
-      const res = await fetch(`${backendUrl}/api/units/${selectedPropertyId}`, {
+      const res = await fetch(`/api/proxy/units/${selectedPropertyId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: unitName, rent_amount: Number(unitRent) }),
       });
       const body = await res.json();
@@ -375,9 +373,8 @@ export default function Home() {
     setLoading(true);
     setNotice("");
     try {
-      const res = await fetch(`${backendUrl}/api/properties/${deletingProperty.id}`, {
+      const res = await fetch(`/api/proxy/properties/${deletingProperty.id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to delete property");
@@ -399,9 +396,8 @@ export default function Home() {
     setLoading(true);
     setNotice("");
     try {
-      const res = await fetch(`${backendUrl}/api/units/${deletingUnit.id}`, {
+      const res = await fetch(`/api/proxy/units/${deletingUnit.id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to delete unit");
@@ -420,11 +416,7 @@ export default function Home() {
     setNotice("");
 
     try {
-      const response = await fetch(`${backendUrl}/api/receipts/${paymentId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`/api/proxy/receipts/${paymentId}`);
 
       if (!response.ok) {
         const body = await response.json();
@@ -447,13 +439,9 @@ export default function Home() {
     setLoading(true);
     setNotice("");
     try {
-      const res = await fetch(`${backendUrl}/api/auth/me`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch("/api/auth/session", { method: "DELETE" });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to delete account");
-      setToken("");
       setUser(null);
       setOwnerDashboard(null);
       setTenantDashboard(null);
@@ -497,7 +485,7 @@ export default function Home() {
                     <button
                       type="button"
                       className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
-                      onClick={() => { setToken(""); setUser(null); setOwnerDashboard(null); setTenantDashboard(null); setProperties([]); setPropertyUnits([]); setShowMenu(false); }}
+                      onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); setUser(null); setOwnerDashboard(null); setTenantDashboard(null); setProperties([]); setPropertyUnits([]); setShowMenu(false); }}
                     >
                       Log Out
                     </button>
@@ -633,7 +621,7 @@ export default function Home() {
         </section>
 
         {/* ── Owner: Property & Unit Management ── */}
-        {user?.role === "owner" && token ? (
+        {user?.role === "owner" ? (
           <section className="grid gap-4 lg:grid-cols-2">
             {/* Add Property Card */}
             <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
