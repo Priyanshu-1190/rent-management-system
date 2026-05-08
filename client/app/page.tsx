@@ -88,6 +88,32 @@ type Unit = {
   due_day: number;
 };
 
+type Invite = {
+  id: number;
+  unit_id: number;
+  unit_name: string;
+  rent_amount?: number;
+  property_name: string;
+  property_address?: string;
+  owner_name?: string;
+  owner_email?: string;
+  tenant_email?: string;
+  deposit: number;
+  move_in_date: string | null;
+  message: string | null;
+  status: string;
+  created_at: string;
+  responded_at: string | null;
+};
+
+type AvailableUnit = {
+  id: number;
+  name: string;
+  rent_amount: number;
+  property_name: string;
+  property_id: number;
+};
+
 function formatKolkataTime(timestamp: string) {
   return new Intl.DateTimeFormat("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -159,6 +185,17 @@ export default function Home() {
   const [deletingProperty, setDeletingProperty] = useState<{ id: number; name: string } | null>(null);
   const [deletingUnit, setDeletingUnit] = useState<{ id: number; name: string } | null>(null);
 
+  // Invite state
+  const [sentInvites, setSentInvites] = useState<Invite[]>([]);
+  const [receivedInvites, setReceivedInvites] = useState<Invite[]>([]);
+  const [availableUnits, setAvailableUnits] = useState<AvailableUnit[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteUnitId, setInviteUnitId] = useState<number | null>(null);
+  const [inviteDeposit, setInviteDeposit] = useState("");
+  const [inviteMoveIn, setInviteMoveIn] = useState("");
+  const [inviteMessage, setInviteMessage] = useState("");
+  const [showInvitesModal, setShowInvitesModal] = useState(false);
+
   // Restore session from httpOnly cookie on mount
   useEffect(() => {
     fetch("/api/auth/session")
@@ -167,7 +204,8 @@ export default function Home() {
         if (data.user) {
           setUser(data.user);
           await loadDashboard(data.user.role);
-          if (data.user.role === "owner") await loadProperties();
+          if (data.user.role === "owner") { await loadProperties(); await loadSentInvites(); await loadAvailableUnits(); }
+          if (data.user.role === "tenant") await loadReceivedInvites();
         }
       })
       .catch(() => {});
@@ -238,7 +276,8 @@ export default function Home() {
 
       setUser(body.user);
       await loadDashboard(body.user.role);
-      if (body.user.role === "owner") await loadProperties();
+      if (body.user.role === "owner") { await loadProperties(); await loadSentInvites(); await loadAvailableUnits(); }
+      if (body.user.role === "tenant") await loadReceivedInvites();
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -284,7 +323,8 @@ export default function Home() {
 
       setUser(loginBody.user);
       await loadDashboard(loginBody.user.role);
-      if (loginBody.user.role === "owner") await loadProperties();
+      if (loginBody.user.role === "owner") { await loadProperties(); await loadSentInvites(); await loadAvailableUnits(); }
+      if (loginBody.user.role === "tenant") await loadReceivedInvites();
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -435,6 +475,118 @@ export default function Home() {
     }
   };
 
+  // ── Invite functions ──
+  const loadSentInvites = async () => {
+    try {
+      const res = await fetch("/api/proxy/invites/sent");
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to load sent invites");
+      setSentInvites(body);
+    } catch { setSentInvites([]); }
+  };
+
+  const loadReceivedInvites = async () => {
+    try {
+      const res = await fetch("/api/proxy/invites/received");
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to load invites");
+      setReceivedInvites(body);
+    } catch { setReceivedInvites([]); }
+  };
+
+  const loadAvailableUnits = async () => {
+    try {
+      const res = await fetch("/api/proxy/invites/available-units");
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to load available units");
+      setAvailableUnits(body);
+    } catch { setAvailableUnits([]); }
+  };
+
+  const handleSendInvite = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!inviteUnitId) { setNotice("Select a unit"); return; }
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch("/api/proxy/invites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tenant_email: inviteEmail,
+          unit_id: inviteUnitId,
+          deposit: inviteDeposit ? Number(inviteDeposit) : 0,
+          move_in_date: inviteMoveIn || null,
+          message: inviteMessage || null,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to send invite");
+      setInviteEmail("");
+      setInviteUnitId(null);
+      setInviteDeposit("");
+      setInviteMoveIn("");
+      setInviteMessage("");
+      await loadSentInvites();
+      await loadAvailableUnits();
+      setNotice("Invite sent successfully!");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to send invite");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptInvite = async (inviteId: number) => {
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/invites/${inviteId}/accept`, { method: "POST" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to accept invite");
+      await loadReceivedInvites();
+      await loadDashboard();
+      setNotice("Invite accepted! You are now a tenant.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to accept invite");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeclineInvite = async (inviteId: number) => {
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/invites/${inviteId}/decline`, { method: "POST" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to decline invite");
+      await loadReceivedInvites();
+      setNotice("Invite declined.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to decline invite");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelInvite = async (inviteId: number) => {
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/invites/${inviteId}`, { method: "DELETE" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to cancel invite");
+      await loadSentInvites();
+      await loadAvailableUnits();
+      setNotice("Invite cancelled.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to cancel invite");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     setLoading(true);
     setNotice("");
@@ -482,6 +634,18 @@ export default function Home() {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
                   <div className="absolute right-0 z-50 mt-1 w-44 rounded-lg border border-[#d8ded2] bg-white py-1 shadow-lg">
+                    {user?.role && (
+                      <button
+                        type="button"
+                        className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                        onClick={() => {
+                          setShowInvitesModal(true);
+                          setShowMenu(false);
+                        }}
+                      >
+                        Invites
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
@@ -718,6 +882,85 @@ export default function Home() {
           </section>
         ) : null}
 
+        {/* ── Owner: Send Invite ── */}
+        {user?.role === "owner" && showInvitesModal ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+            <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f7f8f3] p-6 shadow-xl border border-[#d8ded2]">
+              <div className="flex justify-end mb-4">
+                <button type="button" className="rounded-md p-2 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]" onClick={() => setShowInvitesModal(false)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <section id="invites" className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold">Send Invite to Tenant</h2>
+              {availableUnits.length === 0 ? (
+                <p className="mt-3 text-sm text-[#60715f]">No available units. Add units first or wait for existing invites to be resolved.</p>
+              ) : (
+                <form onSubmit={handleSendInvite} className="mt-3 grid gap-3">
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Tenant Email
+                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required placeholder="tenant@example.com" />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Unit
+                    <select className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" value={inviteUnitId ?? ""} onChange={(e) => setInviteUnitId(Number(e.target.value) || null)} required>
+                      <option value="">Select unit…</option>
+                      {availableUnits.map((u) => <option key={u.id} value={u.id}>{u.property_name} — {u.name} ({formatMoney(u.rent_amount)}/mo)</option>)}
+                    </select>
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Deposit (₹) <span className="font-normal text-[#8a9a88]">(optional)</span>
+                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="number" min="0" step="1" value={inviteDeposit} onChange={(e) => setInviteDeposit(e.target.value)} placeholder="e.g. 25000" />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Move-in Date <span className="font-normal text-[#8a9a88]">(optional)</span>
+                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="date" value={inviteMoveIn} onChange={(e) => setInviteMoveIn(e.target.value)} />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Message <span className="font-normal text-[#8a9a88]">(optional)</span>
+                    <textarea className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65] resize-none" rows={2} value={inviteMessage} onChange={(e) => setInviteMessage(e.target.value)} placeholder="Welcome message…" />
+                  </label>
+                  <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading || !inviteUnitId}>Send Invite</button>
+                </form>
+              )}
+            </div>
+
+            {/* Sent Invites List */}
+            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold">Sent Invites</h2>
+              {sentInvites.length === 0 ? (
+                <p className="mt-3 text-sm text-[#60715f]">No invites sent yet.</p>
+              ) : (
+                <ul className="mt-3 grid gap-2">
+                  {sentInvites.map((inv) => (
+                    <li key={inv.id} className="rounded-md border border-[#e3e8df] p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">{inv.tenant_email}</p>
+                          <p className="text-xs text-[#60715f]">{inv.property_name} — {inv.unit_name}</p>
+                          {inv.move_in_date && <p className="text-xs text-[#60715f]">Move-in: {formatDate(inv.move_in_date)}</p>}
+                          {inv.deposit > 0 && <p className="text-xs text-[#60715f]">Deposit: {formatMoney(inv.deposit)}</p>}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <InviteStatusLabel status={inv.status} />
+                          {inv.status === "pending" && (
+                            <button type="button" className="rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]" onClick={() => handleCancelInvite(inv.id)} disabled={loading} title="Cancel invite">
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+            </div>
+          </div>
+        ) : null}
+
         {ownerDashboard ? (
           <section className="grid gap-4">
             <div className="grid gap-3 md:grid-cols-4">
@@ -786,6 +1029,67 @@ export default function Home() {
               </tbody>
             </DataTable>
           </section>
+        ) : null}
+
+        {/* ── Tenant: Invites Section ── */}
+        {user?.role === "tenant" && showInvitesModal ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+            <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f7f8f3] p-6 shadow-xl border border-[#d8ded2]">
+              <div className="flex justify-end mb-4">
+                <button type="button" className="rounded-md p-2 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]" onClick={() => setShowInvitesModal(false)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <section id="invites" className="grid gap-4">
+            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#2f6f5e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="16" height="12" rx="2"/><polyline points="2 4 10 11 18 4"/></svg>
+                Property Invites
+                {receivedInvites.filter((i) => i.status === "pending").length > 0 && (
+                  <span className="inline-flex items-center justify-center rounded-full bg-[#2f6f5e] px-2 py-0.5 text-xs font-bold text-white">
+                    {receivedInvites.filter((i) => i.status === "pending").length}
+                  </span>
+                )}
+              </h2>
+              {receivedInvites.length === 0 ? (
+                <p className="mt-3 text-sm text-[#60715f]">No invites received yet. Property owners can invite you to their units.</p>
+              ) : (
+                <ul className="mt-3 grid gap-3">
+                  {receivedInvites.map((inv) => (
+                    <li key={inv.id} className={`rounded-lg border p-4 transition-all ${
+                      inv.status === "pending"
+                        ? "border-[#2f6f5e]/30 bg-[#f0faf6] shadow-sm"
+                        : "border-[#e3e8df] bg-white"
+                    }`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-[#1b1f1d]">{inv.property_name} — {inv.unit_name}</p>
+                          {inv.property_address && <p className="text-xs text-[#60715f]">{inv.property_address}</p>}
+                          <p className="mt-1 text-sm text-[#435146]">From: {inv.owner_name || inv.owner_email}</p>
+                          {inv.rent_amount != null && <p className="text-sm text-[#435146]">Rent: <span className="font-semibold text-[#2f6f5e]">{formatMoney(inv.rent_amount)}/mo</span></p>}
+                          {inv.deposit > 0 && <p className="text-sm text-[#435146]">Deposit: {formatMoney(inv.deposit)}</p>}
+                          {inv.move_in_date && <p className="text-sm text-[#435146]">Move-in: {formatDate(inv.move_in_date)}</p>}
+                          {inv.message && <p className="mt-1 rounded-md bg-[#eef0eb] px-3 py-2 text-sm italic text-[#435146]">&ldquo;{inv.message}&rdquo;</p>}
+                          <p className="mt-1 text-xs text-[#8a9a88]">Received {formatDate(inv.created_at)}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <InviteStatusLabel status={inv.status} />
+                          {inv.status === "pending" && (
+                            <div className="flex gap-2">
+                              <button type="button" className="rounded-md bg-[#2f6f5e] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50" onClick={() => handleAcceptInvite(inv.id)} disabled={loading}>Accept</button>
+                              <button type="button" className="rounded-md border border-[#c9d0c5] px-3 py-1.5 text-xs font-semibold text-[#c44d4d] transition-colors hover:bg-[#fde8e8] disabled:opacity-50" onClick={() => handleDeclineInvite(inv.id)} disabled={loading}>Decline</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+            </div>
+          </div>
         ) : null}
 
         {tenantDashboard ? (
@@ -987,6 +1291,24 @@ function StatusLabel({ status }: { status: string }) {
       : normalized === "partial"
         ? "bg-[#fff3d6] text-[#765315]"
         : "bg-[#fde8e8] text-[#933232]";
+
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}>
+      {status}
+    </span>
+  );
+}
+
+function InviteStatusLabel({ status }: { status: string }) {
+  const normalized = status.toLowerCase();
+  const className =
+    normalized === "accepted"
+      ? "bg-[#e6f4ea] text-[#23633d]"
+      : normalized === "pending"
+        ? "bg-[#e8f0fe] text-[#1a56db]"
+        : normalized === "declined"
+          ? "bg-[#fde8e8] text-[#933232]"
+          : "bg-[#f3f4f6] text-[#6b7280]";
 
   return (
     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}>
