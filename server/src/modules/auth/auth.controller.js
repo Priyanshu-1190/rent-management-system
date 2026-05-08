@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../../utils/jwt");
-const { registerUser, findUserByEmail } = require("./auth.service");
+const { registerUser, findUserByEmail, deleteUserById } = require("./auth.service");
 
 const register = async (req, res, next) => {
   try {
@@ -36,4 +36,13 @@ const login = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login };
+const deleteAccount = async (req, res, next) => {
+  try {
+    await deleteUserById(req.user.id);
+    return res.json({ message: "Account deleted" });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = { register, login, deleteAccount };

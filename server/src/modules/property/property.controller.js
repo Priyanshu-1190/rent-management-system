@@ -1,4 +1,4 @@
-const { createProperty, getOwnerProperties } = require("./property.service");
+const { createProperty, getOwnerProperties, deleteOwnerProperty } = require("./property.service");
 
 const addProperty = async (req, res, next) => {
   try {
@@ -35,4 +35,26 @@ const listProperties = async (req, res, next) => {
   }
 };
 
-module.exports = { addProperty, listProperties };
+const removeProperty = async (req, res, next) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const propertyId = Number(req.params.id);
+    if (!Number.isInteger(propertyId) || propertyId <= 0) {
+      return res.status(400).json({ error: "Valid property id is required" });
+    }
+
+    const deleted = await deleteOwnerProperty(req.user.id, propertyId);
+    if (!deleted) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    return res.json({ message: "Property deleted" });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = { addProperty, listProperties, removeProperty };

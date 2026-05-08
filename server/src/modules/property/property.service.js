@@ -23,4 +23,12 @@ const getOwnerProperties = async (ownerId) => {
   return result.rows;
 };
 
-module.exports = { createProperty, getOwnerProperties };
+const deleteOwnerProperty = async (ownerId, propertyId) => {
+  const result = await pool.query(
+    `DELETE FROM properties WHERE id = $1 AND owner_id = $2 RETURNING id`,
+    [propertyId, ownerId]
+  );
+  return result.rows[0];
+};
+
+module.exports = { createProperty, getOwnerProperties, deleteOwnerProperty };

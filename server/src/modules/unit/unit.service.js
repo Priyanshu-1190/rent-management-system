@@ -22,4 +22,26 @@ const createUnit = async (propertyId, data) => {
   return result.rows[0];
 };
 
-module.exports = { getOwnerPropertyById, createUnit };
+const deleteOwnerUnit = async (ownerId, unitId) => {
+  const result = await pool.query(
+    `DELETE FROM units u
+     USING properties p
+     WHERE u.id = $1 AND u.property_id = p.id AND p.owner_id = $2
+     RETURNING u.id`,
+    [unitId, ownerId]
+  );
+  return result.rows[0];
+};
+
+const getUnitsByProperty = async (ownerId, propertyId) => {
+  const result = await pool.query(
+    `SELECT u.* FROM units u
+     JOIN properties p ON p.id = u.property_id
+     WHERE u.property_id = $1 AND p.owner_id = $2
+     ORDER BY u.created_at DESC, u.id DESC`,
+    [propertyId, ownerId]
+  );
+  return result.rows;
+};
+
+module.exports = { getOwnerPropertyById, createUnit, deleteOwnerUnit, getUnitsByProperty };

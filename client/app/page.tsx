@@ -154,6 +154,10 @@ export default function Home() {
   const [unitName, setUnitName] = useState("");
   const [unitRent, setUnitRent] = useState("");
   const [propertyUnits, setPropertyUnits] = useState<Unit[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [deletingProperty, setDeletingProperty] = useState<{ id: number; name: string } | null>(null);
+  const [deletingUnit, setDeletingUnit] = useState<{ id: number; name: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/db-test")
@@ -325,6 +329,20 @@ export default function Home() {
     }
   };
 
+  // ── Owner: load units for a property ──
+  const loadUnits = async (propertyId: number, authToken = token) => {
+    try {
+      const res = await fetch(`${backendUrl}/api/units/property/${propertyId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to load units");
+      setPropertyUnits(body);
+    } catch {
+      setPropertyUnits([]);
+    }
+  };
+
   // ── Owner: add unit ──
   const handleAddUnit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -341,7 +359,7 @@ export default function Home() {
       if (!res.ok) throw new Error(body.error || "Failed to add unit");
       setUnitName("");
       setUnitRent("");
-      setPropertyUnits((prev) => [...prev, body]);
+      await loadUnits(selectedPropertyId);
       await loadDashboard();
       setNotice(`Unit "${body.name}" added with rent ${formatMoney(body.rent_amount)}`);
     } catch (err) {
@@ -351,6 +369,52 @@ export default function Home() {
     }
   };
 
+  // ── Owner: delete property ──
+  const handleDeleteProperty = async () => {
+    if (!deletingProperty) return;
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`${backendUrl}/api/properties/${deletingProperty.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to delete property");
+      if (selectedPropertyId === deletingProperty.id) setSelectedPropertyId(null);
+      await loadProperties();
+      await loadDashboard();
+      setNotice(`Property "${deletingProperty.name}" deleted.`);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to delete property");
+    } finally {
+      setLoading(false);
+      setDeletingProperty(null);
+    }
+  };
+
+  // ── Owner: delete unit ──
+  const handleDeleteUnit = async () => {
+    if (!deletingUnit) return;
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`${backendUrl}/api/units/${deletingUnit.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to delete unit");
+      setPropertyUnits((prev) => prev.filter((u) => u.id !== deletingUnit.id));
+      await loadDashboard();
+      setNotice(`Unit "${deletingUnit.name}" deleted.`);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to delete unit");
+    } finally {
+      setLoading(false);
+      setDeletingUnit(null);
+    }
+  };
 
   const downloadReceipt = async (paymentId: number) => {
     setNotice("");
@@ -379,20 +443,74 @@ export default function Home() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`${backendUrl}/api/auth/me`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to delete account");
+      setToken("");
+      setUser(null);
+      setOwnerDashboard(null);
+      setTenantDashboard(null);
+      setProperties([]);
+      setPropertyUnits([]);
+      setShowDeleteConfirm(false);
+      setNotice("Account deleted successfully.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to delete account");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#f7f8f3] text-[#1b1f1d]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-3 border-b border-[#d8ded2] pb-5 lg:flex-row lg:items-end lg:justify-between">
+        <header className="flex items-start justify-between border-b border-[#d8ded2] pb-5">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#60715f]">
               Rent Management
             </p>
             <h1 className="mt-2 text-3xl font-semibold">Dashboard</h1>
+            {apiStatus ? <p className="mt-1 text-sm text-[#60715f]">{apiStatus}</p> : null}
+            {user ? <p className="text-sm text-[#60715f]">Signed in as {user.role} #{user.id}</p> : null}
           </div>
-          {(apiStatus || user) ? (
-            <div className="text-sm text-[#60715f]">
-              {apiStatus ? <p>{apiStatus}</p> : null}
-              {user ? <p>Signed in as {user.role} #{user.id}</p> : null}
+          {user ? (
+            <div className="relative">
+              <button
+                type="button"
+                className="rounded-md p-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
+                onClick={() => setShowMenu((v) => !v)}
+                aria-label="Menu"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="4" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="16" r="1.5"/></svg>
+              </button>
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                  <div className="absolute right-0 z-50 mt-1 w-44 rounded-lg border border-[#d8ded2] bg-white py-1 shadow-lg">
+                    <button
+                      type="button"
+                      className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                      onClick={() => { setToken(""); setUser(null); setOwnerDashboard(null); setTenantDashboard(null); setProperties([]); setPropertyUnits([]); setShowMenu(false); }}
+                    >
+                      Log Out
+                    </button>
+                    <button
+                      type="button"
+                      className="flex w-full px-4 py-2 text-sm font-medium text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                      onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
+                    >
+                      Delete Account
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ) : null}
         </header>
@@ -538,8 +656,19 @@ export default function Home() {
                   <ul className="mt-2 grid gap-1">
                     {properties.map((p) => (
                       <li key={p.id} className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm">
-                        <span className="font-medium">{p.name}</span>
-                        {p.address && <span className="text-[#60715f]">{p.address}</span>}
+                        <div className="min-w-0 flex-1">
+                          <span className="font-medium">{p.name}</span>
+                          {p.address && <span className="ml-2 text-[#60715f]">{p.address}</span>}
+                        </div>
+                        <button
+                          type="button"
+                          className="ml-2 flex-shrink-0 rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                          onClick={() => setDeletingProperty({ id: p.id, name: p.name })}
+                          title={`Delete ${p.name}`}
+                          disabled={loading}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -556,7 +685,7 @@ export default function Home() {
                 <form onSubmit={handleAddUnit} className="mt-3 grid gap-3">
                   <label className="grid gap-1 text-sm font-medium text-[#435146]">
                     Property
-                    <select className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" value={selectedPropertyId ?? ""} onChange={(e) => { setSelectedPropertyId(Number(e.target.value) || null); setPropertyUnits([]); }} required>
+                    <select className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" value={selectedPropertyId ?? ""} onChange={(e) => { const id = Number(e.target.value) || null; setSelectedPropertyId(id); if (id) loadUnits(id); else setPropertyUnits([]); }} required>
                       <option value="">Select property…</option>
                       {properties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
@@ -575,12 +704,23 @@ export default function Home() {
 
               {propertyUnits.length > 0 && (
                 <div className="mt-4 border-t border-[#e3e8df] pt-3">
-                  <p className="text-sm font-semibold text-[#435146]">Recently Added Units</p>
+                  <p className="text-sm font-semibold text-[#435146]">Units</p>
                   <ul className="mt-2 grid gap-1">
                     {propertyUnits.map((u) => (
                       <li key={u.id} className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm">
-                        <span className="font-medium">{u.name}</span>
-                        <span className="text-[#2f6f5e] font-semibold">{formatMoney(u.rent_amount)}/mo</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="font-medium">{u.name}</span>
+                          <span className="ml-2 text-[#2f6f5e] font-semibold">{formatMoney(u.rent_amount)}/mo</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="ml-2 flex-shrink-0 rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                          onClick={() => setDeletingUnit({ id: u.id, name: u.name })}
+                          title={`Delete ${u.name}`}
+                          disabled={loading}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -720,6 +860,93 @@ export default function Home() {
           </section>
         ) : null}
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#933232]">Delete Account</h3>
+            <p className="mt-2 text-sm text-[#435146]">
+              Are you sure? This will permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+            <div className="mt-5 flex gap-3 justify-end">
+              <button
+                type="button"
+                className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-md bg-[#c44d4d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a83a3a] disabled:opacity-50"
+                onClick={handleDeleteAccount}
+                disabled={loading}
+              >
+                {loading ? "Deleting…" : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Property Confirmation Modal */}
+      {deletingProperty && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#933232]">Delete Property</h3>
+            <p className="mt-2 text-sm text-[#435146]">
+              Delete <strong>&ldquo;{deletingProperty.name}&rdquo;</strong> and all its units? This action cannot be undone.
+            </p>
+            <div className="mt-5 flex gap-3 justify-end">
+              <button
+                type="button"
+                className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                onClick={() => setDeletingProperty(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-md bg-[#c44d4d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a83a3a] disabled:opacity-50"
+                onClick={handleDeleteProperty}
+                disabled={loading}
+              >
+                {loading ? "Deleting…" : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Unit Confirmation Modal */}
+      {deletingUnit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#933232]">Delete Unit</h3>
+            <p className="mt-2 text-sm text-[#435146]">
+              Delete <strong>&ldquo;{deletingUnit.name}&rdquo;</strong> and all its associated data? This action cannot be undone.
+            </p>
+            <div className="mt-5 flex gap-3 justify-end">
+              <button
+                type="button"
+                className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                onClick={() => setDeletingUnit(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-md bg-[#c44d4d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a83a3a] disabled:opacity-50"
+                onClick={handleDeleteUnit}
+                disabled={loading}
+              >
+                {loading ? "Deleting…" : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

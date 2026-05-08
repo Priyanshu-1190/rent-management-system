@@ -22,4 +22,8 @@ const findUserByEmail = async (email) => {
   return result.rows[0];
 };
 
-module.exports = { registerUser, findUserByEmail };
+const deleteUserById = async (userId) => {
+  await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+};
+
+module.exports = { registerUser, findUserByEmail, deleteUserById };
