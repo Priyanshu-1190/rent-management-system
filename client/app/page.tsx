@@ -322,6 +322,10 @@ export default function Home() {
       }
 
       setUser(loginBody.user);
+      setRegName("");
+      setRegEmail("");
+      setRegPassword("");
+      setRegRole("tenant");
       await loadDashboard(loginBody.user.role);
       if (loginBody.user.role === "owner") { await loadProperties(); await loadSentInvites(); await loadAvailableUnits(); }
       if (loginBody.user.role === "tenant") await loadReceivedInvites();
@@ -668,8 +672,9 @@ export default function Home() {
         </header>
 
         <section className="grid gap-4 lg:grid-cols-[1fr_1.5fr]">
-          <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-            <div className="flex gap-1 rounded-md bg-[#eef0eb] p-1">
+          {!user && (
+            <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+              <div className="flex gap-1 rounded-md bg-[#eef0eb] p-1">
               <button
                 type="button"
                 className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
@@ -719,7 +724,7 @@ export default function Home() {
                   type="submit"
                   disabled={loading}
                 >
-                  Login
+                  {loading ? "Logging in..." : "Login"}
                 </button>
               </form>
             ) : (
@@ -772,7 +777,7 @@ export default function Home() {
                   type="submit"
                   disabled={loading}
                 >
-                  Register
+                  {loading ? "Registering..." : "Register"}
                 </button>
               </form>
             )}
@@ -781,7 +786,8 @@ export default function Home() {
                 {notice}
               </p>
             ) : null}
-          </div>
+            </div>
+          )}
         </section>
 
         {/* ── Owner: Property & Unit Management ── */}
@@ -799,7 +805,9 @@ export default function Home() {
                   Address <span className="font-normal text-[#8a9a88]">(optional)</span>
                   <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="text" value={propAddress} onChange={(e) => setPropAddress(e.target.value)} placeholder="e.g. 42 MG Road, Kolkata" />
                 </label>
-                <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading}>Add Property</button>
+                <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading}>
+                  {loading ? "Adding..." : "Add Property"}
+                </button>
               </form>
 
               {properties.length > 0 && (
@@ -850,7 +858,9 @@ export default function Home() {
                     Monthly Rent (₹)
                     <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="number" min="1" step="1" value={unitRent} onChange={(e) => setUnitRent(e.target.value)} required placeholder="e.g. 12000" />
                   </label>
-                  <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading || !selectedPropertyId}>Add Unit</button>
+                  <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading || !selectedPropertyId}>
+                    {loading ? "Adding..." : "Add Unit"}
+                  </button>
                 </form>
               )}
 
@@ -921,7 +931,9 @@ export default function Home() {
                     Message <span className="font-normal text-[#8a9a88]">(optional)</span>
                     <textarea className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65] resize-none" rows={2} value={inviteMessage} onChange={(e) => setInviteMessage(e.target.value)} placeholder="Welcome message…" />
                   </label>
-                  <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading || !inviteUnitId}>Send Invite</button>
+                  <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading || !inviteUnitId}>
+                    {loading ? "Sending..." : "Send Invite"}
+                  </button>
                 </form>
               )}
             </div>
