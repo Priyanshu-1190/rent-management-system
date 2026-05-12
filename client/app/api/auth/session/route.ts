@@ -34,11 +34,25 @@ export async function GET() {
     return NextResponse.json({ user: null });
   }
 
+  // Fetch latest user info from backend
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const user = await res.json();
+      return NextResponse.json({ user });
+    }
+  } catch (error) {
+    console.error("Session proxy error fetching /me:", error);
+  }
+
   return NextResponse.json({
     user: {
       id: payload.id,
       email: payload.email,
       role: payload.role,
+      name: payload.name,
     },
   });
 }

@@ -29,7 +29,7 @@ const login = async (req, res, next) => {
 
     return res.json({
       token,
-      user: { id: user.id, email: user.email, role: user.role },
+      user: { id: user.id, email: user.email, role: user.role, name: user.name },
     });
   } catch (err) {
     return next(err);
@@ -45,4 +45,16 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, deleteAccount };
+const getMe = async (req, res, next) => {
+  try {
+    const user = await findUserByEmail(req.user.email);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    return res.json({ id: user.id, email: user.email, role: user.role, name: user.name });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = { register, login, deleteAccount, getMe };

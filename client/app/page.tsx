@@ -637,7 +637,22 @@ export default function Home() {
               {showMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                  <div className="absolute right-0 z-50 mt-1 w-44 rounded-lg border border-[#d8ded2] bg-white py-1 shadow-lg">
+                  <div className="absolute right-0 z-50 mt-1 w-56 rounded-lg border border-[#d8ded2] bg-white py-1 shadow-lg">
+                    <div className="border-b border-[#e3e8df] px-4 py-3">
+                      <p className="text-sm font-semibold text-[#1b1f1d] truncate">
+                        {user.name || "User"}
+                      </p>
+                      <p className="text-xs text-[#60715f] truncate">
+                        {user.email || "No email"}
+                      </p>
+                      <button
+                        type="button"
+                        className="mt-2 flex w-full justify-center rounded-md border border-[#c44d4d] px-2 py-1.5 text-xs font-medium text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                        onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
+                      >
+                        Delete Account
+                      </button>
+                    </div>
                     {user?.role && (
                       <button
                         type="button"
@@ -656,13 +671,6 @@ export default function Home() {
                       onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); setUser(null); setOwnerDashboard(null); setTenantDashboard(null); setProperties([]); setPropertyUnits([]); setShowMenu(false); }}
                     >
                       Log Out
-                    </button>
-                    <button
-                      type="button"
-                      className="flex w-full px-4 py-2 text-sm font-medium text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                      onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
-                    >
-                      Delete Account
                     </button>
                   </div>
                 </>
