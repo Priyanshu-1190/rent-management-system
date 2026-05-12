@@ -9,7 +9,8 @@ const getOwnerDashboard = async (ownerId) => {
       SELECT
         properties.id AS property_id,
         COUNT(units.id) AS total_units,
-        COUNT(tenancies.id) FILTER (WHERE tenancies.is_active = TRUE) AS occupied_units
+        COUNT(tenancies.id) FILTER (WHERE tenancies.is_active = TRUE) AS occupied_units,
+        COALESCE(SUM(units.rent_amount), 0) AS monthly_rent
       FROM properties
       LEFT JOIN units ON units.property_id = properties.id
       LEFT JOIN tenancies
@@ -26,7 +27,6 @@ const getOwnerDashboard = async (ownerId) => {
     rent_totals AS (
       SELECT
         properties.id AS property_id,
-        COALESCE(SUM(rent_schedules.amount), 0) AS total_rent,
         COALESCE(SUM(COALESCE(payment_totals.paid, 0)), 0) AS total_collected,
         COALESCE(
           SUM(GREATEST(rent_schedules.amount - COALESCE(payment_totals.paid, 0), 0)),
@@ -47,7 +47,7 @@ const getOwnerDashboard = async (ownerId) => {
       properties.name AS property_name,
       COALESCE(unit_counts.total_units, 0) AS total_units,
       COALESCE(unit_counts.occupied_units, 0) AS occupied_units,
-      COALESCE(rent_totals.total_rent, 0) AS total_rent,
+      COALESCE(unit_counts.monthly_rent, 0) AS total_rent,
       COALESCE(rent_totals.total_collected, 0) AS total_collected,
       COALESCE(rent_totals.total_pending, 0) AS total_pending
     FROM properties
@@ -107,11 +107,45 @@ const getOwnerDashboard = async (ownerId) => {
     total_pending: toNumber(property.total_pending),
   }));
 
+  const paymentResult = await pool.query(
+    `
+    SELECT
+      payments.id AS payment_id,
+      payments.rent_schedule_id AS rent_id,
+      payments.amount,
+      payments.payment_method,
+      payments.payment_date,
+      payments.transaction_id,
+      payments.status
+    FROM payments
+    INNER JOIN rent_schedules ON rent_schedules.id = payments.rent_schedule_id
+    INNER JOIN tenancies ON tenancies.id = rent_schedules.tenancy_id
+    INNER JOIN units ON units.id = tenancies.unit_id
+    INNER JOIN properties ON properties.id = units.property_id
+    WHERE properties.owner_id = $1
+    ORDER BY payments.payment_date DESC, payments.id DESC
+    `,
+    [ownerId]
+  );
+
+  const paymentsByRent = paymentResult.rows.reduce((acc, payment) => {
+    const rentId = payment.rent_id;
+    if (!acc[rentId]) acc[rentId] = [];
+
+    acc[rentId].push({
+      ...payment,
+      amount: toNumber(payment.amount),
+    });
+
+    return acc;
+  }, {});
+
   const rent_status = statusResult.rows.map((rent) => ({
     ...rent,
     amount: toNumber(rent.amount),
     paid: toNumber(rent.paid),
     pending: toNumber(rent.pending),
+    payments: paymentsByRent[rent.rent_id] || [],
   }));
 
   const totals = properties.reduce(

@@ -43,6 +43,13 @@ type OwnerDashboard = {
     paid: number;
     pending: number;
     payment_status: string;
+    payments: Array<{
+      payment_id: number;
+      amount: number;
+      payment_method: string | null;
+      payment_date: string;
+      transaction_id: string | null;
+    }>;
   }>;
 };
 
@@ -1005,16 +1012,24 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {ownerDashboard.properties.map((property) => (
-                  <tr key={property.property_id} className="border-t border-[#e3e8df]">
-                    <Td>{property.property_name}</Td>
-                    <Td>{property.total_units}</Td>
-                    <Td>{property.occupied_units}</Td>
-                    <Td>{formatMoney(property.total_rent)}</Td>
-                    <Td>{formatMoney(property.total_collected)}</Td>
-                    <Td>{formatMoney(property.total_pending)}</Td>
+                {ownerDashboard.properties.length > 0 ? (
+                  ownerDashboard.properties.map((property) => (
+                    <tr key={property.property_id} className="border-t border-[#e3e8df]">
+                      <Td>{property.property_name}</Td>
+                      <Td>{property.total_units}</Td>
+                      <Td>{property.occupied_units}</Td>
+                      <Td>{formatMoney(property.total_rent)}</Td>
+                      <Td>{formatMoney(property.total_collected)}</Td>
+                      <Td>{formatMoney(property.total_pending)}</Td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr className="border-t border-[#e3e8df]">
+                    <td colSpan={6} className="py-4 text-center text-sm text-[#60715f]">
+                      No properties overview information available.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </DataTable>
 
@@ -1029,23 +1044,50 @@ export default function Home() {
                   <Th>Paid</Th>
                   <Th>Pending</Th>
                   <Th>Status</Th>
+                  <Th>Receipts</Th>
                 </tr>
               </thead>
               <tbody>
-                {ownerDashboard.rent_status.map((rent) => (
-                  <tr key={rent.rent_id} className="border-t border-[#e3e8df]">
-                    <Td>{rent.tenant_name}</Td>
-                    <Td>{rent.property_name}</Td>
-                    <Td>{rent.unit_name}</Td>
-                    <Td>{formatPeriod(rent.month, rent.year)}</Td>
-                    <Td>{formatMoney(rent.amount)}</Td>
-                    <Td>{formatMoney(rent.paid)}</Td>
-                    <Td>{formatMoney(rent.pending)}</Td>
-                    <Td>
-                      <StatusLabel status={rent.payment_status} />
-                    </Td>
+                {ownerDashboard.rent_status.length > 0 ? (
+                  ownerDashboard.rent_status.map((rent) => (
+                    <tr key={rent.rent_id} className="border-t border-[#e3e8df]">
+                      <Td>{rent.tenant_name}</Td>
+                      <Td>{rent.property_name}</Td>
+                      <Td>{rent.unit_name}</Td>
+                      <Td>{formatPeriod(rent.month, rent.year)}</Td>
+                      <Td>{formatMoney(rent.amount)}</Td>
+                      <Td>{formatMoney(rent.paid)}</Td>
+                      <Td>{formatMoney(rent.pending)}</Td>
+                      <Td>
+                        <StatusLabel status={rent.payment_status} />
+                      </Td>
+                      <Td>
+                        <div className="flex flex-col gap-2">
+                          {rent.payments && rent.payments.length ? (
+                            rent.payments.map((payment) => (
+                              <button
+                                key={payment.payment_id}
+                                className="w-fit rounded-md border border-[#2f6f5e] px-3 py-1 text-sm font-semibold text-[#2f6f5e]"
+                                type="button"
+                                onClick={() => downloadReceipt(payment.payment_id)}
+                              >
+                                Receipt #{payment.payment_id}
+                              </button>
+                            ))
+                          ) : (
+                            <span className="text-sm text-[#60715f]">No payment</span>
+                          )}
+                        </div>
+                      </Td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr className="border-t border-[#e3e8df]">
+                    <td colSpan={9} className="py-4 text-center text-sm text-[#60715f]">
+                      No payment status information available.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </DataTable>
           </section>
@@ -1135,38 +1177,46 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {tenantDashboard.rent_history.map((rent) => (
-                  <tr key={rent.rent_id} className="border-t border-[#e3e8df] align-top">
-                    <Td>{rent.property_name}</Td>
-                    <Td>{rent.unit_name}</Td>
-                    <Td>{formatPeriod(rent.month, rent.year)}</Td>
-                    <Td>{formatDate(rent.due_date)}</Td>
-                    <Td>{formatMoney(rent.amount)}</Td>
-                    <Td>{formatMoney(rent.paid)}</Td>
-                    <Td>{formatMoney(rent.pending)}</Td>
-                    <Td>
-                      <StatusLabel status={rent.payment_status} />
-                    </Td>
-                    <Td>
-                      <div className="flex flex-col gap-2">
-                        {rent.payments.length ? (
-                          rent.payments.map((payment) => (
-                            <button
-                              key={payment.payment_id}
-                              className="w-fit rounded-md border border-[#2f6f5e] px-3 py-1 text-sm font-semibold text-[#2f6f5e]"
-                              type="button"
-                              onClick={() => downloadReceipt(payment.payment_id)}
-                            >
-                              Receipt #{payment.payment_id}
-                            </button>
-                          ))
-                        ) : (
-                          <span className="text-sm text-[#60715f]">No payment</span>
-                        )}
-                      </div>
-                    </Td>
+                {tenantDashboard.rent_history.length > 0 ? (
+                  tenantDashboard.rent_history.map((rent) => (
+                    <tr key={rent.rent_id} className="border-t border-[#e3e8df] align-top">
+                      <Td>{rent.property_name}</Td>
+                      <Td>{rent.unit_name}</Td>
+                      <Td>{formatPeriod(rent.month, rent.year)}</Td>
+                      <Td>{formatDate(rent.due_date)}</Td>
+                      <Td>{formatMoney(rent.amount)}</Td>
+                      <Td>{formatMoney(rent.paid)}</Td>
+                      <Td>{formatMoney(rent.pending)}</Td>
+                      <Td>
+                        <StatusLabel status={rent.payment_status} />
+                      </Td>
+                      <Td>
+                        <div className="flex flex-col gap-2">
+                          {rent.payments.length ? (
+                            rent.payments.map((payment) => (
+                              <button
+                                key={payment.payment_id}
+                                className="w-fit rounded-md border border-[#2f6f5e] px-3 py-1 text-sm font-semibold text-[#2f6f5e]"
+                                type="button"
+                                onClick={() => downloadReceipt(payment.payment_id)}
+                              >
+                                Receipt #{payment.payment_id}
+                              </button>
+                            ))
+                          ) : (
+                            <span className="text-sm text-[#60715f]">No payment</span>
+                          )}
+                        </div>
+                      </Td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr className="border-t border-[#e3e8df]">
+                    <td colSpan={9} className="py-4 text-center text-sm text-[#60715f]">
+                      No rent history available.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </DataTable>
           </section>
