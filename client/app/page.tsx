@@ -624,7 +624,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f8f3] text-[#1b1f1d]">
+    <main className="min-h-screen w-full bg-[#f7f8f3] text-[#1b1f1d] overflow-x-hidden">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
         <header className="flex items-start justify-between border-b border-[#d8ded2] pb-5">
           <div>
@@ -997,7 +997,7 @@ export default function Home() {
 
         {ownerDashboard ? (
           <section className="grid gap-4">
-            <div className="grid gap-3 md:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Metric label="Total Rent" value={formatMoney(ownerDashboard.totals.total_rent)} />
               <Metric label="Collected" value={formatMoney(ownerDashboard.totals.total_collected)} />
               <Metric label="Pending" value={formatMoney(ownerDashboard.totals.total_pending)} tone="warn" />
@@ -1167,7 +1167,7 @@ export default function Home() {
 
         {tenantDashboard ? (
           <section className="grid gap-4">
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
               <Metric label="Total Rent" value={formatMoney(tenantDashboard.summary.total_rent)} />
               <Metric label="Paid" value={formatMoney(tenantDashboard.summary.total_paid)} />
               <Metric label="Pending" value={formatMoney(tenantDashboard.summary.total_pending)} tone="warn" />
@@ -1340,7 +1340,7 @@ function Metric({
   return (
     <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
       <p className="text-sm font-medium text-[#60715f]">{label}</p>
-      <p className={tone === "warn" ? "mt-2 text-2xl font-semibold text-[#9a4d21]" : "mt-2 text-2xl font-semibold"}>
+      <p className={(tone === "warn" ? "mt-2 text-xl font-semibold text-[#9a4d21]" : "mt-2 text-xl font-semibold") + " sm:text-2xl"}>
         {value}
       </p>
     </div>
@@ -1349,10 +1349,10 @@ function Metric({
 
 function DataTable({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+    <section className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm overflow-hidden">
       <h2 className="text-lg font-semibold">{title}</h2>
-      <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+      <div className="mt-3 overflow-x-auto -mx-4 px-4">
+        <table className="w-full min-w-[650px] border-collapse text-left text-sm md:min-w-[760px]">
           {children}
         </table>
       </div>
