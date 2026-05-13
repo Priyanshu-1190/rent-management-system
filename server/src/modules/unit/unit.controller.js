@@ -1,4 +1,4 @@
-const { getOwnerPropertyById, createUnit, deleteOwnerUnit, getUnitsByProperty } = require("./unit.service");
+const { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty } = require("./unit.service");
 
 const addUnit = async (req, res, next) => {
   try {
@@ -28,6 +28,11 @@ const addUnit = async (req, res, next) => {
     const property = await getOwnerPropertyById(req.user.id, propertyId);
     if (!property) {
       return res.status(404).json({ error: "Property not found" });
+    }
+
+    const existingUnit = await getUnitByNameAndPropertyId(propertyId, String(name).trim());
+    if (existingUnit) {
+      return res.status(400).json({ error: "Unit already exists" });
     }
 
     const unit = await createUnit(propertyId, {

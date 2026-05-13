@@ -43,6 +43,8 @@ type OwnerDashboard = {
     paid: number;
     pending: number;
     payment_status: string;
+    due_in_days: number | null;
+    overdue_by_days: number | null;
     payments: Array<{
       payment_id: number;
       amount: number;
@@ -70,6 +72,8 @@ type TenantDashboard = {
     paid: number;
     pending: number;
     payment_status: string;
+    due_in_days: number | null;
+    overdue_by_days: number | null;
     payments: Array<{
       payment_id: number;
       amount: number;
@@ -686,6 +690,15 @@ export default function Home() {
           ) : null}
         </header>
 
+        {notice && (
+          <div className="rounded-md border border-[#e0b15c] bg-[#fff9eb] px-4 py-3 text-sm text-[#6b4c18] flex items-center justify-between">
+            <span>{notice}</span>
+            <button type="button" onClick={() => setNotice("")} className="ml-4 text-[#6b4c18] hover:text-[#435146]">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+            </button>
+          </div>
+        )}
+
         <section className="grid gap-4 lg:grid-cols-[1fr_1.5fr]">
           {!user && (
             <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
@@ -796,16 +809,10 @@ export default function Home() {
                 </button>
               </form>
             )}
-            {notice ? (
-              <p className="mt-3 rounded-md border border-[#e0b15c] bg-[#fff9eb] px-3 py-2 text-sm text-[#6b4c18]">
-                {notice}
-              </p>
-            ) : null}
             </div>
           )}
         </section>
 
-        {/* ── Owner: Property & Unit Management ── */}
         {user?.role === "owner" ? (
           <section className="grid gap-4 lg:grid-cols-2">
             {/* Add Property Card */}
@@ -1059,7 +1066,11 @@ export default function Home() {
                       <Td>{formatMoney(rent.paid)}</Td>
                       <Td>{formatMoney(rent.pending)}</Td>
                       <Td>
-                        <StatusLabel status={rent.payment_status} />
+                        <StatusLabel
+                          status={rent.payment_status}
+                          dueInDays={rent.due_in_days}
+                          overdueByDays={rent.overdue_by_days}
+                        />
                       </Td>
                       <Td>
                         <div className="flex flex-col gap-2">
@@ -1188,7 +1199,11 @@ export default function Home() {
                       <Td>{formatMoney(rent.paid)}</Td>
                       <Td>{formatMoney(rent.pending)}</Td>
                       <Td>
-                        <StatusLabel status={rent.payment_status} />
+                        <StatusLabel
+                          status={rent.payment_status}
+                          dueInDays={rent.due_in_days}
+                          overdueByDays={rent.overdue_by_days}
+                        />
                       </Td>
                       <Td>
                         <div className="flex flex-col gap-2">
@@ -1353,18 +1368,37 @@ function Td({ children }: { children: ReactNode }) {
   return <td className="py-3 pr-4">{children}</td>;
 }
 
-function StatusLabel({ status }: { status: string }) {
+function StatusLabel({
+  status,
+  dueInDays,
+  overdueByDays,
+}: {
+  status: string;
+  dueInDays?: number | null;
+  overdueByDays?: number | null;
+}) {
   const normalized = status.toLowerCase();
+  const dayWord = (count: number) => (count === 1 ? "day" : "days");
+  const label =
+    normalized === "pending" && typeof dueInDays === "number"
+      ? `Pending (due in ${dueInDays} ${dayWord(dueInDays)})`
+      : normalized === "overdue" && typeof overdueByDays === "number"
+        ? `Overdue (${overdueByDays} ${dayWord(overdueByDays)})`
+        : status;
   const className =
     normalized === "paid"
       ? "bg-[#e6f4ea] text-[#23633d]"
       : normalized === "partial"
-        ? "bg-[#fff3d6] text-[#765315]"
-        : "bg-[#fde8e8] text-[#933232]";
+        ? "bg-[#fef08a] text-[#854d0e]"
+        : normalized === "overdue"
+          ? "bg-[#fde8e8] text-[#933232]"
+          : normalized === "upcoming"
+            ? "bg-[#f3f4f6] text-[#4b5563]"
+            : "bg-[#e0e7ff] text-[#3730a3]";
 
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}>
-      {status}
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}>
+      {label}
     </span>
   );
 }

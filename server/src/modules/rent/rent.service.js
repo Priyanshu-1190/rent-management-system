@@ -9,15 +9,55 @@ const createHttpError = (status, message) => {
 
 const toNumber = (value) => Number(value || 0);
 
-const getDueDate = (year, month, dueDay) => {
-  const maxDay = new Date(year, month, 0).getDate();
-  const safeDay = Math.min(dueDay, maxDay);
-  return `${year}-${String(month).padStart(2, "0")}-${String(safeDay).padStart(2, "0")}`;
+const getDueDate = (year, month, moveInDateStr) => {
+  const moveInParts = String(moveInDateStr || "").split("-");
+  const parsedDay = Number(moveInParts[2]);
+  const parsedYear = Number(moveInParts[0]);
+  const parsedMonth = Number(moveInParts[1]);
+  const fallbackDay = new Date(moveInDateStr).getDate();
+  const joinDay = Number.isInteger(parsedDay) && parsedDay > 0 ? parsedDay : fallbackDay;
+  const moveInDate = Number.isInteger(parsedYear) && Number.isInteger(parsedMonth) && Number.isInteger(parsedDay)
+    ? new Date(parsedYear, parsedMonth - 1, parsedDay)
+    : new Date(moveInDateStr);
+
+  const getAnniversary = (targetYear, targetMonth, day) => {
+    const maxAnniversaryDay = new Date(targetYear, targetMonth, 0).getDate();
+    const safeDay = Math.min(day, maxAnniversaryDay);
+    return new Date(targetYear, targetMonth - 1, safeDay);
+  };
+
+  let anniversary = getAnniversary(year, month, joinDay);
+
+  // Due date is the first valid join-cycle anniversary strictly after move-in.
+  let guard = 0;
+  while (anniversary <= moveInDate && guard < 36) {
+    const nextMonthAnchor = new Date(anniversary.getFullYear(), anniversary.getMonth() + 1, 1);
+    anniversary = getAnniversary(
+      nextMonthAnchor.getFullYear(),
+      nextMonthAnchor.getMonth() + 1,
+      joinDay
+    );
+    guard += 1;
+  }
+
+  return `${anniversary.getFullYear()}-${String(anniversary.getMonth() + 1).padStart(2, "0")}-${String(anniversary.getDate()).padStart(2, "0")}`;
+};
+
+const getPaymentStatus = (totalPaid, totalDue) => {
+  if (totalPaid >= totalDue) {
+    return "paid";
+  }
+
+  if (totalPaid > 0) {
+    return "partial";
+  }
+
+  return "pending";
 };
 
 const generateMonthlyRent = async (tenancyId, month, year) => {
   const unitRes = await pool.query(
-    `SELECT u.rent_amount, u.due_day
+    `SELECT u.rent_amount, t.move_in_date
      FROM units u
      JOIN tenancies t ON t.unit_id = u.id
      WHERE t.id = $1 AND t.is_active = TRUE`,
@@ -29,7 +69,7 @@ const generateMonthlyRent = async (tenancyId, month, year) => {
     throw createHttpError(404, "Active tenancy not found");
   }
 
-  const dueDate = getDueDate(year, month, unit.due_day);
+  const dueDate = getDueDate(year, month, unit.move_in_date);
 
   const result = await pool.query(
     `INSERT INTO rent_schedules (tenancy_id, month, year, amount, due_date)
@@ -71,20 +111,22 @@ const addPayment = async (rentScheduleId, data) => {
       throw createHttpError(404, "Rent schedule not found");
     }
 
-    if (schedule.status === "paid") {
-      throw createHttpError(400, "Rent schedule is already paid");
-    }
-
     const sumRes = await client.query(
       `SELECT COALESCE(SUM(amount), 0) AS total_paid
        FROM payments
-       WHERE rent_schedule_id = $1`,
+       WHERE rent_schedule_id = $1
+         AND status = 'success'`,
       [scheduleId]
     );
 
     const paidBeforeThisPayment = toNumber(sumRes.rows[0].total_paid);
     const totalDue = toNumber(schedule.amount) + toNumber(schedule.late_fee);
+    const statusBeforePayment = getPaymentStatus(paidBeforeThisPayment, totalDue);
     const outstandingBeforePayment = Math.max(totalDue - paidBeforeThisPayment, 0);
+
+    if (statusBeforePayment === "paid") {
+      throw createHttpError(400, "Rent schedule is already paid");
+    }
 
     if (paymentAmount > outstandingBeforePayment) {
       throw createHttpError(
@@ -100,12 +142,7 @@ const addPayment = async (rentScheduleId, data) => {
     );
 
     const totalPaid = paidBeforeThisPayment + paymentAmount;
-    let status = "pending";
-    if (totalPaid >= totalDue) {
-      status = "paid";
-    } else if (totalPaid > 0) {
-      status = "partial";
-    }
+    const status = getPaymentStatus(totalPaid, totalDue);
 
     await client.query(
       `UPDATE rent_schedules

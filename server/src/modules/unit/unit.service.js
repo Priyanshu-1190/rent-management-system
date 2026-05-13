@@ -11,6 +11,16 @@ const getOwnerPropertyById = async (ownerId, propertyId) => {
   return result.rows[0];
 };
 
+const getUnitByNameAndPropertyId = async (propertyId, name) => {
+  const result = await pool.query(
+    `SELECT *
+     FROM units
+     WHERE property_id = $1 AND LOWER(name) = LOWER($2)`,
+    [propertyId, name]
+  );
+  return result.rows[0];
+};
+
 const createUnit = async (propertyId, data) => {
   const result = await pool.query(
     `INSERT INTO units (property_id, name, rent_amount, due_day)
@@ -44,4 +54,4 @@ const getUnitsByProperty = async (ownerId, propertyId) => {
   return result.rows;
 };
 
-module.exports = { getOwnerPropertyById, createUnit, deleteOwnerUnit, getUnitsByProperty };
+module.exports = { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty };

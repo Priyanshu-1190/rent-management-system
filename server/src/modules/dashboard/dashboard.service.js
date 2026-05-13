@@ -1,6 +1,7 @@
 const pool = require("../../config/db");
 
 const toNumber = (value) => Number(value || 0);
+const isOutstandingStatus = (status) => ["pending", "partial", "overdue"].includes(status);
 
 const getOwnerDashboard = async (ownerId) => {
   const propertyResult = await pool.query(
@@ -22,6 +23,7 @@ const getOwnerDashboard = async (ownerId) => {
     payment_totals AS (
       SELECT rent_schedule_id, SUM(amount) AS paid
       FROM payments
+      WHERE status = 'success'
       GROUP BY rent_schedule_id
     ),
     rent_totals AS (
@@ -29,7 +31,15 @@ const getOwnerDashboard = async (ownerId) => {
         properties.id AS property_id,
         COALESCE(SUM(COALESCE(payment_totals.paid, 0)), 0) AS total_collected,
         COALESCE(
-          SUM(GREATEST(rent_schedules.amount - COALESCE(payment_totals.paid, 0), 0)),
+          SUM(
+            GREATEST(
+              COALESCE(rent_schedules.amount, 0)
+                + COALESCE(rent_schedules.late_fee, 0)
+                - COALESCE(payment_totals.paid, 0),
+              0
+            )
+          )
+          FILTER (WHERE CURRENT_DATE >= (rent_schedules.due_date - INTERVAL '9 days')),
           0
         ) AS total_pending
       FROM properties
@@ -64,6 +74,7 @@ const getOwnerDashboard = async (ownerId) => {
     WITH payment_totals AS (
       SELECT rent_schedule_id, SUM(amount) AS paid
       FROM payments
+      WHERE status = 'success'
       GROUP BY rent_schedule_id
     )
     SELECT
@@ -77,13 +88,33 @@ const getOwnerDashboard = async (ownerId) => {
       rent_schedules.month,
       rent_schedules.year,
       rent_schedules.amount,
+      COALESCE(rent_schedules.late_fee, 0) AS late_fee,
+      rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0) AS total_due,
       rent_schedules.status,
       COALESCE(payment_totals.paid, 0) AS paid,
-      GREATEST(rent_schedules.amount - COALESCE(payment_totals.paid, 0), 0) AS pending,
+      GREATEST(
+        rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0) - COALESCE(payment_totals.paid, 0),
+        0
+      ) AS pending,
       CASE
-        WHEN COALESCE(payment_totals.paid, 0) >= rent_schedules.amount THEN 'paid'
+        WHEN COALESCE(payment_totals.paid, 0) < rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0)
+         AND CURRENT_DATE >= (rent_schedules.due_date - INTERVAL '9 days')
+         AND CURRENT_DATE <= rent_schedules.due_date
+        THEN (rent_schedules.due_date - CURRENT_DATE)
+        ELSE NULL
+      END AS due_in_days,
+      CASE
+        WHEN COALESCE(payment_totals.paid, 0) < rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0)
+         AND CURRENT_DATE > rent_schedules.due_date
+        THEN (CURRENT_DATE - rent_schedules.due_date)
+        ELSE NULL
+      END AS overdue_by_days,
+      CASE
+        WHEN COALESCE(payment_totals.paid, 0) >= rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0) THEN 'paid'
         WHEN COALESCE(payment_totals.paid, 0) > 0 THEN 'partial'
-        ELSE 'pending'
+        WHEN CURRENT_DATE > rent_schedules.due_date THEN 'overdue'
+        WHEN CURRENT_DATE >= (rent_schedules.due_date - INTERVAL '9 days') THEN 'pending'
+        ELSE 'upcoming'
       END AS payment_status
     FROM rent_schedules
     INNER JOIN tenancies ON tenancies.id = rent_schedules.tenancy_id
@@ -143,8 +174,12 @@ const getOwnerDashboard = async (ownerId) => {
   const rent_status = statusResult.rows.map((rent) => ({
     ...rent,
     amount: toNumber(rent.amount),
+    late_fee: toNumber(rent.late_fee),
+    total_due: toNumber(rent.total_due),
     paid: toNumber(rent.paid),
     pending: toNumber(rent.pending),
+    due_in_days: rent.due_in_days === null ? null : Number(rent.due_in_days),
+    overdue_by_days: rent.overdue_by_days === null ? null : Number(rent.overdue_by_days),
     payments: paymentsByRent[rent.rent_id] || [],
   }));
 
@@ -176,6 +211,7 @@ const getTenantDashboard = async (tenantId) => {
     WITH payment_totals AS (
       SELECT rent_schedule_id, SUM(amount) AS paid
       FROM payments
+      WHERE status = 'success'
       GROUP BY rent_schedule_id
     )
     SELECT
@@ -185,14 +221,34 @@ const getTenantDashboard = async (tenantId) => {
       rent_schedules.month,
       rent_schedules.year,
       rent_schedules.amount,
+      COALESCE(rent_schedules.late_fee, 0) AS late_fee,
+      rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0) AS total_due,
       rent_schedules.due_date,
       rent_schedules.status,
       COALESCE(payment_totals.paid, 0) AS paid,
-      GREATEST(rent_schedules.amount - COALESCE(payment_totals.paid, 0), 0) AS pending,
+      GREATEST(
+        rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0) - COALESCE(payment_totals.paid, 0),
+        0
+      ) AS pending,
       CASE
-        WHEN COALESCE(payment_totals.paid, 0) >= rent_schedules.amount THEN 'paid'
+        WHEN COALESCE(payment_totals.paid, 0) < rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0)
+         AND CURRENT_DATE >= (rent_schedules.due_date - INTERVAL '9 days')
+         AND CURRENT_DATE <= rent_schedules.due_date
+        THEN (rent_schedules.due_date - CURRENT_DATE)
+        ELSE NULL
+      END AS due_in_days,
+      CASE
+        WHEN COALESCE(payment_totals.paid, 0) < rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0)
+         AND CURRENT_DATE > rent_schedules.due_date
+        THEN (CURRENT_DATE - rent_schedules.due_date)
+        ELSE NULL
+      END AS overdue_by_days,
+      CASE
+        WHEN COALESCE(payment_totals.paid, 0) >= rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0) THEN 'paid'
         WHEN COALESCE(payment_totals.paid, 0) > 0 THEN 'partial'
-        ELSE 'pending'
+        WHEN CURRENT_DATE > rent_schedules.due_date THEN 'overdue'
+        WHEN CURRENT_DATE >= (rent_schedules.due_date - INTERVAL '9 days') THEN 'pending'
+        ELSE 'upcoming'
       END AS payment_status
     FROM tenancies
     INNER JOIN units ON units.id = tenancies.unit_id
@@ -239,8 +295,12 @@ const getTenantDashboard = async (tenantId) => {
   const rent_history = rentResult.rows.map((rent) => ({
     ...rent,
     amount: toNumber(rent.amount),
+    late_fee: toNumber(rent.late_fee),
+    total_due: toNumber(rent.total_due),
     paid: toNumber(rent.paid),
     pending: toNumber(rent.pending),
+    due_in_days: rent.due_in_days === null ? null : Number(rent.due_in_days),
+    overdue_by_days: rent.overdue_by_days === null ? null : Number(rent.overdue_by_days),
     payments: paymentsByRent[rent.rent_id] || [],
   }));
 
@@ -248,7 +308,7 @@ const getTenantDashboard = async (tenantId) => {
     (acc, rent) => ({
       total_rent: acc.total_rent + rent.amount,
       total_paid: acc.total_paid + rent.paid,
-      total_pending: acc.total_pending + rent.pending,
+      total_pending: acc.total_pending + (isOutstandingStatus(rent.payment_status) ? rent.pending : 0),
     }),
     { total_rent: 0, total_paid: 0, total_pending: 0 }
   );
