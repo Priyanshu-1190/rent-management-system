@@ -97,6 +97,8 @@ type Unit = {
   name: string;
   rent_amount: number;
   due_day: number;
+  late_fee_percentage: number;
+  grace_period_days: number;
 };
 
 type Invite = {
@@ -190,11 +192,21 @@ export default function Home() {
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
   const [unitName, setUnitName] = useState("");
   const [unitRent, setUnitRent] = useState("");
+  const [unitLateFee, setUnitLateFee] = useState("0");
+  const [unitGracePeriod, setUnitGracePeriod] = useState("0");
   const [propertyUnits, setPropertyUnits] = useState<Unit[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [deletingProperty, setDeletingProperty] = useState<{ id: number; name: string } | null>(null);
   const [deletingUnit, setDeletingUnit] = useState<{ id: number; name: string } | null>(null);
+  const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+  const [editUnitName, setEditUnitName] = useState("");
+  const [editUnitRent, setEditUnitRent] = useState("");
+  const [editUnitLateFee, setEditUnitLateFee] = useState("0");
+  const [editUnitGracePeriod, setEditUnitGracePeriod] = useState("0");
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [editPropName, setEditPropName] = useState("");
+  const [editPropAddress, setEditPropAddress] = useState("");
 
   // Invite state
   const [sentInvites, setSentInvites] = useState<Invite[]>([]);
@@ -384,6 +396,31 @@ export default function Home() {
     }
   };
 
+  // ── Owner: edit property ──
+  const handleEditProperty = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingProperty) return;
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/properties/${editingProperty.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editPropName, address: editPropAddress || undefined }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to update property");
+      setEditingProperty(null);
+      await loadProperties();
+      await loadDashboard();
+      setNotice(`Property "${body.name}" updated!`);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to update property");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ── Owner: load units for a property ──
   const loadUnits = async (propertyId: number) => {
     try {
@@ -400,23 +437,81 @@ export default function Home() {
   const handleAddUnit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!selectedPropertyId) { setNotice("Select a property first"); return; }
+    const rent = Number(unitRent);
+    const lateFee = Number(unitLateFee);
+    const gracePeriod = Number(unitGracePeriod);
+
+    if (rent < 0 || lateFee < 0 || lateFee > 100 || gracePeriod < 0 || gracePeriod > 31) {
+      setNotice("Please provide valid positive numbers for rent, late fee (0-100%), and grace period (0-31 days).");
+      return;
+    }
+
     setLoading(true);
     setNotice("");
     try {
       const res = await fetch(`/api/proxy/units/${selectedPropertyId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: unitName, rent_amount: Number(unitRent) }),
+        body: JSON.stringify({
+          name: unitName,
+          rent_amount: rent,
+          late_fee_percentage: lateFee,
+          grace_period_days: gracePeriod,
+        }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to add unit");
       setUnitName("");
       setUnitRent("");
+      setUnitLateFee("0");
+      setUnitGracePeriod("0");
       await loadUnits(selectedPropertyId);
       await loadDashboard();
       setNotice(`Unit "${body.name}" added with rent ${formatMoney(body.rent_amount)}`);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Failed to add unit");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Owner: edit unit ──
+  const handleEditUnit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingUnit) return;
+    const rent = Number(editUnitRent);
+    const lateFee = Number(editUnitLateFee);
+    const gracePeriod = Number(editUnitGracePeriod);
+
+    if (rent < 0 || lateFee < 0 || lateFee > 100 || gracePeriod < 0 || gracePeriod > 31) {
+      setNotice("Please provide valid positive numbers for rent, late fee (0-100%), and grace period (0-31 days).");
+      return;
+    }
+
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/units/${editingUnit.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editUnitName,
+          rent_amount: rent,
+          due_day: editingUnit.due_day,
+          late_fee_percentage: lateFee,
+          grace_period_days: gracePeriod,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to update unit");
+      setEditingUnit(null);
+      setEditUnitLateFee("0");
+      setEditUnitGracePeriod("0");
+      if (selectedPropertyId) await loadUnits(selectedPropertyId);
+      await loadDashboard();
+      setNotice(`Unit "${body.name}" updated!`);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to update unit");
     } finally {
       setLoading(false);
     }
@@ -842,15 +937,30 @@ export default function Home() {
                           <span className="font-medium">{p.name}</span>
                           {p.address && <span className="ml-2 text-[#60715f]">{p.address}</span>}
                         </div>
-                        <button
-                          type="button"
-                          className="ml-2 flex-shrink-0 rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                          onClick={() => setDeletingProperty({ id: p.id, name: p.name })}
-                          title={`Delete ${p.name}`}
-                          disabled={loading}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
-                        </button>
+                        <div className="ml-2 flex items-center gap-1">
+                          <button
+                            type="button"
+                            className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                            onClick={() => {
+                              setEditingProperty(p);
+                              setEditPropName(p.name);
+                              setEditPropAddress(p.address || "");
+                            }}
+                            title={`Edit ${p.name}`}
+                            disabled={loading}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="flex-shrink-0 rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                            onClick={() => setDeletingProperty({ id: p.id, name: p.name })}
+                            title={`Delete ${p.name}`}
+                            disabled={loading}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -880,6 +990,32 @@ export default function Home() {
                     Monthly Rent (₹)
                     <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="number" min="1" step="1" value={unitRent} onChange={(e) => setUnitRent(e.target.value)} required placeholder="e.g. 12000" />
                   </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                      Late Fee (%)
+                      <input
+                        className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={unitLateFee}
+                        onChange={(e) => setUnitLateFee(e.target.value)}
+                      />
+                    </label>
+                    <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                      Grace Period (Days)
+                      <input
+                        className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                        type="number"
+                        min="0"
+                        max="31"
+                        step="1"
+                        value={unitGracePeriod}
+                        onChange={(e) => setUnitGracePeriod(e.target.value)}
+                      />
+                    </label>
+                  </div>
                   <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading || !selectedPropertyId}>
                     {loading ? "Adding..." : "Add Unit"}
                   </button>
@@ -896,15 +1032,32 @@ export default function Home() {
                           <span className="font-medium">{u.name}</span>
                           <span className="ml-2 text-[#2f6f5e] font-semibold">{formatMoney(u.rent_amount)}/mo</span>
                         </div>
-                        <button
-                          type="button"
-                          className="ml-2 flex-shrink-0 rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                          onClick={() => setDeletingUnit({ id: u.id, name: u.name })}
-                          title={`Delete ${u.name}`}
-                          disabled={loading}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                            onClick={() => {
+                              setEditingUnit(u);
+                              setEditUnitName(u.name);
+                              setEditUnitRent(u.rent_amount.toString());
+                              setEditUnitLateFee(u.late_fee_percentage.toString());
+                              setEditUnitGracePeriod(u.grace_period_days.toString());
+                            }}
+                            title={`Edit ${u.name}`}
+                            disabled={loading}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="flex-shrink-0 rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                            onClick={() => setDeletingUnit({ id: u.id, name: u.name })}
+                            title={`Delete ${u.name}`}
+                            disabled={loading}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -1321,6 +1474,128 @@ export default function Home() {
                 {loading ? "Deleting…" : "Yes, Delete"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Property Modal */}
+      {editingProperty && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#2f6f5e]">Edit Property</h3>
+            <form onSubmit={handleEditProperty} className="mt-4 grid gap-3">
+              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                Property Name
+                <input
+                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  type="text"
+                  value={editPropName}
+                  onChange={(e) => setEditPropName(e.target.value)}
+                  required
+                  minLength={2}
+                />
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                Address <span className="font-normal text-[#8a9a88]">(optional)</span>
+                <input
+                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  type="text"
+                  value={editPropAddress}
+                  onChange={(e) => setEditPropAddress(e.target.value)}
+                />
+              </label>
+              <div className="mt-2 flex gap-3 justify-end">
+                <button
+                  type="button"
+                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                  onClick={() => setEditingProperty(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                  disabled={loading}
+                >
+                  {loading ? "Updating…" : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Unit Modal */}
+      {editingUnit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#2f6f5e]">Edit Unit</h3>
+            <form onSubmit={handleEditUnit} className="mt-4 grid gap-3">
+              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                Unit Name
+                <input
+                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  type="text"
+                  value={editUnitName}
+                  onChange={(e) => setEditUnitName(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                Monthly Rent (₹)
+                <input
+                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={editUnitRent}
+                  onChange={(e) => setEditUnitRent(e.target.value)}
+                  required
+                />
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Late Fee (%)
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={editUnitLateFee}
+                    onChange={(e) => setEditUnitLateFee(e.target.value)}
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Grace Period (Days)
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="number"
+                    min="0"
+                    max="31"
+                    step="1"
+                    value={editUnitGracePeriod}
+                    onChange={(e) => setEditUnitGracePeriod(e.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="mt-2 flex gap-3 justify-end">
+                <button
+                  type="button"
+                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                  onClick={() => setEditingUnit(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                  disabled={loading}
+                >
+                  {loading ? "Updating…" : "Save Changes"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

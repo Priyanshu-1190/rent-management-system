@@ -31,4 +31,15 @@ const deleteOwnerProperty = async (ownerId, propertyId) => {
   return result.rows[0];
 };
 
-module.exports = { createProperty, getOwnerProperties, deleteOwnerProperty };
+const updateOwnerProperty = async (ownerId, propertyId, data) => {
+  const result = await pool.query(
+    `UPDATE properties
+     SET name = $1, address = $2
+     WHERE id = $3 AND owner_id = $4
+     RETURNING *`,
+    [data.name, data.address, propertyId, ownerId]
+  );
+  return result.rows[0];
+};
+
+module.exports = { createProperty, getOwnerProperties, deleteOwnerProperty, updateOwnerProperty };

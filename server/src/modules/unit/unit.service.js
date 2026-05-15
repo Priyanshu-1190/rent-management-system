@@ -23,10 +23,17 @@ const getUnitByNameAndPropertyId = async (propertyId, name) => {
 
 const createUnit = async (propertyId, data) => {
   const result = await pool.query(
-    `INSERT INTO units (property_id, name, rent_amount, due_day)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO units (property_id, name, rent_amount, due_day, late_fee_percentage, grace_period_days)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
-    [propertyId, data.name, data.rent_amount, data.due_day]
+    [
+      propertyId,
+      data.name,
+      data.rent_amount,
+      data.due_day,
+      data.late_fee_percentage || 0,
+      data.grace_period_days || 0,
+    ]
   );
 
   return result.rows[0];
@@ -54,4 +61,29 @@ const getUnitsByProperty = async (ownerId, propertyId) => {
   return result.rows;
 };
 
-module.exports = { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty };
+const getUnitById = async (unitId) => {
+  const result = await pool.query("SELECT * FROM units WHERE id = $1", [unitId]);
+  return result.rows[0];
+};
+
+const updateOwnerUnit = async (ownerId, unitId, data) => {
+  const result = await pool.query(
+    `UPDATE units u
+     SET name = $1, rent_amount = $2, due_day = $3, late_fee_percentage = $4, grace_period_days = $5
+     FROM properties p
+     WHERE u.id = $6 AND u.property_id = p.id AND p.owner_id = $7
+     RETURNING u.*`,
+    [
+      data.name,
+      data.rent_amount,
+      data.due_day,
+      data.late_fee_percentage || 0,
+      data.grace_period_days || 0,
+      unitId,
+      ownerId,
+    ]
+  );
+  return result.rows[0];
+};
+
+module.exports = { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty, updateOwnerUnit, getUnitById };

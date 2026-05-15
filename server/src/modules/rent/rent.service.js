@@ -170,10 +170,14 @@ const addPayment = async (rentScheduleId, data) => {
 const applyLateFees = async () => {
   const result = await pool.query(`
     UPDATE rent_schedules rs
-    SET late_fee = ROUND(rs.amount * 0.02, 2)
-    WHERE CURRENT_DATE > rs.due_date
+    SET late_fee = ROUND(rs.amount * (u.late_fee_percentage / 100.0), 2)
+    FROM tenancies t
+    JOIN units u ON u.id = t.unit_id
+    WHERE rs.tenancy_id = t.id
       AND rs.status != 'paid'
       AND COALESCE(rs.late_fee, 0) = 0
+      AND u.late_fee_percentage > 0
+      AND CURRENT_DATE > (rs.due_date + (COALESCE(u.grace_period_days, 0) || ' days')::INTERVAL)::DATE
     RETURNING rs.id, rs.tenancy_id, rs.amount, rs.late_fee, rs.due_date
   `);
 
@@ -183,26 +187,27 @@ const applyLateFees = async () => {
 
   const rentScheduleIds = result.rows.map((row) => row.id);
   const recipientRes = await pool.query(
-    `SELECT rs.id, u.email
+    `SELECT rs.id, u.email, un.late_fee_percentage
      FROM rent_schedules rs
      JOIN tenancies t ON t.id = rs.tenancy_id
+     JOIN units un ON un.id = t.unit_id
      JOIN users u ON u.id = t.tenant_id
      WHERE rs.id = ANY($1::int[])`,
     [rentScheduleIds]
   );
 
   const emailByScheduleId = new Map(
-    recipientRes.rows.map((row) => [row.id, row.email])
+    recipientRes.rows.map((row) => [row.id, { email: row.email, percentage: row.late_fee_percentage }])
   );
 
   let notificationsSent = 0;
   for (const row of result.rows) {
-    const email = emailByScheduleId.get(row.id);
-    if (!email) {
+    const info = emailByScheduleId.get(row.id);
+    if (!info || !info.email) {
       continue;
     }
 
-    const sent = await sendLateFeeNotice(email, row.amount, row.late_fee, row.due_date);
+    const sent = await sendLateFeeNotice(info.email, row.amount, row.late_fee, row.due_date, info.percentage);
     if (sent) {
       notificationsSent += 1;
     }

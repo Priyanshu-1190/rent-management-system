@@ -1,4 +1,4 @@
-const { createProperty, getOwnerProperties, deleteOwnerProperty } = require("./property.service");
+const { createProperty, getOwnerProperties, deleteOwnerProperty, updateOwnerProperty } = require("./property.service");
 
 const addProperty = async (req, res, next) => {
   try {
@@ -17,6 +17,37 @@ const addProperty = async (req, res, next) => {
     });
 
     return res.status(201).json(property);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const editProperty = async (req, res, next) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const propertyId = Number(req.params.id);
+    if (!Number.isInteger(propertyId) || propertyId <= 0) {
+      return res.status(400).json({ error: "Valid property id is required" });
+    }
+
+    const { name, address } = req.body;
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ error: "Property name is required" });
+    }
+
+    const updated = await updateOwnerProperty(req.user.id, propertyId, {
+      name: String(name).trim(),
+      address: address ? String(address).trim() : null,
+    });
+
+    if (!updated) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    return res.json(updated);
   } catch (error) {
     return next(error);
   }
@@ -57,4 +88,4 @@ const removeProperty = async (req, res, next) => {
   }
 };
 
-module.exports = { addProperty, listProperties, removeProperty };
+module.exports = { addProperty, editProperty, listProperties, removeProperty };

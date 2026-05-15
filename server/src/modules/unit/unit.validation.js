@@ -10,6 +10,18 @@ const createUnitSchema = z.object({
     .max(31, "Due day must be between 1 and 31")
     .optional()
     .default(1),
+  late_fee_percentage: z.coerce
+    .number()
+    .min(0, "Late fee percentage cannot be negative")
+    .max(100, "Late fee percentage cannot exceed 100")
+    .optional()
+    .default(0),
+  grace_period_days: z.coerce
+    .number()
+    .int("Grace period must be a whole number")
+    .min(0, "Grace period cannot be negative")
+    .optional()
+    .default(0),
 });
 
 module.exports = { createUnitSchema };

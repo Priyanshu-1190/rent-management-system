@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS units (
     name VARCHAR(50),
     rent_amount NUMERIC NOT NULL,
     due_day INT CHECK (due_day BETWEEN 1 AND 31),
+    late_fee_percentage NUMERIC DEFAULT 0,
+    grace_period_days INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

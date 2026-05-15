@@ -63,15 +63,16 @@ const sendReminder = async (email, amount, dueDate) => {
   }
 };
 
-const sendLateFeeNotice = async (email, amount, lateFee, dueDate) => {
+const sendLateFeeNotice = async (email, amount, lateFee, dueDate, percentage) => {
   const formattedAmount = formatMoney(amount);
   const formattedLateFee = formatMoney(lateFee);
   const formattedDueDate = formatDate(dueDate);
   const totalDue = formatMoney(Number(amount) + Number(lateFee));
+  const displayPercentage = percentage ? `${percentage}%` : "calculated";
 
   if (!process.env.SENDGRID_API_KEY) {
     console.log(
-      `[EMAIL SKIP] No SendGrid key. Would send late fee notice to ${email}: ${formattedLateFee} on ${formattedAmount}`
+      `[EMAIL SKIP] No SendGrid key. Would send late fee notice to ${email}: ${formattedLateFee} (${displayPercentage}) on ${formattedAmount}`
     );
     return false;
   }
@@ -80,7 +81,7 @@ const sendLateFeeNotice = async (email, amount, lateFee, dueDate) => {
     to: email,
     from: FROM_EMAIL,
     subject: "Late Fee Applied - Overdue Rent",
-    text: `A late fee of ${formattedLateFee} has been applied to your overdue rent of ${formattedAmount} (due ${formattedDueDate}). Total now due: ${totalDue}.`,
+    text: `A late fee of ${formattedLateFee} (${displayPercentage}) has been applied to your overdue rent of ${formattedAmount} (due ${formattedDueDate}). Total now due: ${totalDue}.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;">
         <h2 style="color: #d93025;">Late Fee Notice</h2>
@@ -96,7 +97,7 @@ const sendLateFeeNotice = async (email, amount, lateFee, dueDate) => {
             <td style="padding: 8px;">${formattedDueDate}</td>
           </tr>
           <tr>
-            <td style="padding: 8px; font-weight: bold; color: #d93025;">Late Fee (2%)</td>
+            <td style="padding: 8px; font-weight: bold; color: #d93025;">Late Fee (${displayPercentage})</td>
             <td style="padding: 8px; color: #d93025;">${formattedLateFee}</td>
           </tr>
           <tr style="background: #f5f5f5;">
