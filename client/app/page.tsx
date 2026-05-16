@@ -207,6 +207,7 @@ export default function Home() {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [editPropName, setEditPropName] = useState("");
   const [editPropAddress, setEditPropAddress] = useState("");
+  const [viewingUnitDetails, setViewingUnitDetails] = useState<any>(null);
 
   // Invite state
   const [sentInvites, setSentInvites] = useState<Invite[]>([]);
@@ -430,6 +431,21 @@ export default function Home() {
       setPropertyUnits(body);
     } catch {
       setPropertyUnits([]);
+    }
+  };
+
+  const handleViewUnitDetails = async (unitId: number) => {
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/units/${unitId}/details`);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to load unit details");
+      setViewingUnitDetails(body);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to load unit details");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1036,6 +1052,15 @@ export default function Home() {
                           <button
                             type="button"
                             className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                            onClick={() => handleViewUnitDetails(u.id)}
+                            title={`View details of ${u.name}`}
+                            disabled={loading}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
                             onClick={() => {
                               setEditingUnit(u);
                               setEditUnitName(u.name);
@@ -1596,6 +1621,70 @@ export default function Home() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Unit Details Modal */}
+      {viewingUnitDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-xl font-semibold text-[#1b1f1d]">{viewingUnitDetails.unit_name}</h3>
+                <p className="text-sm text-[#60715f]">{viewingUnitDetails.property_name}</p>
+              </div>
+              <button type="button" className="rounded-md p-1 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]" onClick={() => setViewingUnitDetails(null)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">Rent Amount</p>
+                <p className="mt-1 text-xl font-semibold text-[#2f6f5e]">{formatMoney(viewingUnitDetails.rent_amount)}<span className="text-sm font-normal text-[#60715f]">/mo</span></p>
+              </div>
+              <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">Terms</p>
+                <p className="mt-1 text-sm font-medium text-[#1b1f1d]">Due: <span className="font-normal text-[#435146]">Day {viewingUnitDetails.due_day}</span></p>
+                <p className="text-sm font-medium text-[#1b1f1d]">Late Fee: <span className="font-normal text-[#435146]">{viewingUnitDetails.late_fee_percentage}% (Grace: {viewingUnitDetails.grace_period_days}d)</span></p>
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-[#e3e8df] pt-5">
+              <h4 className="font-semibold text-[#1b1f1d] mb-4 flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Assigned Tenant
+              </h4>
+              {viewingUnitDetails.tenancy_id ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">Tenant Info</p>
+                    <p className="text-sm font-medium text-[#1b1f1d]">{viewingUnitDetails.tenant_name || "N/A"}</p>
+                    <p className="text-sm text-[#435146]">{viewingUnitDetails.tenant_email}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">Lease Details</p>
+                    <p className="text-sm font-medium text-[#1b1f1d]">Move-in: <span className="font-normal text-[#435146]">{formatDate(viewingUnitDetails.move_in_date)}</span></p>
+                    <p className="text-sm font-medium text-[#1b1f1d]">Deposit: <span className="font-normal text-[#435146]">{formatMoney(viewingUnitDetails.deposit)}</span></p>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-md bg-[#fff9eb] p-3 border border-[#e0b15c]/50 text-sm text-[#6b4c18]">
+                  No tenant is currently assigned to this unit.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex justify-end">
+              <button
+                type="button"
+                className="rounded-md bg-[#eef0eb] px-5 py-2.5 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#d8ded2]"
+                onClick={() => setViewingUnitDetails(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

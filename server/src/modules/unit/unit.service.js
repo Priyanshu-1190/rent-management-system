@@ -61,6 +61,34 @@ const getUnitsByProperty = async (ownerId, propertyId) => {
   return result.rows;
 };
 
+const getUnitDetails = async (ownerId, unitId) => {
+  const result = await pool.query(
+    `SELECT
+      u.id AS unit_id,
+      u.name AS unit_name,
+      u.rent_amount,
+      u.due_day,
+      u.late_fee_percentage,
+      u.grace_period_days,
+      p.id AS property_id,
+      p.name AS property_name,
+      t.id AS tenancy_id,
+      t.move_in_date,
+      t.deposit,
+      t.is_active,
+      usr.id AS tenant_id,
+      usr.name AS tenant_name,
+      usr.email AS tenant_email
+    FROM units u
+    JOIN properties p ON p.id = u.property_id
+    LEFT JOIN tenancies t ON t.unit_id = u.id AND t.is_active = TRUE
+    LEFT JOIN users usr ON usr.id = t.tenant_id
+    WHERE u.id = $1 AND p.owner_id = $2`,
+    [unitId, ownerId]
+  );
+  return result.rows[0];
+};
+
 const getUnitById = async (unitId) => {
   const result = await pool.query("SELECT * FROM units WHERE id = $1", [unitId]);
   return result.rows[0];
@@ -86,4 +114,4 @@ const updateOwnerUnit = async (ownerId, unitId, data) => {
   return result.rows[0];
 };
 
-module.exports = { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty, updateOwnerUnit, getUnitById };
+module.exports = { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty, updateOwnerUnit, getUnitById, getUnitDetails };

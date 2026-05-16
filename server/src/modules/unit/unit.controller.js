@@ -1,4 +1,4 @@
-const { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty, updateOwnerUnit, getUnitById } = require("./unit.service");
+const { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty, updateOwnerUnit, getUnitById, getUnitDetails: getUnitDetailsSvc } = require("./unit.service");
 
 const addUnit = async (req, res, next) => {
   try {
@@ -145,4 +145,26 @@ const listUnits = async (req, res, next) => {
   }
 };
 
-module.exports = { addUnit, editUnit, removeUnit, listUnits };
+const getUnitDetails = async (req, res, next) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const unitId = Number(req.params.unitId);
+    if (!Number.isInteger(unitId) || unitId <= 0) {
+      return res.status(400).json({ error: "Valid unitId is required" });
+    }
+
+    const details = await getUnitDetailsSvc(req.user.id, unitId);
+    if (!details) {
+      return res.status(404).json({ error: "Unit not found" });
+    }
+
+    return res.json(details);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = { addUnit, editUnit, removeUnit, listUnits, getUnitDetails };
