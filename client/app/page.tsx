@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
-
-
 type Role = "owner" | "tenant";
 
 type User = {
@@ -127,6 +125,20 @@ type AvailableUnit = {
   property_id: number;
 };
 
+type UnitDetails = {
+  unit_name: string;
+  property_name: string;
+  rent_amount: number;
+  due_day: number;
+  late_fee_percentage: number;
+  grace_period_days: number;
+  tenancy_id: number | null;
+  tenant_name: string | null;
+  tenant_email: string | null;
+  move_in_date: string | null;
+  deposit: number;
+};
+
 function formatKolkataTime(timestamp: string) {
   return new Intl.DateTimeFormat("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -167,8 +179,6 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-
-
 export default function Home() {
   const [apiStatus, setApiStatus] = useState("");
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -180,8 +190,11 @@ export default function Home() {
   const [regRole, setRegRole] = useState<Role>("tenant");
 
   const [user, setUser] = useState<User | null>(null);
-  const [ownerDashboard, setOwnerDashboard] = useState<OwnerDashboard | null>(null);
-  const [tenantDashboard, setTenantDashboard] = useState<TenantDashboard | null>(null);
+  const [ownerDashboard, setOwnerDashboard] = useState<OwnerDashboard | null>(
+    null,
+  );
+  const [tenantDashboard, setTenantDashboard] =
+    useState<TenantDashboard | null>(null);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -189,7 +202,9 @@ export default function Home() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [propName, setPropName] = useState("");
   const [propAddress, setPropAddress] = useState("");
-  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(
+    null,
+  );
   const [unitName, setUnitName] = useState("");
   const [unitRent, setUnitRent] = useState("");
   const [unitLateFee, setUnitLateFee] = useState("0");
@@ -197,8 +212,14 @@ export default function Home() {
   const [propertyUnits, setPropertyUnits] = useState<Unit[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [deletingProperty, setDeletingProperty] = useState<{ id: number; name: string } | null>(null);
-  const [deletingUnit, setDeletingUnit] = useState<{ id: number; name: string } | null>(null);
+  const [deletingProperty, setDeletingProperty] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+  const [deletingUnit, setDeletingUnit] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   const [editUnitName, setEditUnitName] = useState("");
   const [editUnitRent, setEditUnitRent] = useState("");
@@ -207,7 +228,8 @@ export default function Home() {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [editPropName, setEditPropName] = useState("");
   const [editPropAddress, setEditPropAddress] = useState("");
-  const [viewingUnitDetails, setViewingUnitDetails] = useState<any>(null);
+  const [viewingUnitDetails, setViewingUnitDetails] =
+    useState<UnitDetails | null>(null);
 
   // Invite state
   const [sentInvites, setSentInvites] = useState<Invite[]>([]);
@@ -228,7 +250,11 @@ export default function Home() {
         if (data.user) {
           setUser(data.user);
           await loadDashboard(data.user.role);
-          if (data.user.role === "owner") { await loadProperties(); await loadSentInvites(); await loadAvailableUnits(); }
+          if (data.user.role === "owner") {
+            await loadProperties();
+            await loadSentInvites();
+            await loadAvailableUnits();
+          }
           if (data.user.role === "tenant") await loadReceivedInvites();
         }
       })
@@ -240,12 +266,16 @@ export default function Home() {
         if (!res.ok) throw new Error(body.error || "Backend request failed");
         return body;
       })
-      .then((res) => setApiStatus(`Database online: ${formatKolkataTime(res.data[0].now)}`))
+      .then((res) =>
+        setApiStatus(`Database online: ${formatKolkataTime(res.data[0].now)}`),
+      )
       .catch((err) => {
         console.error(err);
-        setApiStatus(err.message || "Unable to reach backend database test endpoint.");
+        setApiStatus(
+          err.message || "Unable to reach backend database test endpoint.",
+        );
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDashboard = async (role?: Role) => {
@@ -259,7 +289,10 @@ export default function Home() {
     setNotice("");
 
     try {
-      const path = currentRole === "owner" ? "/api/proxy/dashboard/owner" : "/api/proxy/dashboard/tenant";
+      const path =
+        currentRole === "owner"
+          ? "/api/proxy/dashboard/owner"
+          : "/api/proxy/dashboard/tenant";
       const response = await fetch(path);
       const body = await response.json();
 
@@ -275,7 +308,9 @@ export default function Home() {
         setOwnerDashboard(null);
       }
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Dashboard request failed");
+      setNotice(
+        err instanceof Error ? err.message : "Dashboard request failed",
+      );
     } finally {
       setLoading(false);
     }
@@ -300,7 +335,11 @@ export default function Home() {
 
       setUser(body.user);
       await loadDashboard(body.user.role);
-      if (body.user.role === "owner") { await loadProperties(); await loadSentInvites(); await loadAvailableUnits(); }
+      if (body.user.role === "owner") {
+        await loadProperties();
+        await loadSentInvites();
+        await loadAvailableUnits();
+      }
       if (body.user.role === "tenant") await loadReceivedInvites();
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Login failed");
@@ -328,7 +367,9 @@ export default function Home() {
       const regBody = await regResponse.json();
 
       if (!regResponse.ok) {
-        throw new Error(regBody.error || regBody.message || "Registration failed");
+        throw new Error(
+          regBody.error || regBody.message || "Registration failed",
+        );
       }
 
       // Auto-login after successful registration
@@ -351,7 +392,11 @@ export default function Home() {
       setRegPassword("");
       setRegRole("tenant");
       await loadDashboard(loginBody.user.role);
-      if (loginBody.user.role === "owner") { await loadProperties(); await loadSentInvites(); await loadAvailableUnits(); }
+      if (loginBody.user.role === "owner") {
+        await loadProperties();
+        await loadSentInvites();
+        await loadAvailableUnits();
+      }
       if (loginBody.user.role === "tenant") await loadReceivedInvites();
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Registration failed");
@@ -368,7 +413,9 @@ export default function Home() {
       if (!res.ok) throw new Error(body.error || "Failed to load properties");
       setProperties(body);
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Failed to load properties");
+      setNotice(
+        err instanceof Error ? err.message : "Failed to load properties",
+      );
     }
   };
 
@@ -381,7 +428,10 @@ export default function Home() {
       const res = await fetch("/api/proxy/properties", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: propName, address: propAddress || undefined }),
+        body: JSON.stringify({
+          name: propName,
+          address: propAddress || undefined,
+        }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to add property");
@@ -407,7 +457,10 @@ export default function Home() {
       const res = await fetch(`/api/proxy/properties/${editingProperty.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editPropName, address: editPropAddress || undefined }),
+        body: JSON.stringify({
+          name: editPropName,
+          address: editPropAddress || undefined,
+        }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to update property");
@@ -416,7 +469,9 @@ export default function Home() {
       await loadDashboard();
       setNotice(`Property "${body.name}" updated!`);
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Failed to update property");
+      setNotice(
+        err instanceof Error ? err.message : "Failed to update property",
+      );
     } finally {
       setLoading(false);
     }
@@ -443,7 +498,9 @@ export default function Home() {
       if (!res.ok) throw new Error(body.error || "Failed to load unit details");
       setViewingUnitDetails(body);
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Failed to load unit details");
+      setNotice(
+        err instanceof Error ? err.message : "Failed to load unit details",
+      );
     } finally {
       setLoading(false);
     }
@@ -452,13 +509,24 @@ export default function Home() {
   // ── Owner: add unit ──
   const handleAddUnit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selectedPropertyId) { setNotice("Select a property first"); return; }
+    if (!selectedPropertyId) {
+      setNotice("Select a property first");
+      return;
+    }
     const rent = Number(unitRent);
     const lateFee = Number(unitLateFee);
     const gracePeriod = Number(unitGracePeriod);
 
-    if (rent < 0 || lateFee < 0 || lateFee > 100 || gracePeriod < 0 || gracePeriod > 31) {
-      setNotice("Please provide valid positive numbers for rent, late fee (0-100%), and grace period (0-31 days).");
+    if (
+      rent < 0 ||
+      lateFee < 0 ||
+      lateFee > 100 ||
+      gracePeriod < 0 ||
+      gracePeriod > 31
+    ) {
+      setNotice(
+        "Please provide valid positive numbers for rent, late fee (0-100%), and grace period (0-31 days).",
+      );
       return;
     }
 
@@ -483,7 +551,9 @@ export default function Home() {
       setUnitGracePeriod("0");
       await loadUnits(selectedPropertyId);
       await loadDashboard();
-      setNotice(`Unit "${body.name}" added with rent ${formatMoney(body.rent_amount)}`);
+      setNotice(
+        `Unit "${body.name}" added with rent ${formatMoney(body.rent_amount)}`,
+      );
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Failed to add unit");
     } finally {
@@ -499,8 +569,16 @@ export default function Home() {
     const lateFee = Number(editUnitLateFee);
     const gracePeriod = Number(editUnitGracePeriod);
 
-    if (rent < 0 || lateFee < 0 || lateFee > 100 || gracePeriod < 0 || gracePeriod > 31) {
-      setNotice("Please provide valid positive numbers for rent, late fee (0-100%), and grace period (0-31 days).");
+    if (
+      rent < 0 ||
+      lateFee < 0 ||
+      lateFee > 100 ||
+      gracePeriod < 0 ||
+      gracePeriod > 31
+    ) {
+      setNotice(
+        "Please provide valid positive numbers for rent, late fee (0-100%), and grace period (0-31 days).",
+      );
       return;
     }
 
@@ -544,12 +622,15 @@ export default function Home() {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to delete property");
-      if (selectedPropertyId === deletingProperty.id) setSelectedPropertyId(null);
+      if (selectedPropertyId === deletingProperty.id)
+        setSelectedPropertyId(null);
       await loadProperties();
       await loadDashboard();
       setNotice(`Property "${deletingProperty.name}" deleted.`);
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Failed to delete property");
+      setNotice(
+        err instanceof Error ? err.message : "Failed to delete property",
+      );
     } finally {
       setLoading(false);
       setDeletingProperty(null);
@@ -608,7 +689,9 @@ export default function Home() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to load sent invites");
       setSentInvites(body);
-    } catch { setSentInvites([]); }
+    } catch {
+      setSentInvites([]);
+    }
   };
 
   const loadReceivedInvites = async () => {
@@ -617,21 +700,65 @@ export default function Home() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to load invites");
       setReceivedInvites(body);
-    } catch { setReceivedInvites([]); }
+    } catch {
+      setReceivedInvites([]);
+    }
   };
 
   const loadAvailableUnits = async () => {
     try {
       const res = await fetch("/api/proxy/invites/available-units");
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Failed to load available units");
+      if (!res.ok)
+        throw new Error(body.error || "Failed to load available units");
       setAvailableUnits(body);
-    } catch { setAvailableUnits([]); }
+    } catch {
+      setAvailableUnits([]);
+    }
   };
+
+  // Restore session from httpOnly cookie on mount.
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then(async (data) => {
+        if (data.user) {
+          setUser(data.user);
+          await loadDashboard(data.user.role);
+          if (data.user.role === "owner") {
+            await loadProperties();
+            await loadSentInvites();
+            await loadAvailableUnits();
+          }
+          if (data.user.role === "tenant") await loadReceivedInvites();
+        }
+      })
+      .catch(() => {});
+
+    fetch("/api/db-test")
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || "Backend request failed");
+        return body;
+      })
+      .then((res) =>
+        setApiStatus(`Database online: ${formatKolkataTime(res.data[0].now)}`),
+      )
+      .catch((err) => {
+        console.error(err);
+        setApiStatus(
+          err.message || "Unable to reach backend database test endpoint.",
+        );
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSendInvite = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!inviteUnitId) { setNotice("Select a unit"); return; }
+    if (!inviteUnitId) {
+      setNotice("Select a unit");
+      return;
+    }
     setLoading(true);
     setNotice("");
     try {
@@ -667,7 +794,9 @@ export default function Home() {
     setLoading(true);
     setNotice("");
     try {
-      const res = await fetch(`/api/proxy/invites/${inviteId}/accept`, { method: "POST" });
+      const res = await fetch(`/api/proxy/invites/${inviteId}/accept`, {
+        method: "POST",
+      });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to accept invite");
       await loadReceivedInvites();
@@ -684,13 +813,17 @@ export default function Home() {
     setLoading(true);
     setNotice("");
     try {
-      const res = await fetch(`/api/proxy/invites/${inviteId}/decline`, { method: "POST" });
+      const res = await fetch(`/api/proxy/invites/${inviteId}/decline`, {
+        method: "POST",
+      });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to decline invite");
       await loadReceivedInvites();
       setNotice("Invite declined.");
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Failed to decline invite");
+      setNotice(
+        err instanceof Error ? err.message : "Failed to decline invite",
+      );
     } finally {
       setLoading(false);
     }
@@ -700,7 +833,9 @@ export default function Home() {
     setLoading(true);
     setNotice("");
     try {
-      const res = await fetch(`/api/proxy/invites/${inviteId}`, { method: "DELETE" });
+      const res = await fetch(`/api/proxy/invites/${inviteId}`, {
+        method: "DELETE",
+      });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to cancel invite");
       await loadSentInvites();
@@ -728,23 +863,352 @@ export default function Home() {
       setShowDeleteConfirm(false);
       setNotice("Account deleted successfully.");
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Failed to delete account");
+      setNotice(
+        err instanceof Error ? err.message : "Failed to delete account",
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const authPanel = (
+    <div
+      id="access"
+      className="scroll-mt-24 rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm"
+    >
+      <div className="flex gap-1 rounded-md bg-[#eef0eb] p-1">
+        <button
+          type="button"
+          className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+            authMode === "login"
+              ? "bg-white text-[#1b1f1d] shadow-sm"
+              : "text-[#60715f] hover:text-[#435146]"
+          }`}
+          onClick={() => {
+            setAuthMode("login");
+            setNotice("");
+          }}
+        >
+          Login
+        </button>
+        <button
+          type="button"
+          className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+            authMode === "register"
+              ? "bg-white text-[#1b1f1d] shadow-sm"
+              : "text-[#60715f] hover:text-[#435146]"
+          }`}
+          onClick={() => {
+            setAuthMode("register");
+            setNotice("");
+          }}
+        >
+          Register
+        </button>
+      </div>
+
+      {authMode === "login" ? (
+        <form onSubmit={handleLogin} className="mt-4 grid gap-3">
+          <label className="grid gap-1 text-sm font-medium text-[#435146]">
+            Email
+            <input
+              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </label>
+          <label className="grid gap-1 text-sm font-medium text-[#435146]">
+            Password
+            <input
+              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          <button
+            className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleRegister} className="mt-4 grid gap-3">
+          <label className="grid gap-1 text-sm font-medium text-[#435146]">
+            Name
+            <input
+              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              type="text"
+              value={regName}
+              onChange={(event) => setRegName(event.target.value)}
+              required
+              minLength={2}
+            />
+          </label>
+          <label className="grid gap-1 text-sm font-medium text-[#435146]">
+            Email
+            <input
+              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              type="email"
+              value={regEmail}
+              onChange={(event) => setRegEmail(event.target.value)}
+              required
+            />
+          </label>
+          <label className="grid gap-1 text-sm font-medium text-[#435146]">
+            Password
+            <input
+              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              type="password"
+              value={regPassword}
+              onChange={(event) => setRegPassword(event.target.value)}
+              required
+              minLength={6}
+            />
+          </label>
+          <label className="grid gap-1 text-sm font-medium text-[#435146]">
+            Role
+            <select
+              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              value={regRole}
+              onChange={(event) => setRegRole(event.target.value as Role)}
+            >
+              <option value="tenant">Tenant</option>
+              <option value="owner">Owner</option>
+            </select>
+          </label>
+          <button
+            className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+
+  if (!user) {
+    return (
+      <main className="min-h-screen w-full bg-[#f7f8f3] text-[#1b1f1d]">
+        <header className="sticky top-0 z-40 border-b border-white/10 bg-[#10231f]/95 text-white shadow-sm backdrop-blur">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+            <a href="#" className="text-lg font-semibold tracking-normal">
+              Rent Khata
+            </a>
+            <nav
+              className="flex items-center gap-1 sm:gap-2"
+              aria-label="Landing page"
+            >
+              <a
+                className="rounded-md px-3 py-2 text-sm font-semibold text-white/82 transition-colors hover:bg-white/10 hover:text-white"
+                href="#features"
+              >
+                Features
+              </a>
+              <a
+                className="rounded-md px-3 py-2 text-sm font-semibold text-white/82 transition-colors hover:bg-white/10 hover:text-white"
+                href="#access"
+                onClick={() => setAuthMode("login")}
+              >
+                Login
+              </a>
+              <p className="text-white/100 text-2xl font-semibold">|</p>
+              <a
+                className="rounded-md bg-[#f5b84b] px-3 py-2 text-sm font-semibold text-[#17211e] transition-colors hover:bg-[#ffd074]"
+                href="#access"
+                onClick={() => setAuthMode("register")}
+              >
+                Create account
+              </a>
+            </nav>
+          </div>
+        </header>
+
+        <section
+          className="relative min-h-[92vh] overflow-hidden bg-[#10231f] text-white"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg, rgba(16,35,31,0.96) 0%, rgba(16,35,31,0.88) 42%, rgba(16,35,31,0.34) 100%), url('/dashboard-mockup.png')",
+            backgroundPosition: "center right",
+            backgroundSize: "cover",
+          }}
+        >
+          <div className="mx-auto flex min-h-[92vh] max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
+            <div className="flex flex-1 items-center py-12">
+              <div className="max-w-3xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9ee0c0]">
+                  Rent Khata
+                </p>
+                <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[1.02] tracking-normal sm:text-6xl lg:text-7xl">
+                  Rent, tenants, receipts, and dues in one calm workspace.
+                </h1>
+                <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82">
+                  A focused rental management system for owners and tenants,
+                  built around property records, rent schedules, payment
+                  history, and receipt downloads.
+                </p>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <a
+                    className="inline-flex justify-center rounded-md bg-[#f5b84b] px-5 py-3 text-sm font-semibold text-[#17211e] transition-colors hover:bg-[#ffd074]"
+                    href="#access"
+                    onClick={() => setAuthMode("register")}
+                  >
+                    Start managing
+                  </a>
+                  <a
+                    className="inline-flex justify-center rounded-md border border-white/35 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                    href="#features"
+                  >
+                    View features
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 pb-5 sm:grid-cols-3">
+              {[
+                [
+                  "Owner dashboard",
+                  "Track units, occupancy, collections, and pending rent.",
+                ],
+                [
+                  "Tenant dashboard",
+                  "View rent status, payment history, and receipts.",
+                ],
+                [
+                  "Secure access",
+                  "Keep owner and tenant views scoped to the right records.",
+                ],
+              ].map(([title, body]) => (
+                <div
+                  key={title}
+                  className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur"
+                >
+                  <p className="font-semibold">{title}</p>
+                  <p className="mt-1 text-sm leading-6 text-white/72">{body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="features"
+          className="scroll-mt-20 border-b border-[#d8ded2] bg-white"
+        >
+          <div className="mx-auto grid max-w-7xl gap-6 px-4 py-14 sm:px-6 md:grid-cols-3 lg:px-8">
+            {[
+              [
+                "Property operations",
+                "Create properties and units, assign tenants, and keep rental details clean.",
+              ],
+              [
+                "Financial clarity",
+                "Separate rent obligations from payment transactions so pending dues stay accurate.",
+              ],
+              [
+                "Receipt ready",
+                "Generate PDF receipts from real payment records when either side needs proof.",
+              ],
+            ].map(([title, body]) => (
+              <article
+                key={title}
+                className="rounded-lg border border-[#d8ded2] bg-[#f7f8f3] p-5"
+              >
+                <h2 className="text-lg font-semibold">{title}</h2>
+                <p className="mt-3 text-sm leading-6 text-[#60715f]">{body}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="bg-[#eef0eb]">
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_420px] lg:px-8">
+            <div className="flex flex-col justify-center">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2f6f5e]">
+                Access
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-normal text-[#1b1f1d] sm:text-4xl">
+                Login or create the right account for your role.
+              </h2>
+              <p className="mt-4 max-w-2xl leading-7 text-[#60715f]">
+                Owners get property and rent controls. Tenants get a focused
+                view of dues, payments, invitations, and receipts.
+              </p>
+              {apiStatus ? (
+                <p className="mt-5 text-sm text-[#60715f]">{apiStatus}</p>
+              ) : null}
+              {notice ? (
+                <div className="mt-5 rounded-md border border-[#e0b15c] bg-[#fff9eb] px-4 py-3 text-sm text-[#6b4c18]">
+                  {notice}
+                </div>
+              ) : null}
+            </div>
+            {authPanel}
+          </div>
+        </section>
+
+        <footer className="border-t border-[#d8ded2] bg-[#10231f] text-white">
+          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1fr_auto] lg:px-8">
+            <div>
+              <p className="text-lg font-semibold">Rent Management</p>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-white/68">
+                A rental operations workspace for properties, tenants, rent
+                schedules, payments, and receipts.
+              </p>
+            </div>
+            <nav
+              className="flex flex-wrap items-start gap-2 md:justify-end"
+              aria-label="Footer"
+            >
+              <a
+                className="rounded-md px-3 py-2 text-sm font-semibold text-white/72 transition-colors hover:bg-white/10 hover:text-white"
+                href="#"
+              >
+                Home
+              </a>
+              <a
+                className="rounded-md px-3 py-2 text-sm font-semibold text-white/72 transition-colors hover:bg-white/10 hover:text-white"
+                href="#features"
+              >
+                Features
+              </a>
+              <a
+                className="rounded-md px-3 py-2 text-sm font-semibold text-white/72 transition-colors hover:bg-white/10 hover:text-white"
+                href="#access"
+                onClick={() => setAuthMode("login")}
+              >
+                Login
+              </a>
+            </nav>
+          </div>
+        </footer>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen w-full bg-[#f7f8f3] text-[#1b1f1d] overflow-x-hidden">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <header className="flex items-start justify-between border-b border-[#d8ded2] pb-5">
+    <main className="min-h-screen w-full bg-[#f7f8f3] text-[#1b1f1d]">
+      <header className="sticky top-0 z-40 border-b border-[#d8ded2] bg-[#f7f8f3]/25 backdrop-blur(16)">
+        <div className="mx-auto flex w-full max-w-7xl items-start justify-between px-4 py-5 sm:px-6 lg:px-8">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#60715f]">
               Rent Management
             </p>
             <h1 className="mt-2 text-3xl font-semibold">Dashboard</h1>
-            {apiStatus ? <p className="mt-1 text-sm text-[#60715f]">{apiStatus}</p> : null}
-            {user ? <p className="text-sm text-[#60715f]">Signed in as {user.role} #{user.id}</p> : null}
+            {apiStatus ? (
+              <p className="mt-1 text-sm text-[#60715f]">{apiStatus}</p>
+            ) : null}
+            {user ? (
+              <p className="text-sm text-[#60715f]">
+                Signed in as {user.role} #{user.id}
+              </p>
+            ) : null}
           </div>
           {user ? (
             <div className="relative">
@@ -754,11 +1218,23 @@ export default function Home() {
                 onClick={() => setShowMenu((v) => !v)}
                 aria-label="Menu"
               >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="4" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="16" r="1.5"/></svg>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <circle cx="10" cy="4" r="1.5" />
+                  <circle cx="10" cy="10" r="1.5" />
+                  <circle cx="10" cy="16" r="1.5" />
+                </svg>
               </button>
               {showMenu && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowMenu(false)}
+                  />
                   <div className="absolute right-0 z-50 mt-1 w-56 rounded-lg border border-[#d8ded2] bg-white py-1 shadow-lg">
                     <div className="border-b border-[#e3e8df] px-4 py-3">
                       <p className="text-sm font-semibold text-[#1b1f1d] truncate">
@@ -770,7 +1246,10 @@ export default function Home() {
                       <button
                         type="button"
                         className="mt-2 flex w-full justify-center rounded-md border border-[#c44d4d] px-2 py-1.5 text-xs font-medium text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                        onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
+                        onClick={() => {
+                          setShowDeleteConfirm(true);
+                          setShowMenu(false);
+                        }}
                       >
                         Delete Account
                       </button>
@@ -790,7 +1269,15 @@ export default function Home() {
                     <button
                       type="button"
                       className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
-                      onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); setUser(null); setOwnerDashboard(null); setTenantDashboard(null); setProperties([]); setPropertyUnits([]); setShowMenu(false); }}
+                      onClick={async () => {
+                        await fetch("/api/auth/logout", { method: "POST" });
+                        setUser(null);
+                        setOwnerDashboard(null);
+                        setTenantDashboard(null);
+                        setProperties([]);
+                        setPropertyUnits([]);
+                        setShowMenu(false);
+                      }}
                     >
                       Log Out
                     </button>
@@ -799,13 +1286,30 @@ export default function Home() {
               )}
             </div>
           ) : null}
-        </header>
+        </div>
+      </header>
 
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
         {notice && (
           <div className="rounded-md border border-[#e0b15c] bg-[#fff9eb] px-4 py-3 text-sm text-[#6b4c18] flex items-center justify-between">
             <span>{notice}</span>
-            <button type="button" onClick={() => setNotice("")} className="ml-4 text-[#6b4c18] hover:text-[#435146]">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+            <button
+              type="button"
+              onClick={() => setNotice("")}
+              className="ml-4 text-[#6b4c18] hover:text-[#435146]"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <line x1="2" y1="2" x2="12" y2="12" />
+                <line x1="12" y1="2" x2="2" y2="12" />
+              </svg>
             </button>
           </div>
         )}
@@ -814,112 +1318,120 @@ export default function Home() {
           {!user && (
             <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
               <div className="flex gap-1 rounded-md bg-[#eef0eb] p-1">
-              <button
-                type="button"
-                className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
-                  authMode === "login"
-                    ? "bg-white text-[#1b1f1d] shadow-sm"
-                    : "text-[#60715f] hover:text-[#435146]"
-                }`}
-                onClick={() => { setAuthMode("login"); setNotice(""); }}
-              >
-                Login
-              </button>
-              <button
-                type="button"
-                className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
-                  authMode === "register"
-                    ? "bg-white text-[#1b1f1d] shadow-sm"
-                    : "text-[#60715f] hover:text-[#435146]"
-                }`}
-                onClick={() => { setAuthMode("register"); setNotice(""); }}
-              >
-                Register
-              </button>
-            </div>
+                <button
+                  type="button"
+                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+                    authMode === "login"
+                      ? "bg-white text-[#1b1f1d] shadow-sm"
+                      : "text-[#60715f] hover:text-[#435146]"
+                  }`}
+                  onClick={() => {
+                    setAuthMode("login");
+                    setNotice("");
+                  }}
+                >
+                  Login
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+                    authMode === "register"
+                      ? "bg-white text-[#1b1f1d] shadow-sm"
+                      : "text-[#60715f] hover:text-[#435146]"
+                  }`}
+                  onClick={() => {
+                    setAuthMode("register");
+                    setNotice("");
+                  }}
+                >
+                  Register
+                </button>
+              </div>
 
-            {authMode === "login" ? (
-              <form onSubmit={handleLogin} className="mt-4 grid gap-3">
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                  Email
-                  <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                  />
-                </label>
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                  Password
-                  <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                  />
-                </label>
-                <button
-                  className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading ? "Logging in..." : "Login"}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleRegister} className="mt-4 grid gap-3">
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                  Name
-                  <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                    type="text"
-                    value={regName}
-                    onChange={(event) => setRegName(event.target.value)}
-                    required
-                    minLength={2}
-                  />
-                </label>
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                  Email
-                  <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                    type="email"
-                    value={regEmail}
-                    onChange={(event) => setRegEmail(event.target.value)}
-                    required
-                  />
-                </label>
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                  Password
-                  <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                    type="password"
-                    value={regPassword}
-                    onChange={(event) => setRegPassword(event.target.value)}
-                    required
-                    minLength={6}
-                  />
-                </label>
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                  Role
-                  <select
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                    value={regRole}
-                    onChange={(event) => setRegRole(event.target.value as Role)}
+              {authMode === "login" ? (
+                <form onSubmit={handleLogin} className="mt-4 grid gap-3">
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Email
+                    <input
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Password
+                    <input
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                    type="submit"
+                    disabled={loading}
                   >
-                    <option value="tenant">Tenant</option>
-                    <option value="owner">Owner</option>
-                  </select>
-                </label>
-                <button
-                  className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
-                  type="submit"
-                  disabled={loading}
-                >
-                  {loading ? "Registering..." : "Register"}
-                </button>
-              </form>
-            )}
+                    {loading ? "Logging in..." : "Login"}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleRegister} className="mt-4 grid gap-3">
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Name
+                    <input
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      type="text"
+                      value={regName}
+                      onChange={(event) => setRegName(event.target.value)}
+                      required
+                      minLength={2}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Email
+                    <input
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      type="email"
+                      value={regEmail}
+                      onChange={(event) => setRegEmail(event.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Password
+                    <input
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      type="password"
+                      value={regPassword}
+                      onChange={(event) => setRegPassword(event.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Role
+                    <select
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      value={regRole}
+                      onChange={(event) =>
+                        setRegRole(event.target.value as Role)
+                      }
+                    >
+                      <option value="tenant">Tenant</option>
+                      <option value="owner">Owner</option>
+                    </select>
+                  </label>
+                  <button
+                    className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? "Registering..." : "Register"}
+                  </button>
+                </form>
+              )}
             </div>
           )}
         </section>
@@ -932,26 +1444,54 @@ export default function Home() {
               <form onSubmit={handleAddProperty} className="mt-3 grid gap-3">
                 <label className="grid gap-1 text-sm font-medium text-[#435146]">
                   Property Name
-                  <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="text" value={propName} onChange={(e) => setPropName(e.target.value)} required minLength={2} placeholder="e.g. Sunrise Apartments" />
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="text"
+                    value={propName}
+                    onChange={(e) => setPropName(e.target.value)}
+                    required
+                    minLength={2}
+                    placeholder="e.g. Sunrise Apartments"
+                  />
                 </label>
                 <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                  Address <span className="font-normal text-[#8a9a88]">(optional)</span>
-                  <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="text" value={propAddress} onChange={(e) => setPropAddress(e.target.value)} placeholder="e.g. 42 MG Road, Kolkata" />
+                  Address{" "}
+                  <span className="font-normal text-[#8a9a88]">(optional)</span>
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="text"
+                    value={propAddress}
+                    onChange={(e) => setPropAddress(e.target.value)}
+                    placeholder="e.g. 42 MG Road, Kolkata"
+                  />
                 </label>
-                <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading}>
+                <button
+                  className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                  type="submit"
+                  disabled={loading}
+                >
                   {loading ? "Adding..." : "Add Property"}
                 </button>
               </form>
 
               {properties.length > 0 && (
                 <div className="mt-4 border-t border-[#e3e8df] pt-3">
-                  <p className="text-sm font-semibold text-[#435146]">Your Properties</p>
+                  <p className="text-sm font-semibold text-[#435146]">
+                    Your Properties
+                  </p>
                   <ul className="mt-2 grid gap-1">
                     {properties.map((p) => (
-                      <li key={p.id} className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm">
+                      <li
+                        key={p.id}
+                        className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm"
+                      >
                         <div className="min-w-0 flex-1">
                           <span className="font-medium">{p.name}</span>
-                          {p.address && <span className="ml-2 text-[#60715f]">{p.address}</span>}
+                          {p.address && (
+                            <span className="ml-2 text-[#60715f]">
+                              {p.address}
+                            </span>
+                          )}
                         </div>
                         <div className="ml-2 flex items-center gap-1">
                           <button
@@ -965,16 +1505,41 @@ export default function Home() {
                             title={`Edit ${p.name}`}
                             disabled={loading}
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
                           </button>
                           <button
                             type="button"
                             className="flex-shrink-0 rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                            onClick={() => setDeletingProperty({ id: p.id, name: p.name })}
+                            onClick={() =>
+                              setDeletingProperty({ id: p.id, name: p.name })
+                            }
                             title={`Delete ${p.name}`}
                             disabled={loading}
                           >
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 14 14"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            >
+                              <line x1="2" y1="2" x2="12" y2="12" />
+                              <line x1="12" y1="2" x2="2" y2="12" />
+                            </svg>
                           </button>
                         </div>
                       </li>
@@ -988,23 +1553,55 @@ export default function Home() {
             <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">Add Unit</h2>
               {properties.length === 0 ? (
-                <p className="mt-3 text-sm text-[#60715f]">Add a property first to create units.</p>
+                <p className="mt-3 text-sm text-[#60715f]">
+                  Add a property first to create units.
+                </p>
               ) : (
                 <form onSubmit={handleAddUnit} className="mt-3 grid gap-3">
                   <label className="grid gap-1 text-sm font-medium text-[#435146]">
                     Property
-                    <select className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" value={selectedPropertyId ?? ""} onChange={(e) => { const id = Number(e.target.value) || null; setSelectedPropertyId(id); if (id) loadUnits(id); else setPropertyUnits([]); }} required>
+                    <select
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      value={selectedPropertyId ?? ""}
+                      onChange={(e) => {
+                        const id = Number(e.target.value) || null;
+                        setSelectedPropertyId(id);
+                        if (id) loadUnits(id);
+                        else setPropertyUnits([]);
+                      }}
+                      required
+                    >
                       <option value="">Select property…</option>
-                      {properties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      {properties.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <label className="grid gap-1 text-sm font-medium text-[#435146]">
                     Unit Name
-                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="text" value={unitName} onChange={(e) => setUnitName(e.target.value)} required placeholder="e.g. Flat 101" />
+                    <input
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      type="text"
+                      value={unitName}
+                      onChange={(e) => setUnitName(e.target.value)}
+                      required
+                      placeholder="e.g. Flat 101"
+                    />
                   </label>
                   <label className="grid gap-1 text-sm font-medium text-[#435146]">
                     Monthly Rent (₹)
-                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="number" min="1" step="1" value={unitRent} onChange={(e) => setUnitRent(e.target.value)} required placeholder="e.g. 12000" />
+                    <input
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={unitRent}
+                      onChange={(e) => setUnitRent(e.target.value)}
+                      required
+                      placeholder="e.g. 12000"
+                    />
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <label className="grid gap-1 text-sm font-medium text-[#435146]">
@@ -1032,7 +1629,11 @@ export default function Home() {
                       />
                     </label>
                   </div>
-                  <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading || !selectedPropertyId}>
+                  <button
+                    className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                    type="submit"
+                    disabled={loading || !selectedPropertyId}
+                  >
                     {loading ? "Adding..." : "Add Unit"}
                   </button>
                 </form>
@@ -1043,10 +1644,15 @@ export default function Home() {
                   <p className="text-sm font-semibold text-[#435146]">Units</p>
                   <ul className="mt-2 grid gap-1">
                     {propertyUnits.map((u) => (
-                      <li key={u.id} className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm">
+                      <li
+                        key={u.id}
+                        className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm"
+                      >
                         <div className="min-w-0 flex-1">
                           <span className="font-medium">{u.name}</span>
-                          <span className="ml-2 text-[#2f6f5e] font-semibold">{formatMoney(u.rent_amount)}/mo</span>
+                          <span className="ml-2 text-[#2f6f5e] font-semibold">
+                            {formatMoney(u.rent_amount)}/mo
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <button
@@ -1056,7 +1662,19 @@ export default function Home() {
                             title={`View details of ${u.name}`}
                             disabled={loading}
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
                           </button>
                           <button
                             type="button"
@@ -1065,22 +1683,51 @@ export default function Home() {
                               setEditingUnit(u);
                               setEditUnitName(u.name);
                               setEditUnitRent(u.rent_amount.toString());
-                              setEditUnitLateFee(u.late_fee_percentage.toString());
-                              setEditUnitGracePeriod(u.grace_period_days.toString());
+                              setEditUnitLateFee(
+                                u.late_fee_percentage.toString(),
+                              );
+                              setEditUnitGracePeriod(
+                                u.grace_period_days.toString(),
+                              );
                             }}
                             title={`Edit ${u.name}`}
                             disabled={loading}
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
                           </button>
                           <button
                             type="button"
                             className="flex-shrink-0 rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                            onClick={() => setDeletingUnit({ id: u.id, name: u.name })}
+                            onClick={() =>
+                              setDeletingUnit({ id: u.id, name: u.name })
+                            }
                             title={`Delete ${u.name}`}
                             disabled={loading}
                           >
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 14 14"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            >
+                              <line x1="2" y1="2" x2="12" y2="12" />
+                              <line x1="12" y1="2" x2="2" y2="12" />
+                            </svg>
                           </button>
                         </div>
                       </li>
@@ -1097,78 +1744,187 @@ export default function Home() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
             <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f7f8f3] p-6 shadow-xl border border-[#d8ded2]">
               <div className="flex justify-end mb-4">
-                <button type="button" className="rounded-md p-2 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]" onClick={() => setShowInvitesModal(false)}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <button
+                  type="button"
+                  className="rounded-md p-2 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
+                  onClick={() => setShowInvitesModal(false)}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
               <section id="invites" className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold">Send Invite to Tenant</h2>
-              {availableUnits.length === 0 ? (
-                <p className="mt-3 text-sm text-[#60715f]">No available units. Add units first or wait for existing invites to be resolved.</p>
-              ) : (
-                <form onSubmit={handleSendInvite} className="mt-3 grid gap-3">
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                    Tenant Email
-                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required placeholder="tenant@example.com" />
-                  </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                    Unit
-                    <select className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" value={inviteUnitId ?? ""} onChange={(e) => setInviteUnitId(Number(e.target.value) || null)} required>
-                      <option value="">Select unit…</option>
-                      {availableUnits.map((u) => <option key={u.id} value={u.id}>{u.property_name} — {u.name} ({formatMoney(u.rent_amount)}/mo)</option>)}
-                    </select>
-                  </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                    Deposit (₹) <span className="font-normal text-[#8a9a88]">(optional)</span>
-                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="number" min="0" step="1" value={inviteDeposit} onChange={(e) => setInviteDeposit(e.target.value)} placeholder="e.g. 25000" />
-                  </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                    Move-in Date <span className="font-normal text-[#8a9a88]">(optional)</span>
-                    <input className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]" type="date" value={inviteMoveIn} onChange={(e) => setInviteMoveIn(e.target.value)} />
-                  </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                    Message <span className="font-normal text-[#8a9a88]">(optional)</span>
-                    <textarea className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65] resize-none" rows={2} value={inviteMessage} onChange={(e) => setInviteMessage(e.target.value)} placeholder="Welcome message…" />
-                  </label>
-                  <button className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]" type="submit" disabled={loading || !inviteUnitId}>
-                    {loading ? "Sending..." : "Send Invite"}
-                  </button>
-                </form>
-              )}
-            </div>
+                <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                  <h2 className="text-lg font-semibold">
+                    Send Invite to Tenant
+                  </h2>
+                  {availableUnits.length === 0 ? (
+                    <p className="mt-3 text-sm text-[#60715f]">
+                      No available units. Add units first or wait for existing
+                      invites to be resolved.
+                    </p>
+                  ) : (
+                    <form
+                      onSubmit={handleSendInvite}
+                      className="mt-3 grid gap-3"
+                    >
+                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                        Tenant Email
+                        <input
+                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                          type="email"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          required
+                          placeholder="tenant@example.com"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                        Unit
+                        <select
+                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                          value={inviteUnitId ?? ""}
+                          onChange={(e) =>
+                            setInviteUnitId(Number(e.target.value) || null)
+                          }
+                          required
+                        >
+                          <option value="">Select unit…</option>
+                          {availableUnits.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.property_name} — {u.name} (
+                              {formatMoney(u.rent_amount)}/mo)
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                        Deposit (₹){" "}
+                        <span className="font-normal text-[#8a9a88]">
+                          (optional)
+                        </span>
+                        <input
+                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={inviteDeposit}
+                          onChange={(e) => setInviteDeposit(e.target.value)}
+                          placeholder="e.g. 25000"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                        Move-in Date{" "}
+                        <span className="font-normal text-[#8a9a88]">
+                          (optional)
+                        </span>
+                        <input
+                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                          type="date"
+                          value={inviteMoveIn}
+                          onChange={(e) => setInviteMoveIn(e.target.value)}
+                        />
+                      </label>
+                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                        Message{" "}
+                        <span className="font-normal text-[#8a9a88]">
+                          (optional)
+                        </span>
+                        <textarea
+                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65] resize-none"
+                          rows={2}
+                          value={inviteMessage}
+                          onChange={(e) => setInviteMessage(e.target.value)}
+                          placeholder="Welcome message…"
+                        />
+                      </label>
+                      <button
+                        className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                        type="submit"
+                        disabled={loading || !inviteUnitId}
+                      >
+                        {loading ? "Sending..." : "Send Invite"}
+                      </button>
+                    </form>
+                  )}
+                </div>
 
-            {/* Sent Invites List */}
-            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold">Sent Invites</h2>
-              {sentInvites.length === 0 ? (
-                <p className="mt-3 text-sm text-[#60715f]">No invites sent yet.</p>
-              ) : (
-                <ul className="mt-3 grid gap-2">
-                  {sentInvites.map((inv) => (
-                    <li key={inv.id} className="rounded-md border border-[#e3e8df] p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">{inv.tenant_email}</p>
-                          <p className="text-xs text-[#60715f]">{inv.property_name} — {inv.unit_name}</p>
-                          {inv.move_in_date && <p className="text-xs text-[#60715f]">Move-in: {formatDate(inv.move_in_date)}</p>}
-                          {inv.deposit > 0 && <p className="text-xs text-[#60715f]">Deposit: {formatMoney(inv.deposit)}</p>}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <InviteStatusLabel status={inv.status} />
-                          {inv.status === "pending" && (
-                            <button type="button" className="rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]" onClick={() => handleCancelInvite(inv.id)} disabled={loading} title="Cancel invite">
-                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
+                {/* Sent Invites List */}
+                <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                  <h2 className="text-lg font-semibold">Sent Invites</h2>
+                  {sentInvites.length === 0 ? (
+                    <p className="mt-3 text-sm text-[#60715f]">
+                      No invites sent yet.
+                    </p>
+                  ) : (
+                    <ul className="mt-3 grid gap-2">
+                      {sentInvites.map((inv) => (
+                        <li
+                          key={inv.id}
+                          className="rounded-md border border-[#e3e8df] p-3"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium">
+                                {inv.tenant_email}
+                              </p>
+                              <p className="text-xs text-[#60715f]">
+                                {inv.property_name} — {inv.unit_name}
+                              </p>
+                              {inv.move_in_date && (
+                                <p className="text-xs text-[#60715f]">
+                                  Move-in: {formatDate(inv.move_in_date)}
+                                </p>
+                              )}
+                              {inv.deposit > 0 && (
+                                <p className="text-xs text-[#60715f]">
+                                  Deposit: {formatMoney(inv.deposit)}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <InviteStatusLabel status={inv.status} />
+                              {inv.status === "pending" && (
+                                <button
+                                  type="button"
+                                  className="rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                                  onClick={() => handleCancelInvite(inv.id)}
+                                  disabled={loading}
+                                  title="Cancel invite"
+                                >
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 14 14"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                  >
+                                    <line x1="2" y1="2" x2="12" y2="12" />
+                                    <line x1="12" y1="2" x2="2" y2="12" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </section>
             </div>
           </div>
         ) : null}
@@ -1176,9 +1932,19 @@ export default function Home() {
         {ownerDashboard ? (
           <section className="grid gap-4">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Metric label="Total Rent" value={formatMoney(ownerDashboard.totals.total_rent)} />
-              <Metric label="Collected" value={formatMoney(ownerDashboard.totals.total_collected)} />
-              <Metric label="Pending" value={formatMoney(ownerDashboard.totals.total_pending)} tone="warn" />
+              <Metric
+                label="Total Rent"
+                value={formatMoney(ownerDashboard.totals.total_rent)}
+              />
+              <Metric
+                label="Collected"
+                value={formatMoney(ownerDashboard.totals.total_collected)}
+              />
+              <Metric
+                label="Pending"
+                value={formatMoney(ownerDashboard.totals.total_pending)}
+                tone="warn"
+              />
               <Metric
                 label="Occupancy"
                 value={`${ownerDashboard.totals.occupied_units}/${ownerDashboard.totals.total_units}`}
@@ -1199,7 +1965,10 @@ export default function Home() {
               <tbody>
                 {ownerDashboard.properties.length > 0 ? (
                   ownerDashboard.properties.map((property) => (
-                    <tr key={property.property_id} className="border-t border-[#e3e8df]">
+                    <tr
+                      key={property.property_id}
+                      className="border-t border-[#e3e8df]"
+                    >
                       <Td>{property.property_name}</Td>
                       <Td>{property.total_units}</Td>
                       <Td>{property.occupied_units}</Td>
@@ -1210,7 +1979,10 @@ export default function Home() {
                   ))
                 ) : (
                   <tr className="border-t border-[#e3e8df]">
-                    <td colSpan={6} className="py-4 text-center text-sm text-[#60715f]">
+                    <td
+                      colSpan={6}
+                      className="py-4 text-center text-sm text-[#60715f]"
+                    >
                       No properties overview information available.
                     </td>
                   </tr>
@@ -1235,7 +2007,10 @@ export default function Home() {
               <tbody>
                 {ownerDashboard.rent_status.length > 0 ? (
                   ownerDashboard.rent_status.map((rent) => (
-                    <tr key={rent.rent_id} className="border-t border-[#e3e8df]">
+                    <tr
+                      key={rent.rent_id}
+                      className="border-t border-[#e3e8df]"
+                    >
                       <Td>{rent.tenant_name}</Td>
                       <Td>{rent.property_name}</Td>
                       <Td>{rent.unit_name}</Td>
@@ -1258,13 +2033,17 @@ export default function Home() {
                                 key={payment.payment_id}
                                 className="w-fit rounded-md border border-[#2f6f5e] px-3 py-1 text-sm font-semibold text-[#2f6f5e]"
                                 type="button"
-                                onClick={() => downloadReceipt(payment.payment_id)}
+                                onClick={() =>
+                                  downloadReceipt(payment.payment_id)
+                                }
                               >
                                 Receipt #{payment.payment_id}
                               </button>
                             ))
                           ) : (
-                            <span className="text-sm text-[#60715f]">No payment</span>
+                            <span className="text-sm text-[#60715f]">
+                              No payment
+                            </span>
                           )}
                         </div>
                       </Td>
@@ -1272,7 +2051,10 @@ export default function Home() {
                   ))
                 ) : (
                   <tr className="border-t border-[#e3e8df]">
-                    <td colSpan={9} className="py-4 text-center text-sm text-[#60715f]">
+                    <td
+                      colSpan={9}
+                      className="py-4 text-center text-sm text-[#60715f]"
+                    >
                       No payment status information available.
                     </td>
                   </tr>
@@ -1287,58 +2069,139 @@ export default function Home() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
             <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f7f8f3] p-6 shadow-xl border border-[#d8ded2]">
               <div className="flex justify-end mb-4">
-                <button type="button" className="rounded-md p-2 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]" onClick={() => setShowInvitesModal(false)}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <button
+                  type="button"
+                  className="rounded-md p-2 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
+                  onClick={() => setShowInvitesModal(false)}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
               <section id="invites" className="grid gap-4">
-            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#2f6f5e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="16" height="12" rx="2"/><polyline points="2 4 10 11 18 4"/></svg>
-                Property Invites
-                {receivedInvites.filter((i) => i.status === "pending").length > 0 && (
-                  <span className="inline-flex items-center justify-center rounded-full bg-[#2f6f5e] px-2 py-0.5 text-xs font-bold text-white">
-                    {receivedInvites.filter((i) => i.status === "pending").length}
-                  </span>
-                )}
-              </h2>
-              {receivedInvites.length === 0 ? (
-                <p className="mt-3 text-sm text-[#60715f]">No invites received yet. Property owners can invite you to their units.</p>
-              ) : (
-                <ul className="mt-3 grid gap-3">
-                  {receivedInvites.map((inv) => (
-                    <li key={inv.id} className={`rounded-lg border p-4 transition-all ${
-                      inv.status === "pending"
-                        ? "border-[#2f6f5e]/30 bg-[#f0faf6] shadow-sm"
-                        : "border-[#e3e8df] bg-white"
-                    }`}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-[#1b1f1d]">{inv.property_name} — {inv.unit_name}</p>
-                          {inv.property_address && <p className="text-xs text-[#60715f]">{inv.property_address}</p>}
-                          <p className="mt-1 text-sm text-[#435146]">From: {inv.owner_name || inv.owner_email}</p>
-                          {inv.rent_amount != null && <p className="text-sm text-[#435146]">Rent: <span className="font-semibold text-[#2f6f5e]">{formatMoney(inv.rent_amount)}/mo</span></p>}
-                          {inv.deposit > 0 && <p className="text-sm text-[#435146]">Deposit: {formatMoney(inv.deposit)}</p>}
-                          {inv.move_in_date && <p className="text-sm text-[#435146]">Move-in: {formatDate(inv.move_in_date)}</p>}
-                          {inv.message && <p className="mt-1 rounded-md bg-[#eef0eb] px-3 py-2 text-sm italic text-[#435146]">&ldquo;{inv.message}&rdquo;</p>}
-                          <p className="mt-1 text-xs text-[#8a9a88]">Received {formatDate(inv.created_at)}</p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <InviteStatusLabel status={inv.status} />
-                          {inv.status === "pending" && (
-                            <div className="flex gap-2">
-                              <button type="button" className="rounded-md bg-[#2f6f5e] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50" onClick={() => handleAcceptInvite(inv.id)} disabled={loading}>Accept</button>
-                              <button type="button" className="rounded-md border border-[#c9d0c5] px-3 py-1.5 text-xs font-semibold text-[#c44d4d] transition-colors hover:bg-[#fde8e8] disabled:opacity-50" onClick={() => handleDeclineInvite(inv.id)} disabled={loading}>Decline</button>
+                <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      stroke="#2f6f5e"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="2" y="4" width="16" height="12" rx="2" />
+                      <polyline points="2 4 10 11 18 4" />
+                    </svg>
+                    Property Invites
+                    {receivedInvites.filter((i) => i.status === "pending")
+                      .length > 0 && (
+                      <span className="inline-flex items-center justify-center rounded-full bg-[#2f6f5e] px-2 py-0.5 text-xs font-bold text-white">
+                        {
+                          receivedInvites.filter((i) => i.status === "pending")
+                            .length
+                        }
+                      </span>
+                    )}
+                  </h2>
+                  {receivedInvites.length === 0 ? (
+                    <p className="mt-3 text-sm text-[#60715f]">
+                      No invites received yet. Property owners can invite you to
+                      their units.
+                    </p>
+                  ) : (
+                    <ul className="mt-3 grid gap-3">
+                      {receivedInvites.map((inv) => (
+                        <li
+                          key={inv.id}
+                          className={`rounded-lg border p-4 transition-all ${
+                            inv.status === "pending"
+                              ? "border-[#2f6f5e]/30 bg-[#f0faf6] shadow-sm"
+                              : "border-[#e3e8df] bg-white"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-[#1b1f1d]">
+                                {inv.property_name} — {inv.unit_name}
+                              </p>
+                              {inv.property_address && (
+                                <p className="text-xs text-[#60715f]">
+                                  {inv.property_address}
+                                </p>
+                              )}
+                              <p className="mt-1 text-sm text-[#435146]">
+                                From: {inv.owner_name || inv.owner_email}
+                              </p>
+                              {inv.rent_amount != null && (
+                                <p className="text-sm text-[#435146]">
+                                  Rent:{" "}
+                                  <span className="font-semibold text-[#2f6f5e]">
+                                    {formatMoney(inv.rent_amount)}/mo
+                                  </span>
+                                </p>
+                              )}
+                              {inv.deposit > 0 && (
+                                <p className="text-sm text-[#435146]">
+                                  Deposit: {formatMoney(inv.deposit)}
+                                </p>
+                              )}
+                              {inv.move_in_date && (
+                                <p className="text-sm text-[#435146]">
+                                  Move-in: {formatDate(inv.move_in_date)}
+                                </p>
+                              )}
+                              {inv.message && (
+                                <p className="mt-1 rounded-md bg-[#eef0eb] px-3 py-2 text-sm italic text-[#435146]">
+                                  &ldquo;{inv.message}&rdquo;
+                                </p>
+                              )}
+                              <p className="mt-1 text-xs text-[#8a9a88]">
+                                Received {formatDate(inv.created_at)}
+                              </p>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
+                            <div className="flex flex-col items-end gap-2">
+                              <InviteStatusLabel status={inv.status} />
+                              {inv.status === "pending" && (
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    className="rounded-md bg-[#2f6f5e] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                                    onClick={() => handleAcceptInvite(inv.id)}
+                                    disabled={loading}
+                                  >
+                                    Accept
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="rounded-md border border-[#c9d0c5] px-3 py-1.5 text-xs font-semibold text-[#c44d4d] transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
+                                    onClick={() => handleDeclineInvite(inv.id)}
+                                    disabled={loading}
+                                  >
+                                    Decline
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </section>
             </div>
           </div>
         ) : null}
@@ -1346,9 +2209,19 @@ export default function Home() {
         {tenantDashboard ? (
           <section className="grid gap-4">
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-              <Metric label="Total Rent" value={formatMoney(tenantDashboard.summary.total_rent)} />
-              <Metric label="Paid" value={formatMoney(tenantDashboard.summary.total_paid)} />
-              <Metric label="Pending" value={formatMoney(tenantDashboard.summary.total_pending)} tone="warn" />
+              <Metric
+                label="Total Rent"
+                value={formatMoney(tenantDashboard.summary.total_rent)}
+              />
+              <Metric
+                label="Paid"
+                value={formatMoney(tenantDashboard.summary.total_paid)}
+              />
+              <Metric
+                label="Pending"
+                value={formatMoney(tenantDashboard.summary.total_pending)}
+                tone="warn"
+              />
             </div>
 
             <DataTable title="Rent History">
@@ -1368,7 +2241,10 @@ export default function Home() {
               <tbody>
                 {tenantDashboard.rent_history.length > 0 ? (
                   tenantDashboard.rent_history.map((rent) => (
-                    <tr key={rent.rent_id} className="border-t border-[#e3e8df] align-top">
+                    <tr
+                      key={rent.rent_id}
+                      className="border-t border-[#e3e8df] align-top"
+                    >
                       <Td>{rent.property_name}</Td>
                       <Td>{rent.unit_name}</Td>
                       <Td>{formatPeriod(rent.month, rent.year)}</Td>
@@ -1391,13 +2267,17 @@ export default function Home() {
                                 key={payment.payment_id}
                                 className="w-fit rounded-md border border-[#2f6f5e] px-3 py-1 text-sm font-semibold text-[#2f6f5e]"
                                 type="button"
-                                onClick={() => downloadReceipt(payment.payment_id)}
+                                onClick={() =>
+                                  downloadReceipt(payment.payment_id)
+                                }
                               >
                                 Receipt #{payment.payment_id}
                               </button>
                             ))
                           ) : (
-                            <span className="text-sm text-[#60715f]">No payment</span>
+                            <span className="text-sm text-[#60715f]">
+                              No payment
+                            </span>
                           )}
                         </div>
                       </Td>
@@ -1405,7 +2285,10 @@ export default function Home() {
                   ))
                 ) : (
                   <tr className="border-t border-[#e3e8df]">
-                    <td colSpan={9} className="py-4 text-center text-sm text-[#60715f]">
+                    <td
+                      colSpan={9}
+                      className="py-4 text-center text-sm text-[#60715f]"
+                    >
                       No rent history available.
                     </td>
                   </tr>
@@ -1420,9 +2303,12 @@ export default function Home() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#933232]">Delete Account</h3>
+            <h3 className="text-lg font-semibold text-[#933232]">
+              Delete Account
+            </h3>
             <p className="mt-2 text-sm text-[#435146]">
-              Are you sure? This will permanently delete your account and all associated data. This action cannot be undone.
+              Are you sure? This will permanently delete your account and all
+              associated data. This action cannot be undone.
             </p>
             <div className="mt-5 flex gap-3 justify-end">
               <button
@@ -1449,9 +2335,12 @@ export default function Home() {
       {deletingProperty && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#933232]">Delete Property</h3>
+            <h3 className="text-lg font-semibold text-[#933232]">
+              Delete Property
+            </h3>
             <p className="mt-2 text-sm text-[#435146]">
-              Delete <strong>&ldquo;{deletingProperty.name}&rdquo;</strong> and all its units? This action cannot be undone.
+              Delete <strong>&ldquo;{deletingProperty.name}&rdquo;</strong> and
+              all its units? This action cannot be undone.
             </p>
             <div className="mt-5 flex gap-3 justify-end">
               <button
@@ -1478,9 +2367,12 @@ export default function Home() {
       {deletingUnit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#933232]">Delete Unit</h3>
+            <h3 className="text-lg font-semibold text-[#933232]">
+              Delete Unit
+            </h3>
             <p className="mt-2 text-sm text-[#435146]">
-              Delete <strong>&ldquo;{deletingUnit.name}&rdquo;</strong> and all its associated data? This action cannot be undone.
+              Delete <strong>&ldquo;{deletingUnit.name}&rdquo;</strong> and all
+              its associated data? This action cannot be undone.
             </p>
             <div className="mt-5 flex gap-3 justify-end">
               <button
@@ -1507,7 +2399,9 @@ export default function Home() {
       {editingProperty && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#2f6f5e]">Edit Property</h3>
+            <h3 className="text-lg font-semibold text-[#2f6f5e]">
+              Edit Property
+            </h3>
             <form onSubmit={handleEditProperty} className="mt-4 grid gap-3">
               <label className="grid gap-1 text-sm font-medium text-[#435146]">
                 Property Name
@@ -1521,7 +2415,8 @@ export default function Home() {
                 />
               </label>
               <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                Address <span className="font-normal text-[#8a9a88]">(optional)</span>
+                Address{" "}
+                <span className="font-normal text-[#8a9a88]">(optional)</span>
                 <input
                   className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
                   type="text"
@@ -1631,42 +2526,114 @@ export default function Home() {
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-xl font-semibold text-[#1b1f1d]">{viewingUnitDetails.unit_name}</h3>
-                <p className="text-sm text-[#60715f]">{viewingUnitDetails.property_name}</p>
+                <h3 className="text-xl font-semibold text-[#1b1f1d]">
+                  {viewingUnitDetails.unit_name}
+                </h3>
+                <p className="text-sm text-[#60715f]">
+                  {viewingUnitDetails.property_name}
+                </p>
               </div>
-              <button type="button" className="rounded-md p-1 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]" onClick={() => setViewingUnitDetails(null)}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <button
+                type="button"
+                className="rounded-md p-1 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
+                onClick={() => setViewingUnitDetails(null)}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
-            
+
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">Rent Amount</p>
-                <p className="mt-1 text-xl font-semibold text-[#2f6f5e]">{formatMoney(viewingUnitDetails.rent_amount)}<span className="text-sm font-normal text-[#60715f]">/mo</span></p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">
+                  Rent Amount
+                </p>
+                <p className="mt-1 text-xl font-semibold text-[#2f6f5e]">
+                  {formatMoney(viewingUnitDetails.rent_amount)}
+                  <span className="text-sm font-normal text-[#60715f]">
+                    /mo
+                  </span>
+                </p>
               </div>
               <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">Terms</p>
-                <p className="mt-1 text-sm font-medium text-[#1b1f1d]">Due: <span className="font-normal text-[#435146]">Day {viewingUnitDetails.due_day}</span></p>
-                <p className="text-sm font-medium text-[#1b1f1d]">Late Fee: <span className="font-normal text-[#435146]">{viewingUnitDetails.late_fee_percentage}% (Grace: {viewingUnitDetails.grace_period_days}d)</span></p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">
+                  Terms
+                </p>
+                <p className="mt-1 text-sm font-medium text-[#1b1f1d]">
+                  Due:{" "}
+                  <span className="font-normal text-[#435146]">
+                    Day {viewingUnitDetails.due_day}
+                  </span>
+                </p>
+                <p className="text-sm font-medium text-[#1b1f1d]">
+                  Late Fee:{" "}
+                  <span className="font-normal text-[#435146]">
+                    {viewingUnitDetails.late_fee_percentage}% (Grace:{" "}
+                    {viewingUnitDetails.grace_period_days}d)
+                  </span>
+                </p>
               </div>
             </div>
 
             <div className="mt-6 border-t border-[#e3e8df] pt-5">
               <h4 className="font-semibold text-[#1b1f1d] mb-4 flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
                 Assigned Tenant
               </h4>
               {viewingUnitDetails.tenancy_id ? (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">Tenant Info</p>
-                    <p className="text-sm font-medium text-[#1b1f1d]">{viewingUnitDetails.tenant_name || "N/A"}</p>
-                    <p className="text-sm text-[#435146]">{viewingUnitDetails.tenant_email}</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
+                      Tenant Info
+                    </p>
+                    <p className="text-sm font-medium text-[#1b1f1d]">
+                      {viewingUnitDetails.tenant_name || "N/A"}
+                    </p>
+                    <p className="text-sm text-[#435146]">
+                      {viewingUnitDetails.tenant_email}
+                    </p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">Lease Details</p>
-                    <p className="text-sm font-medium text-[#1b1f1d]">Move-in: <span className="font-normal text-[#435146]">{formatDate(viewingUnitDetails.move_in_date)}</span></p>
-                    <p className="text-sm font-medium text-[#1b1f1d]">Deposit: <span className="font-normal text-[#435146]">{formatMoney(viewingUnitDetails.deposit)}</span></p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
+                      Lease Details
+                    </p>
+                    <p className="text-sm font-medium text-[#1b1f1d]">
+                      Move-in:{" "}
+                      <span className="font-normal text-[#435146]">
+                        {formatDate(viewingUnitDetails.move_in_date)}
+                      </span>
+                    </p>
+                    <p className="text-sm font-medium text-[#1b1f1d]">
+                      Deposit:{" "}
+                      <span className="font-normal text-[#435146]">
+                        {formatMoney(viewingUnitDetails.deposit)}
+                      </span>
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -1704,14 +2671,26 @@ function Metric({
   return (
     <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
       <p className="text-sm font-medium text-[#60715f]">{label}</p>
-      <p className={(tone === "warn" ? "mt-2 text-xl font-semibold text-[#9a4d21]" : "mt-2 text-xl font-semibold") + " sm:text-2xl"}>
+      <p
+        className={
+          (tone === "warn"
+            ? "mt-2 text-xl font-semibold text-[#9a4d21]"
+            : "mt-2 text-xl font-semibold") + " sm:text-2xl"
+        }
+      >
         {value}
       </p>
     </div>
   );
 }
 
-function DataTable({ title, children }: { title: string; children: ReactNode }) {
+function DataTable({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
   return (
     <section className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm overflow-hidden">
       <h2 className="text-lg font-semibold">{title}</h2>
@@ -1761,7 +2740,9 @@ function StatusLabel({
             : "bg-[#e0e7ff] text-[#3730a3]";
 
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}>
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}
+    >
       {label}
     </span>
   );
@@ -1779,7 +2760,9 @@ function InviteStatusLabel({ status }: { status: string }) {
           : "bg-[#f3f4f6] text-[#6b7280]";
 
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}>
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}
+    >
       {status}
     </span>
   );
