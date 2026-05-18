@@ -140,4 +140,6 @@ The client will be available at `http://localhost:3000` and the server at `http:
 ---
 
 ## 🛡️ License
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details (or it's for educational use).
+
+This project is licensed under the Commons Clause + GNU Affero General Public License v3.0. See the [LICENSE](LICENSE) file for the full terms. Note: the Commons Clause places a restriction on commercial use — contact the repository owner for a commercial license request.
+
