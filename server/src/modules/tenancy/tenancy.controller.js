@@ -3,6 +3,7 @@ const {
   findTenantById,
   hasActiveTenancy,
   assignTenant,
+  getTenantsByOwner,
 } = require("./tenancy.service");
 
 const createTenancy = async (req, res, next) => {
@@ -63,4 +64,20 @@ const createTenancy = async (req, res, next) => {
   }
 };
 
-module.exports = { createTenancy };
+/**
+ * GET /api/tenancies — Owner gets all tenants (active, past, and invited)
+ */
+const listTenants = async (req, res, next) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const tenants = await getTenantsByOwner(req.user.id);
+    return res.json(tenants);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = { createTenancy, listTenants };

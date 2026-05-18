@@ -1254,17 +1254,26 @@ export default function Home() {
                         Delete Account
                       </button>
                     </div>
-                    {user?.role && (
-                      <button
-                        type="button"
-                        className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
-                        onClick={() => {
-                          setShowInvitesModal(true);
-                          setShowMenu(false);
-                        }}
-                      >
-                        Invites
-                      </button>
+                    {user?.role === "owner" && (
+                      <>
+                        <a
+                          href="/tenant-directory"
+                          className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                          onClick={() => setShowMenu(false)}
+                        >
+                          Tenant Directory
+                        </a>
+                        <button
+                          type="button"
+                          className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                          onClick={() => {
+                            setShowInvitesModal(true);
+                            setShowMenu(false);
+                          }}
+                        >
+                          Invites
+                        </button>
+                      </>
                     )}
                     <button
                       type="button"

@@ -49,4 +49,63 @@ const assignTenant = async (data) => {
   return result.rows[0];
 };
 
-module.exports = { getOwnerUnitDetails, findTenantById, hasActiveTenancy, assignTenant };
+/**
+ * Get all tenants for an owner with their status (active, past, invited)
+ */
+const getTenantsByOwner = async (ownerId) => {
+  const result = await pool.query(
+    `
+    SELECT * FROM (
+      SELECT
+        'tenant' AS type,
+        users.id AS tenant_id,
+        users.name,
+        users.email,
+        properties.name AS property_name,
+        units.name AS unit_name,
+        tenancies.move_in_date,
+        tenancies.move_out_date,
+        CASE WHEN tenancies.is_active = TRUE THEN 'active' ELSE 'past' END AS status,
+        tenancies.deposit,
+        tenancies.id AS tenancy_id
+      FROM tenancies
+      INNER JOIN users ON users.id = tenancies.tenant_id
+      INNER JOIN units ON units.id = tenancies.unit_id
+      INNER JOIN properties ON properties.id = units.property_id
+      WHERE properties.owner_id = $1
+      
+      UNION ALL
+      
+      SELECT
+        'invited' AS type,
+        NULL::integer AS tenant_id,
+        NULL::character varying AS name,
+        invites.tenant_email AS email,
+        properties.name AS property_name,
+        units.name AS unit_name,
+        invites.move_in_date,
+        NULL::date AS move_out_date,
+        'invited' AS status,
+        invites.deposit,
+        invites.id AS tenancy_id
+      FROM invites
+      INNER JOIN units ON units.id = invites.unit_id
+      INNER JOIN properties ON properties.id = units.property_id
+      WHERE properties.owner_id = $1 AND invites.status = 'pending'
+    ) AS combined_tenants
+    ORDER BY 
+      CASE status 
+        WHEN 'active' THEN 1
+        WHEN 'past' THEN 2
+        WHEN 'invited' THEN 3
+        ELSE 4
+      END,
+      COALESCE(move_in_date, CURRENT_DATE) DESC
+    `,
+    [ownerId]
+  );
+  
+  return result.rows;
+};
+
+module.exports = { getOwnerUnitDetails, findTenantById, hasActiveTenancy, assignTenant, getTenantsByOwner };

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS tenancies (
     tenant_id INT REFERENCES users(id) ON DELETE CASCADE,
     unit_id INT REFERENCES units(id) ON DELETE CASCADE,
     move_in_date DATE,
+    move_out_date DATE,
     deposit NUMERIC,
     is_active BOOLEAN DEFAULT TRUE
 );
