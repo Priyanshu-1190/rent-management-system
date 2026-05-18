@@ -1194,7 +1194,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen w-full bg-[#f7f8f3] text-[#1b1f1d]">
-      <header className="sticky top-0 z-40 border-b border-[#d8ded2] bg-[#f7f8f3]/25 backdrop-blur(16)">
+      <header className="border-b border-[#d8ded2] bg-[#f7f8f3]/25 backdrop-blur(16)">
         <div className="mx-auto flex w-full max-w-7xl items-start justify-between px-4 py-5 sm:px-6 lg:px-8">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#60715f]">

@@ -1,0 +1,76 @@
+Commons Clause + GNU Affero General Public License v3.0
+
+================================================================================
+COMMONS CLAUSE (Commercial Use Restriction)
+================================================================================
+
+The licensor of this software further grants permission for the non-commercial
+use of the software. Any use of the software for generating revenue or used
+by an organization to perform services for third parties is considered
+commercial use and requires written permission from the licensor.
+
+"Business purposes" means any use intended to generate, directly or indirectly,
+revenue, profit, or financial benefit. This includes, but is not limited to:
+- Operating the software as a service (SaaS)
+- Incorporating it into commercial products
+- Using it to provide services to paying customers
+- Bundling it with commercial offerings
+
+Non-commercial use is permitted for:
+- Educational purposes
+- Research and experimentation
+- Personal projects
+- Hobby use
+- Open-source contributions
+
+================================================================================
+GNU AFFERO GENERAL PUBLIC LICENSE v3.0
+================================================================================
+
+Copyright (c) 2026, Priyanshu-1190
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+================================================================================
+KEY TERMS:
+================================================================================
+
+1. MODIFICATION: You may modify the software under the same license terms.
+
+2. DISTRIBUTION: You may distribute the software, but you must:
+   - Include this license notice
+   - State significant changes made
+   - Disclose source code to recipients
+   - Apply the same license to derivative works
+
+3. COMMERCIAL USE: Prohibited without explicit written permission from the
+   copyright holder. Contact the repository owner for commercial licensing.
+
+4. NETWORK USE: If you modify and run this software in a network environment,
+   you must provide network users with access to the source code.
+
+5. PATENT: Any patent claims granted to you by contributors do not extend to
+   third parties who have not received the software directly from you.
+
+6. LIABILITY: THE SOFTWARE IS PROVIDED "AS-IS" WITHOUT WARRANTIES OR LIABILITIES.
+
+================================================================================
+HOW TO REQUEST COMMERCIAL LICENSE
+================================================================================
+
+If you wish to use this software commercially, please contact:
+- Repository: https://github.com/Priyanshu-1190/rent-management-system
+- Create an issue or reach out to the maintainer
+
+================================================================================
