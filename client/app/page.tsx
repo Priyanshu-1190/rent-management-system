@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import TenantDirectoryModal from "./components/TenantDirectoryModal";
 import type { FormEvent, ReactNode } from "react";
 
 type Role = "owner" | "tenant";
@@ -241,6 +242,7 @@ export default function Home() {
   const [inviteMoveIn, setInviteMoveIn] = useState("");
   const [inviteMessage, setInviteMessage] = useState("");
   const [showInvitesModal, setShowInvitesModal] = useState(false);
+  const [showTenantDirectory, setShowTenantDirectory] = useState(false);
 
   // Restore session from httpOnly cookie on mount
   useEffect(() => {
@@ -1191,7 +1193,7 @@ export default function Home() {
       </main>
     );
   }
-
+  //Header Section
   return (
     <main className="min-h-screen w-full bg-[#f7f8f3] text-[#1b1f1d]">
       <header className="border-b border-[#d8ded2] bg-[#f7f8f3]/25 backdrop-blur(16)">
@@ -1255,25 +1257,28 @@ export default function Home() {
                       </button>
                     </div>
                     {user?.role === "owner" && (
-                      <>
-                        <a
-                          href="/tenant-directory"
-                          className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
-                          onClick={() => setShowMenu(false)}
-                        >
-                          Tenant Directory
-                        </a>
-                        <button
-                          type="button"
-                          className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
-                          onClick={() => {
-                            setShowInvitesModal(true);
-                            setShowMenu(false);
-                          }}
-                        >
-                          Invites
-                        </button>
-                      </>
+                      <button
+                        type="button"
+                        className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] text-left transition-colors hover:bg-[#eef0eb]"
+                        onClick={() => {
+                          setShowTenantDirectory(true);
+                          setShowMenu(false);
+                        }}
+                      >
+                        Tenant Directory
+                      </button>
+                    )}
+                    {user?.role && (
+                      <button
+                        type="button"
+                        className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] text-left transition-colors hover:bg-[#eef0eb]"
+                        onClick={() => {
+                          setShowInvitesModal(true);
+                          setShowMenu(false);
+                        }}
+                      >
+                        Invites
+                      </button>
                     )}
                     <button
                       type="button"
@@ -2664,6 +2669,11 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <TenantDirectoryModal
+        isOpen={showTenantDirectory}
+        onClose={() => setShowTenantDirectory(false)}
+      />
     </main>
   );
 }

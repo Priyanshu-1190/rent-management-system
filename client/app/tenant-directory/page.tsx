@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Tenant = {
   type: "tenant" | "invited";
@@ -118,13 +119,34 @@ export default function TenantDirectory() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Tenant Directory
-          </h1>
-          <p className="text-gray-600">
-            Manage and view all your tenants, past tenants, and invitations
-          </p>
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              Tenant Directory
+            </h1>
+            <p className="text-gray-600">
+              Manage and view all your tenants, past tenants, and invitations
+            </p>
+          </div>
+          <Link
+            href="/"
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-300 hover:border-gray-400 rounded-lg shadow-sm font-medium transition-all duration-200"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            Close
+          </Link>
         </div>
 
         {/* Error Alert */}
