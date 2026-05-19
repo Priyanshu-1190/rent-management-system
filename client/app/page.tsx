@@ -1238,23 +1238,31 @@ export default function Home() {
                     onClick={() => setShowMenu(false)}
                   />
                   <div className="absolute right-0 z-50 mt-1 w-56 rounded-lg border border-[#d8ded2] bg-white py-1 shadow-lg">
+                    {/* Account Section */}
                     <div className="border-b border-[#e3e8df] px-4 py-3">
-                      <p className="text-sm font-semibold text-[#1b1f1d] truncate">
-                        {user.name || "User"}
+                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#8a9a88]">
+                        Account
                       </p>
-                      <p className="text-xs text-[#60715f] truncate">
-                        {user.email || "No email"}
-                      </p>
-                      <button
-                        type="button"
-                        className="mt-2 flex w-full justify-center rounded-md border border-[#c44d4d] px-2 py-1.5 text-xs font-medium text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                        onClick={() => {
-                          setShowDeleteConfirm(true);
-                          setShowMenu(false);
-                        }}
-                      >
-                        Delete Account
-                      </button>
+                      <div className="mt-2 space-y-2">
+                        <div className="rounded-md bg-[#f7f8f3] p-2.5">
+                          <p className="text-sm font-semibold text-[#1b1f1d] truncate">
+                            {user.name || "User"}
+                          </p>
+                          <p className="text-xs text-[#60715f] truncate">
+                            {user.email || "No email"}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="w-full flex justify-center rounded-md border border-[#c44d4d] px-2 py-1.5 text-xs font-medium text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                          onClick={() => {
+                            setShowDeleteConfirm(true);
+                            setShowMenu(false);
+                          }}
+                        >
+                          Delete Account
+                        </button>
+                      </div>
                     </div>
                     {user?.role === "owner" && (
                       <button
