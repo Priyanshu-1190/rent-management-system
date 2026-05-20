@@ -213,6 +213,7 @@ export default function Home() {
   const [propertyUnits, setPropertyUnits] = useState<Unit[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showAccountDetails, setShowAccountDetails] = useState(false);
   const [deletingProperty, setDeletingProperty] = useState<{
     id: number;
     name: string;
@@ -1235,33 +1236,70 @@ export default function Home() {
                 <>
                   <div
                     className="fixed inset-0 z-40"
-                    onClick={() => setShowMenu(false)}
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowAccountDetails(false);
+                    }}
                   />
                   <div className="absolute right-0 z-50 mt-1 w-56 rounded-lg border border-[#d8ded2] bg-white py-1 shadow-lg">
-                    {/* Account Section */}
-                    <div className="border-b border-[#e3e8df] px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#8a9a88]">
-                        Account
-                      </p>
-                      <div className="mt-2 space-y-2">
-                        <div className="rounded-md bg-[#f7f8f3] p-2.5">
-                          <p className="text-sm font-semibold text-[#1b1f1d] truncate">
-                            {user.name || "User"}
-                          </p>
-                          <p className="text-xs text-[#60715f] truncate">
-                            {user.email || "No email"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          className="w-full flex justify-center rounded-md border border-[#c44d4d] px-2 py-1.5 text-xs font-medium text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                          onClick={() => {
-                            setShowDeleteConfirm(true);
-                            setShowMenu(false);
-                          }}
+                    <div className="border-b border-[#e3e8df] px-4 py-2">
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between rounded-md px-0 py-1 text-left transition-colors hover:text-[#1b1f1d]"
+                        onClick={() => setShowAccountDetails((value) => !value)}
+                        aria-expanded={showAccountDetails}
+                        aria-controls="account-details"
+                      >
+                        <span className="text-sm font-semibold text-[#1b1f1d]">
+                          Account
+                        </span>
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={`text-[#60715f] transition-transform ${
+                            showAccountDetails ? "rotate-180" : ""
+                          }`}
                         >
-                          Delete Account
-                        </button>
+                          <path d="M5 8l5 5 5-5" />
+                        </svg>
+                      </button>
+                      <div
+                        className={`grid transition-[grid-template-rows,opacity,margin-top] duration-300 ease-in-out ${
+                          showAccountDetails
+                            ? "mt-2 grid-rows-[1fr] opacity-100"
+                            : "mt-0 grid-rows-[0fr] opacity-0"
+                        }`}
+                      >
+                        <div className="min-h-0 overflow-hidden">
+                          <div
+                            id="account-details"
+                            className="space-y-2 rounded-md bg-[#f7f8f3] p-2.5"
+                          >
+                            <p className="truncate text-sm font-semibold text-[#1b1f1d]">
+                              {user.name || "User"}
+                            </p>
+                            <p className="truncate text-xs text-[#60715f]">
+                              {user.email || "No email"}
+                            </p>
+                            <button
+                              type="button"
+                              className="flex w-full justify-center rounded-md border border-[#c44d4d] px-2 py-1.5 text-xs font-medium text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                              onClick={() => {
+                                setShowDeleteConfirm(true);
+                                setShowMenu(false);
+                                setShowAccountDetails(false);
+                              }}
+                            >
+                              Delete Account
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     {user?.role === "owner" && (
@@ -1298,6 +1336,7 @@ export default function Home() {
                         setTenantDashboard(null);
                         setProperties([]);
                         setPropertyUnits([]);
+                        setShowAccountDetails(false);
                         setShowMenu(false);
                       }}
                     >
