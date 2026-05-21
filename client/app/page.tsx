@@ -762,6 +762,12 @@ export default function Home() {
       setNotice("Select a unit");
       return;
     }
+
+    if (!inviteMoveIn) {
+      setNotice("Select a move-in date");
+      return;
+    }
+
     setLoading(true);
     setNotice("");
     try {
@@ -772,7 +778,7 @@ export default function Home() {
           tenant_email: inviteEmail,
           unit_id: inviteUnitId,
           deposit: inviteDeposit ? Number(inviteDeposit) : 0,
-          move_in_date: inviteMoveIn || null,
+          move_in_date: inviteMoveIn,
           message: inviteMessage || null,
         }),
       });
@@ -1887,14 +1893,12 @@ export default function Home() {
                       </label>
                       <label className="grid gap-1 text-sm font-medium text-[#435146]">
                         Move-in Date{" "}
-                        <span className="font-normal text-[#8a9a88]">
-                          (optional)
-                        </span>
                         <input
                           className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
                           type="date"
                           value={inviteMoveIn}
                           onChange={(e) => setInviteMoveIn(e.target.value)}
+                          required
                         />
                       </label>
                       <label className="grid gap-1 text-sm font-medium text-[#435146]">
@@ -1913,7 +1917,7 @@ export default function Home() {
                       <button
                         className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
                         type="submit"
-                        disabled={loading || !inviteUnitId}
+                        disabled={loading || !inviteUnitId || !inviteMoveIn}
                       >
                         {loading ? "Sending..." : "Send Invite"}
                       </button>

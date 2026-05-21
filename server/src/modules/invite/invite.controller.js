@@ -29,6 +29,10 @@ const sendInvite = async (req, res, next) => {
       return res.status(400).json({ error: "Valid unit_id is required" });
     }
 
+    if (!move_in_date || !String(move_in_date).trim()) {
+      return res.status(400).json({ error: "Move-in date is required" });
+    }
+
     // Check unit isn't already occupied
     if (await unitHasActiveTenancy(Number(unit_id))) {
       return res.status(409).json({ error: "Unit already has an active tenant" });
@@ -39,7 +43,7 @@ const sendInvite = async (req, res, next) => {
       tenant_email: String(tenant_email).trim().toLowerCase(),
       unit_id: Number(unit_id),
       deposit: deposit ? Number(deposit) : 0,
-      move_in_date: move_in_date || null,
+      move_in_date: String(move_in_date).trim(),
       message: message || null,
     });
 
