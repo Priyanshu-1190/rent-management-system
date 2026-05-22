@@ -470,6 +470,7 @@ export default function Home() {
       setEditingProperty(null);
       await loadProperties();
       await loadDashboard();
+      await loadAvailableUnits();
       setNotice(`Property "${body.name}" updated!`);
     } catch (err) {
       setNotice(
@@ -554,6 +555,7 @@ export default function Home() {
       setUnitGracePeriod("0");
       await loadUnits(selectedPropertyId);
       await loadDashboard();
+      await loadAvailableUnits();
       setNotice(
         `Unit "${body.name}" added with rent ${formatMoney(body.rent_amount)}`,
       );
@@ -606,6 +608,7 @@ export default function Home() {
       setEditUnitGracePeriod("0");
       if (selectedPropertyId) await loadUnits(selectedPropertyId);
       await loadDashboard();
+      await loadAvailableUnits();
       setNotice(`Unit "${body.name}" updated!`);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Failed to update unit");
@@ -629,6 +632,7 @@ export default function Home() {
         setSelectedPropertyId(null);
       await loadProperties();
       await loadDashboard();
+      await loadAvailableUnits();
       setNotice(`Property "${deletingProperty.name}" deleted.`);
     } catch (err) {
       setNotice(
@@ -653,6 +657,7 @@ export default function Home() {
       if (!res.ok) throw new Error(body.error || "Failed to delete unit");
       setPropertyUnits((prev) => prev.filter((u) => u.id !== deletingUnit.id));
       await loadDashboard();
+      await loadAvailableUnits();
       setNotice(`Unit "${deletingUnit.name}" deleted.`);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Failed to delete unit");
@@ -720,41 +725,7 @@ export default function Home() {
     }
   };
 
-  // Restore session from httpOnly cookie on mount.
-  useEffect(() => {
-    fetch("/api/auth/session")
-      .then((res) => res.json())
-      .then(async (data) => {
-        if (data.user) {
-          setUser(data.user);
-          await loadDashboard(data.user.role);
-          if (data.user.role === "owner") {
-            await loadProperties();
-            await loadSentInvites();
-            await loadAvailableUnits();
-          }
-          if (data.user.role === "tenant") await loadReceivedInvites();
-        }
-      })
-      .catch(() => {});
 
-    fetch("/api/db-test")
-      .then(async (res) => {
-        const body = await res.json();
-        if (!res.ok) throw new Error(body.error || "Backend request failed");
-        return body;
-      })
-      .then((res) =>
-        setApiStatus(`Database online: ${formatKolkataTime(res.data[0].now)}`),
-      )
-      .catch((err) => {
-        console.error(err);
-        setApiStatus(
-          err.message || "Unable to reach backend database test endpoint.",
-        );
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleSendInvite = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
