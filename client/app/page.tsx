@@ -880,15 +880,15 @@ export default function Home() {
   const authPanel = (
     <div
       id="access"
-      className="scroll-mt-24 rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm"
+      className="scroll-mt-24 rounded-2xl border border-white/10 bg-brand-green-dark/85 p-6 shadow-2xl backdrop-blur-md relative z-10"
     >
-      <div className="flex gap-1 rounded-md bg-[#eef0eb] p-1">
+      <div className="flex gap-1.5 rounded-xl bg-brand-green-mid/70 p-1.5 border border-white/5">
         <button
           type="button"
-          className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+          className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
             authMode === "login"
-              ? "bg-white text-[#1b1f1d] shadow-sm"
-              : "text-[#60715f] hover:text-[#435146]"
+              ? "bg-brand-green-emerald text-white shadow-md shadow-brand-green-emerald/10"
+              : "text-white/60 hover:text-white hover:bg-white/5"
           }`}
           onClick={() => {
             setAuthMode("login");
@@ -899,10 +899,10 @@ export default function Home() {
         </button>
         <button
           type="button"
-          className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
+          className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
             authMode === "register"
-              ? "bg-white text-[#1b1f1d] shadow-sm"
-              : "text-[#60715f] hover:text-[#435146]"
+              ? "bg-brand-green-emerald text-white shadow-md shadow-brand-green-emerald/10"
+              : "text-white/60 hover:text-white hover:bg-white/5"
           }`}
           onClick={() => {
             setAuthMode("register");
@@ -913,85 +913,99 @@ export default function Home() {
         </button>
       </div>
 
+      {notice && (
+        <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300 flex items-start gap-2">
+          <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <span className="flex-1 leading-normal">{notice}</span>
+        </div>
+      )}
+
       {authMode === "login" ? (
-        <form onSubmit={handleLogin} className="mt-4 grid gap-3">
-          <label className="grid gap-1 text-sm font-medium text-[#435146]">
-            Email
+        <form onSubmit={handleLogin} className="mt-5 grid gap-4">
+          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
+            Email Address
             <input
-              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              placeholder="name@example.com"
+              required
             />
           </label>
-          <label className="grid gap-1 text-sm font-medium text-[#435146]">
+          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
             Password
             <input
-              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              placeholder="••••••••"
+              required
             />
           </label>
           <button
-            className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+            className="mt-2 rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light py-3 font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.01] hover:shadow-lg hover:shadow-brand-gold/25 active:scale-[0.98] disabled:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
             type="submit"
             disabled={loading}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Logging in..." : "Login to Account"}
           </button>
         </form>
       ) : (
-        <form onSubmit={handleRegister} className="mt-4 grid gap-3">
-          <label className="grid gap-1 text-sm font-medium text-[#435146]">
+        <form onSubmit={handleRegister} className="mt-5 grid gap-4">
+          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
             Name
             <input
-              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
               type="text"
               value={regName}
               onChange={(event) => setRegName(event.target.value)}
+              placeholder="John Doe"
               required
               minLength={2}
             />
           </label>
-          <label className="grid gap-1 text-sm font-medium text-[#435146]">
-            Email
+          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
+            Email Address
             <input
-              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
               type="email"
               value={regEmail}
               onChange={(event) => setRegEmail(event.target.value)}
+              placeholder="name@example.com"
               required
             />
           </label>
-          <label className="grid gap-1 text-sm font-medium text-[#435146]">
+          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
             Password
             <input
-              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
               type="password"
               value={regPassword}
               onChange={(event) => setRegPassword(event.target.value)}
+              placeholder="•••••••• (min 6 chars)"
               required
               minLength={6}
             />
           </label>
-          <label className="grid gap-1 text-sm font-medium text-[#435146]">
-            Role
+          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
+            Account Role
             <select
-              className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all cursor-pointer"
               value={regRole}
               onChange={(event) => setRegRole(event.target.value as Role)}
             >
-              <option value="tenant">Tenant</option>
-              <option value="owner">Owner</option>
+              <option value="tenant" className="bg-brand-green-dark text-white">Tenant</option>
+              <option value="owner" className="bg-brand-green-dark text-white">Owner</option>
             </select>
           </label>
           <button
-            className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+            className="mt-2 rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light py-3 font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.01] hover:shadow-lg hover:shadow-brand-gold/25 active:scale-[0.98] disabled:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
             type="submit"
             disabled={loading}
           >
-            {loading ? "Registering..." : "Register"}
+            {loading ? "Registering..." : "Create Free Account"}
           </button>
         </form>
       )}
@@ -1000,200 +1014,350 @@ export default function Home() {
 
   if (!user) {
     return (
-      <main className="min-h-screen w-full bg-[#f7f8f3] text-[#1b1f1d]">
-        <header className="sticky top-0 z-40 border-b border-white/10 bg-[#10231f]/95 text-white shadow-sm backdrop-blur">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-            <a href="#" className="text-lg font-semibold tracking-normal">
-              Rent Khata
+      <main className="min-h-screen w-full bg-[#071210] text-[#f3f4f6] selection:bg-brand-gold selection:text-brand-dark">
+        
+        {/* Sticky Header */}
+        <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-brand-green-dark/75 backdrop-blur-md text-white shadow-lg transition-all duration-300">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+            <a href="#" className="flex items-center gap-2 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-brand-gold to-brand-gold-light text-[#1b1f1d] font-bold text-xl shadow-md shadow-brand-gold/10 group-hover:scale-105 transition-transform">
+                ₹
+              </div>
+              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-[#cbd5e1] bg-clip-text text-transparent">
+                Rent Khata
+              </span>
             </a>
-            <nav
-              className="flex items-center gap-1 sm:gap-2"
-              aria-label="Landing page"
-            >
+            <nav className="flex items-center gap-4" aria-label="Landing page">
               <a
-                className="rounded-md px-3 py-2 text-sm font-semibold text-white/82 transition-colors hover:bg-white/10 hover:text-white"
+                className="relative px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-brand-gold after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300"
                 href="#features"
               >
                 Features
               </a>
               <a
-                className="rounded-md px-3 py-2 text-sm font-semibold text-white/82 transition-colors hover:bg-white/10 hover:text-white"
+                className="relative px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-brand-gold after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300"
                 href="#access"
-                onClick={() => setAuthMode("login")}
+                onClick={() => {
+                  setAuthMode("login");
+                  setNotice("");
+                }}
               >
                 Login
               </a>
-              <p className="text-white/100 text-2xl font-semibold">|</p>
+              <div className="hidden h-5 w-px bg-white/20 sm:block" />
               <a
-                className="rounded-md bg-[#f5b84b] px-3 py-2 text-sm font-semibold text-[#17211e] transition-colors hover:bg-[#ffd074]"
+                className="rounded-lg bg-gradient-to-r from-brand-gold to-brand-gold-light px-4 py-2 text-sm font-bold text-brand-dark shadow-md shadow-brand-gold/20 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-brand-gold/30 active:scale-[0.98]"
                 href="#access"
-                onClick={() => setAuthMode("register")}
+                onClick={() => {
+                  setAuthMode("register");
+                  setNotice("");
+                }}
               >
-                Create account
+                Create Account
               </a>
             </nav>
           </div>
         </header>
 
-        <section
-          className="relative min-h-[92vh] overflow-hidden bg-[#10231f] text-white"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg, rgba(16,35,31,0.96) 0%, rgba(16,35,31,0.88) 42%, rgba(16,35,31,0.34) 100%), url('/dashboard-mockup.png')",
-            backgroundPosition: "center right",
-            backgroundSize: "cover",
-          }}
-        >
-          <div className="mx-auto flex min-h-[92vh] max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-            <div className="flex flex-1 items-center py-12">
-              <div className="max-w-3xl">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9ee0c0]">
-                  Rent Khata
-                </p>
-                <h1 className="mt-5 max-w-3xl text-5xl font-semibold leading-[1.02] tracking-normal sm:text-6xl lg:text-7xl">
-                  Rent, tenants, receipts, and dues in one calm workspace.
+        {/* Hero Section */}
+        <section className="relative min-h-[90vh] overflow-hidden bg-brand-green-dark text-white flex items-center py-16 lg:py-24">
+          {/* Ambient Glows */}
+          <div className="absolute top-1/4 left-1/10 w-96 h-96 rounded-full bg-brand-green-emerald/10 blur-3xl animate-pulse-glow" />
+          <div className="absolute bottom-1/4 right-1/10 w-[450px] h-[450px] rounded-full bg-brand-gold/5 blur-3xl animate-pulse-glow" style={{ animationDelay: '4s' }} />
+
+          <div className="mx-auto max-w-7xl w-full px-6 lg:px-8 relative z-10">
+            <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+              
+              {/* Hero Left: Text Content */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="inline-flex items-center gap-2 rounded-full border border-brand-green-emerald/30 bg-brand-green-mid/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-green-glow backdrop-blur-sm">
+                  <span className="flex h-2 w-2 rounded-full bg-brand-gold animate-pulse" />
+                  Your Ultimate Rental Ledger
+                </div>
+                
+                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl font-serif leading-[1.1] text-gradient">
+                  Rent, tenants, receipts, & dues in <span className="italic font-normal text-brand-gold-light">one calm workspace.</span>
                 </h1>
-                <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82">
-                  A focused rental management system for owners and tenants,
-                  built around property records, rent schedules, payment
-                  history, and receipt downloads.
+                
+                <p className="max-w-2xl text-base sm:text-lg leading-relaxed text-white/80 font-normal">
+                  A modern, clean workspace designed for owners and tenants. Manage properties, coordinate leases, log payments, and generate invoices with ease.
                 </p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                
+                <div className="flex flex-wrap gap-4 pt-2">
                   <a
-                    className="inline-flex justify-center rounded-md bg-[#f5b84b] px-5 py-3 text-sm font-semibold text-[#17211e] transition-colors hover:bg-[#ffd074]"
+                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light px-6 py-3.5 text-sm font-bold text-brand-dark shadow-lg shadow-brand-gold/15 transition-all hover:scale-[1.03] hover:shadow-xl hover:shadow-brand-gold/25 active:scale-[0.98]"
                     href="#access"
-                    onClick={() => setAuthMode("register")}
+                    onClick={() => {
+                      setAuthMode("register");
+                      setNotice("");
+                    }}
                   >
-                    Start managing
+                    Start Managing
                   </a>
                   <a
-                    className="inline-flex justify-center rounded-md border border-white/35 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                    className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/30 active:scale-[0.98]"
                     href="#features"
                   >
-                    View features
+                    Explore Features
                   </a>
                 </div>
+                
+                {/* Micro Stats */}
+                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 max-w-lg">
+                  <div>
+                    <p className="text-3xl font-extrabold text-brand-gold">100%</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">Ledger Accuracy</p>
+                  </div>
+                  <div>
+                    <p className="text-3xl font-extrabold text-brand-green-glow">Instant</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">PDF Receipts</p>
+                  </div>
+                  <div>
+                    <p className="text-3xl font-extrabold text-white">Zero</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">Clutter</p>
+                  </div>
+                </div>
               </div>
+              
+              {/* Hero Right: Interactive Browser Mockup */}
+              <div className="lg:col-span-5 relative flex justify-center">
+                {/* Floating card background decoration */}
+                <div className="absolute -top-6 -left-6 w-32 h-32 bg-brand-green-emerald/20 blur-2xl rounded-full pointer-events-none" />
+                <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-brand-gold/10 blur-3xl rounded-full pointer-events-none" />
+                
+                {/* Browser Mockup Window */}
+                <div className="w-full max-w-[480px] rounded-2xl glassmorphism border border-white/15 shadow-2xl overflow-hidden animate-float relative">
+                  {/* Browser top bar */}
+                  <div className="flex items-center gap-1.5 bg-brand-green-dark/80 px-4 py-3 border-b border-white/10">
+                    <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+                    <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                    <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
+                    <div className="mx-auto bg-brand-green-mid/80 rounded-md px-4 py-0.5 text-[10px] text-white/40 font-mono w-40 truncate text-center">
+                      rentkhata.in/dashboard
+                    </div>
+                  </div>
+                  
+                  {/* Mockup Image */}
+                  <div className="relative bg-brand-green-dark/40 p-1">
+                    <img 
+                      src="/dashboard-mockup.png" 
+                      alt="Rent Khata Dashboard Mockup" 
+                      className="w-full h-auto rounded-b-xl object-cover mix-blend-lighten opacity-95 transition-opacity hover:opacity-100 duration-300"
+                    />
+                  </div>
+                  
+                  {/* Floating Badges */}
+                  <div className="absolute bottom-4 -left-4 glassmorphism rounded-xl p-3 border border-white/10 shadow-lg animate-float-delayed flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-brand-green-emerald/20 flex items-center justify-center text-brand-green-glow">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider leading-none">Monthly Rent</p>
+                      <p className="text-xs font-extrabold text-white mt-1">Dues Sorted Automatically</p>
+                    </div>
+                  </div>
+
+                  <div className="absolute -top-4 -right-4 bg-gradient-to-r from-brand-gold to-brand-gold-light rounded-xl p-3 shadow-lg flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-black/10 flex items-center justify-center text-brand-dark">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-brand-dark/70 font-bold uppercase tracking-wider leading-none">Collected</p>
+                      <p className="text-xs font-extrabold text-brand-dark mt-0.5">₹1,85,000</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </section>
+
+        {/* Features Grid Section */}
+        <section id="features" className="scroll-mt-20 py-20 bg-brand-green-dark border-t border-white/5 relative">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(46,125,99,0.05),transparent_60%)] pointer-events-none" />
+          
+          <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-gold">Platform Features</h2>
+              <p className="mt-3 text-3xl font-bold font-serif sm:text-4xl text-gradient">
+                Everything you need to manage rental operations smoothly
+              </p>
+              <p className="mt-4 text-white/60">
+                Forget messy spreadsheets and chaotic WhatsApp chats. Rent Khata organizes everything into clean, auditable records.
+              </p>
             </div>
 
-            <div className="grid gap-3 pb-5 sm:grid-cols-3">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {[
-                [
-                  "Owner dashboard",
-                  "Track units, occupancy, collections, and pending rent.",
-                ],
-                [
-                  "Tenant dashboard",
-                  "View rent status, payment history, and receipts.",
-                ],
-                [
-                  "Secure access",
-                  "Keep owner and tenant views scoped to the right records.",
-                ],
-              ].map(([title, body]) => (
+                {
+                  title: "Owner Dashboard",
+                  body: "Track total properties, units, current occupancy, total rents, actual collections, and pending dues from a single window.",
+                  icon: (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  ),
+                  color: "from-emerald-500/20 to-teal-500/20 text-brand-green-glow"
+                },
+                {
+                  title: "Tenant Portal",
+                  body: "Tenants get a focused view of rent status, due dates, outstanding amount, grace periods, and payment history.",
+                  icon: (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  ),
+                  color: "from-brand-gold/20 to-amber-500/20 text-brand-gold"
+                },
+                {
+                  title: "Property & Unit Operations",
+                  body: "Create and edit properties, add individual rental units, customize rent cycles, due dates, late fee rates, and grace periods.",
+                  icon: (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2" /></svg>
+                  ),
+                  color: "from-blue-500/20 to-indigo-500/20 text-blue-400"
+                },
+                {
+                  title: "Financial Ledger Clarity",
+                  body: "Obligations (rents) are tracked independently from transactions (payments), ensuring ledger logs never mismatch.",
+                  icon: (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                  ),
+                  color: "from-purple-500/20 to-pink-500/20 text-purple-400"
+                },
+                {
+                  title: "PDF Rent Receipts",
+                  body: "Generate professional, download-ready PDF receipts for payments, equipped with transaction IDs and timestamp details.",
+                  icon: (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  ),
+                  color: "from-rose-500/20 to-orange-500/20 text-rose-400"
+                },
+                {
+                  title: "Leasing & Invitations",
+                  body: "Invite tenants to specific units via email. Set lease starting dates, security deposits, and customized invitation notes.",
+                  icon: (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 19v-8.93a2 2 0 01.89-1.664l8-5.333a2 2 0 012.22 0l8 5.333A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-2.25-1.5a2 2 0 00-2.22 0l-2.25 1.5m4.72 0V12a9 9 0 00-9-9" /></svg>
+                  ),
+                  color: "from-brand-green-emerald/30 to-brand-green-glow/20 text-brand-green-glow"
+                }
+              ].map((f, i) => (
                 <div
-                  key={title}
-                  className="rounded-lg border border-white/16 bg-white/10 p-4 backdrop-blur"
+                  key={i}
+                  className="group rounded-2xl glassmorphism p-6 hover:bg-brand-green-mid/70 hover:-translate-y-1 hover:border-brand-green-emerald/40 transition-all duration-300 relative overflow-hidden"
                 >
-                  <p className="font-semibold">{title}</p>
-                  <p className="mt-1 text-sm leading-6 text-white/72">{body}</p>
+                  <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
+                    {f.icon}
+                  </div>
+                  <h3 className="text-lg font-bold text-white group-hover:text-brand-gold transition-colors duration-300">{f.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/70">{f.body}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section
-          id="features"
-          className="scroll-mt-20 border-b border-[#d8ded2] bg-white"
-        >
-          <div className="mx-auto grid max-w-7xl gap-6 px-4 py-14 sm:px-6 md:grid-cols-3 lg:px-8">
-            {[
-              [
-                "Property operations",
-                "Create properties and units, assign tenants, and keep rental details clean.",
-              ],
-              [
-                "Financial clarity",
-                "Separate rent obligations from payment transactions so pending dues stay accurate.",
-              ],
-              [
-                "Receipt ready",
-                "Generate PDF receipts from real payment records when either side needs proof.",
-              ],
-            ].map(([title, body]) => (
-              <article
-                key={title}
-                className="rounded-lg border border-[#d8ded2] bg-[#f7f8f3] p-5"
-              >
-                <h2 className="text-lg font-semibold">{title}</h2>
-                <p className="mt-3 text-sm leading-6 text-[#60715f]">{body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-[#eef0eb]">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_420px] lg:px-8">
-            <div className="flex flex-col justify-center">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2f6f5e]">
-                Access
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-normal text-[#1b1f1d] sm:text-4xl">
-                Login or create the right account for your role.
-              </h2>
-              <p className="mt-4 max-w-2xl leading-7 text-[#60715f]">
-                Owners get property and rent controls. Tenants get a focused
-                view of dues, payments, invitations, and receipts.
-              </p>
-              {apiStatus ? (
-                <p className="mt-5 text-sm text-[#60715f]">{apiStatus}</p>
-              ) : null}
-              {notice ? (
-                <div className="mt-5 rounded-md border border-[#e0b15c] bg-[#fff9eb] px-4 py-3 text-sm text-[#6b4c18]">
-                  {notice}
+        {/* Access Section (Authentication) */}
+        <section className="bg-brand-green-dark border-t border-white/5 relative overflow-hidden py-20">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-green-emerald/5 blur-3xl rounded-full pointer-events-none" />
+          
+          <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+            <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+              
+              {/* Text content left */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="inline-flex items-center gap-2 rounded-full border border-brand-gold/20 bg-brand-gold/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-gold backdrop-blur-sm">
+                  Access Portal
                 </div>
-              ) : null}
+                <h2 className="text-3xl font-bold font-serif sm:text-4xl text-gradient">
+                  Ready to experience absolute ledger peace?
+                </h2>
+                <p className="max-w-2xl text-white/70 leading-relaxed">
+                  Join hundreds of landlords and tenants already using Rent Khata to eliminate spreadsheet errors, centralize invoices, and keep accounts clear.
+                </p>
+                
+                <div className="space-y-4 pt-4">
+                  <div className="flex gap-3">
+                    <div className="h-6 w-6 rounded-full bg-brand-green-emerald/30 flex items-center justify-center text-brand-green-glow flex-shrink-0 mt-0.5 text-xs font-bold">
+                      ✓
+                    </div>
+                    <p className="text-sm text-white/80">
+                      <strong>For Owners:</strong> Comprehensive property dashboard, automatic late fee calculations, security deposit status tracker, and simple inviting mechanism.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="h-6 w-6 rounded-full bg-brand-green-emerald/30 flex items-center justify-center text-brand-green-glow flex-shrink-0 mt-0.5 text-xs font-bold">
+                      ✓
+                    </div>
+                    <p className="text-sm text-white/80">
+                      <strong>For Tenants:</strong> Instant receipt generation, real-time dashboard of pending dues, and email-based contract accepts.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  {apiStatus && (
+                    <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-xs font-mono text-white/60">
+                      <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                      {apiStatus}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Auth Panel right */}
+              <div className="lg:col-span-5 relative">
+                <div className="absolute inset-0 bg-brand-gold/5 blur-3xl rounded-full pointer-events-none" />
+                {authPanel}
+              </div>
+              
             </div>
-            {authPanel}
           </div>
         </section>
 
-        <footer className="border-t border-[#d8ded2] bg-[#10231f] text-white">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1fr_auto] lg:px-8">
-            <div>
-              <p className="text-lg font-semibold">Rent Management</p>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-white/68">
-                A rental operations workspace for properties, tenants, rent
-                schedules, payments, and receipts.
+        {/* Footer */}
+        <footer className="bg-brand-dark text-white border-t border-white/5 py-12">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold text-brand-dark font-bold text-base">
+                    ₹
+                  </div>
+                  <span className="text-lg font-bold tracking-tight text-white">
+                    Rent Khata
+                  </span>
+                </div>
+                <p className="max-w-md text-sm leading-relaxed text-white/60">
+                  A focused rental operations workspace for properties, tenants, rent schedules, payments, and receipts. Built for simplicity and ledger peace.
+                </p>
+              </div>
+              <nav className="flex flex-wrap gap-x-8 gap-y-4" aria-label="Footer">
+                <a className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors" href="#">
+                  Home
+                </a>
+                <a className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors" href="#features">
+                  Features
+                </a>
+                <a 
+                  className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors" 
+                  href="#access"
+                  onClick={() => {
+                    setAuthMode("login");
+                    setNotice("");
+                  }}
+                >
+                  Login
+                </a>
+              </nav>
+            </div>
+            <div className="mt-8 pt-8 border-t border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs text-white/40">
+              <p>&copy; {new Date().getFullYear()} Rent Khata. All rights reserved.</p>
+              <p className="flex gap-4">
+                <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
               </p>
             </div>
-            <nav
-              className="flex flex-wrap items-start gap-2 md:justify-end"
-              aria-label="Footer"
-            >
-              <a
-                className="rounded-md px-3 py-2 text-sm font-semibold text-white/72 transition-colors hover:bg-white/10 hover:text-white"
-                href="#"
-              >
-                Home
-              </a>
-              <a
-                className="rounded-md px-3 py-2 text-sm font-semibold text-white/72 transition-colors hover:bg-white/10 hover:text-white"
-                href="#features"
-              >
-                Features
-              </a>
-              <a
-                className="rounded-md px-3 py-2 text-sm font-semibold text-white/72 transition-colors hover:bg-white/10 hover:text-white"
-                href="#access"
-                onClick={() => setAuthMode("login")}
-              >
-                Login
-              </a>
-            </nav>
           </div>
         </footer>
+
       </main>
     );
   }
