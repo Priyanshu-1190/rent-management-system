@@ -1174,7 +1174,7 @@ export default function Home() {
         </section>
 
         {/* Features Grid Section */}
-        <section id="features" className="scroll-mt-20 py-20 bg-brand-green-dark border-t border-white/5 relative">
+        <section id="features" className="scroll-mt-2 py-20 bg-brand-green-dark border-t border-white/5 relative">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(46,125,99,0.05),transparent_60%)] pointer-events-none" />
           
           <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
