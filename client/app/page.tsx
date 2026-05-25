@@ -33,6 +33,8 @@ type OwnerDashboard = {
   }>;
   rent_status: Array<{
     rent_id: number;
+    property_id: number;
+    unit_id: number;
     property_name: string;
     unit_name: string;
     tenant_name: string;
@@ -233,6 +235,10 @@ export default function Home() {
   const [editPropAddress, setEditPropAddress] = useState("");
   const [viewingUnitDetails, setViewingUnitDetails] =
     useState<UnitDetails | null>(null);
+  const [viewingPropertyDetails, setViewingPropertyDetails] =
+    useState<any | null>(null);
+  const [viewingPropertyUnits, setViewingPropertyUnits] =
+    useState<Unit[]>([]);
 
   // Invite state
   const [sentInvites, setSentInvites] = useState<Invite[]>([]);
@@ -472,6 +478,9 @@ export default function Home() {
       await loadProperties();
       await loadDashboard();
       await loadAvailableUnits();
+      if (viewingPropertyDetails && viewingPropertyDetails.property_id === editingProperty.id) {
+        setViewingPropertyDetails((prev: any) => prev ? { ...prev, property_name: editPropName } : null);
+      }
       setNotice(`Property "${body.name}" updated!`);
     } catch (err) {
       setNotice(
@@ -509,6 +518,34 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewPropertyDetails = async (property: any) => {
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/units/property/${property.property_id}`);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to load units");
+      setViewingPropertyUnits(body);
+      setViewingPropertyDetails(property);
+    } catch (err) {
+      setNotice(
+        err instanceof Error ? err.message : "Failed to load property details",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshViewingPropertyUnits = async (propertyId: number) => {
+    try {
+      const res = await fetch(`/api/proxy/units/property/${propertyId}`);
+      const body = await res.json();
+      if (res.ok) {
+        setViewingPropertyUnits(body);
+      }
+    } catch {}
   };
 
   // ── Owner: add unit ──
@@ -557,6 +594,9 @@ export default function Home() {
       await loadUnits(selectedPropertyId);
       await loadDashboard();
       await loadAvailableUnits();
+      if (viewingPropertyDetails && viewingPropertyDetails.property_id === selectedPropertyId) {
+        await refreshViewingPropertyUnits(selectedPropertyId);
+      }
       setNotice(
         `Unit "${body.name}" added with rent ${formatMoney(body.rent_amount)}`,
       );
@@ -610,6 +650,9 @@ export default function Home() {
       if (selectedPropertyId) await loadUnits(selectedPropertyId);
       await loadDashboard();
       await loadAvailableUnits();
+      if (viewingPropertyDetails) {
+        await refreshViewingPropertyUnits(viewingPropertyDetails.property_id);
+      }
       setNotice(`Unit "${body.name}" updated!`);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Failed to update unit");
@@ -634,6 +677,9 @@ export default function Home() {
       await loadProperties();
       await loadDashboard();
       await loadAvailableUnits();
+      if (viewingPropertyDetails && viewingPropertyDetails.property_id === deletingProperty.id) {
+        setViewingPropertyDetails(null);
+      }
       setNotice(`Property "${deletingProperty.name}" deleted.`);
     } catch (err) {
       setNotice(
@@ -659,6 +705,9 @@ export default function Home() {
       setPropertyUnits((prev) => prev.filter((u) => u.id !== deletingUnit.id));
       await loadDashboard();
       await loadAvailableUnits();
+      if (viewingPropertyDetails) {
+        setViewingPropertyUnits((prev) => prev.filter((u) => u.id !== deletingUnit.id));
+      }
       setNotice(`Unit "${deletingUnit.name}" deleted.`);
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Failed to delete unit");
@@ -2187,9 +2236,10 @@ export default function Home() {
                   ownerDashboard.properties.map((property) => (
                     <tr
                       key={property.property_id}
-                      className="border-t border-[#e3e8df]"
+                      className="border-t border-[#e3e8df] hover:bg-[#eef0eb]/50 cursor-pointer transition-colors"
+                      onClick={() => handleViewPropertyDetails(property)}
                     >
-                      <Td>{property.property_name}</Td>
+                      <Td className="font-semibold text-[#2f6f5e] hover:underline">{property.property_name}</Td>
                       <Td>{property.total_units}</Td>
                       <Td>{property.occupied_units}</Td>
                       <Td>{formatMoney(property.total_rent)}</Td>
@@ -2907,6 +2957,245 @@ export default function Home() {
         </div>
       )}
 
+      {viewingPropertyDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative">
+            <div className="absolute right-6 top-6">
+              <button
+                type="button"
+                className="rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95"
+                onClick={() => setViewingPropertyDetails(null)}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-6 pr-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#60715f]">
+                Property Details
+              </p>
+              <h3 className="mt-1 text-2xl font-bold text-[#1b1f1d] flex items-center gap-2">
+                <svg className="w-6 h-6 text-[#2f6f5e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2" />
+                </svg>
+                {viewingPropertyDetails.property_name}
+              </h3>
+              {properties.find(p => p.id === viewingPropertyDetails.property_id)?.address && (
+                <p className="mt-1.5 text-sm text-[#60715f] flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {properties.find(p => p.id === viewingPropertyDetails.property_id)?.address}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+              <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">Total Rent</p>
+                <p className="mt-1 text-xl font-bold text-[#1b1f1d]">
+                  {formatMoney(viewingPropertyDetails.total_rent)}
+                  <span className="text-xs font-normal text-[#60715f] block mt-0.5">Estimated monthly</span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">Collected</p>
+                <p className="mt-1 text-xl font-bold text-[#23633d]">
+                  {formatMoney(viewingPropertyDetails.total_collected)}
+                  <span className="text-xs font-normal text-[#60715f] block mt-0.5">This period</span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">Pending</p>
+                <p className="mt-1 text-xl font-bold text-[#9a4d21]">
+                  {formatMoney(viewingPropertyDetails.total_pending)}
+                  <span className="text-xs font-normal text-[#60715f] block mt-0.5">Outstanding</span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">Occupancy</p>
+                <p className="mt-1 text-xl font-bold text-[#1b1f1d]">
+                  {viewingPropertyDetails.occupied_units} / {viewingPropertyDetails.total_units}
+                  <span className="text-xs font-normal text-[#60715f] block mt-0.5">
+                    {viewingPropertyDetails.total_units > 0 
+                      ? Math.round((viewingPropertyDetails.occupied_units / viewingPropertyDetails.total_units) * 100)
+                      : 0}% Occupied
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-bold text-[#1b1f1d]">Units in Property</h4>
+                <button
+                  type="button"
+                  className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
+                  onClick={() => {
+                    setSelectedPropertyId(viewingPropertyDetails.property_id);
+                    loadUnits(viewingPropertyDetails.property_id);
+                    setViewingPropertyDetails(null);
+                    setNotice(`Property "${viewingPropertyDetails.property_name}" selected. You can now add units to it in the "Add Unit" section.`);
+                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                  }}
+                >
+                  Manage Units & Add New
+                </button>
+              </div>
+
+              {viewingPropertyUnits.length === 0 ? (
+                <div className="text-center py-8 text-sm text-[#60715f]">
+                  No units added to this property yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-[#e3e8df]">
+                        <th className="pb-3 pr-4 font-semibold text-[#435146]">Unit</th>
+                        <th className="pb-3 pr-4 font-semibold text-[#435146]">Monthly Rent</th>
+                        <th className="pb-3 pr-4 font-semibold text-[#435146]">Tenant</th>
+                        <th className="pb-3 pr-4 font-semibold text-[#435146]">Status</th>
+                        <th className="pb-3 pr-4 font-semibold text-[#435146] text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#e3e8df]">
+                      {viewingPropertyUnits.map((unit) => {
+                        const activeRent = ownerDashboard?.rent_status?.find(
+                          (r) => r.unit_id === unit.id
+                        );
+
+                        return (
+                          <tr key={unit.id} className="hover:bg-[#f7f8f3]/50">
+                            <td className="py-3.5 pr-4 font-medium text-[#1b1f1d]">{unit.name}</td>
+                            <td className="py-3.5 pr-4">{formatMoney(unit.rent_amount)}/mo</td>
+                            <td className="py-3.5 pr-4">
+                              {activeRent ? (
+                                <div>
+                                  <p className="font-semibold text-gray-900">{activeRent.tenant_name}</p>
+                                  <p className="text-xs text-gray-500 font-normal">Active Tenant</p>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-[#8a9a88] italic">Vacant</span>
+                              )}
+                            </td>
+                            <td className="py-3.5 pr-4">
+                              {activeRent ? (
+                                <StatusLabel
+                                  status={activeRent.payment_status}
+                                  dueInDays={activeRent.due_in_days}
+                                  overdueByDays={activeRent.overdue_by_days}
+                                />
+                              ) : (
+                                <span className="inline-flex rounded-full bg-[#f3f4f6] text-[#6b7280] px-2.5 py-1 text-xs font-semibold">
+                                  N/A
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3.5 pr-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                                  onClick={() => handleViewUnitDetails(unit.id)}
+                                  title={`View details of ${unit.name}`}
+                                  disabled={loading}
+                                >
+                                  <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                  </svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                                  onClick={() => {
+                                    setEditingUnit(unit);
+                                    setEditUnitName(unit.name);
+                                    setEditUnitRent(unit.rent_amount.toString());
+                                    setEditUnitLateFee(
+                                      unit.late_fee_percentage.toString(),
+                                    );
+                                    setEditUnitGracePeriod(
+                                      unit.grace_period_days.toString(),
+                                    );
+                                  }}
+                                  title={`Edit ${unit.name}`}
+                                  disabled={loading}
+                                >
+                                  <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="rounded p-1.5 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                                  onClick={() =>
+                                    setDeletingUnit({ id: unit.id, name: unit.name })
+                                  }
+                                  title={`Delete ${unit.name}`}
+                                  disabled={loading}
+                                >
+                                  <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 14 14"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                  >
+                                    <line x1="2" y1="2" x2="12" y2="12" />
+                                    <line x1="12" y1="2" x2="2" y2="12" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
       <TenantDirectoryModal
         isOpen={showTenantDirectory}
         onClose={() => setShowTenantDirectory(false)}
@@ -2959,12 +3248,12 @@ function DataTable({
   );
 }
 
-function Th({ children }: { children: ReactNode }) {
-  return <th className="pb-3 pr-4 font-semibold text-[#435146]">{children}</th>;
+function Th({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <th className={`pb-3 pr-4 font-semibold text-[#435146] ${className}`}>{children}</th>;
 }
 
-function Td({ children }: { children: ReactNode }) {
-  return <td className="py-3 pr-4">{children}</td>;
+function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <td className={`py-3 pr-4 ${className}`}>{children}</td>;
 }
 
 function StatusLabel({
