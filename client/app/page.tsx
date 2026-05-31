@@ -3183,15 +3183,7 @@ export default function Home() {
               )}
             </div>
 
-            <div className="mt-8 flex justify-end">
-              <button
-                type="button"
-                className="rounded-md bg-[#eef0eb] px-5 py-2.5 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#d8ded2]"
-                onClick={() => setViewingUnitDetails(null)}
-              >
-                Close
-              </button>
-            </div>
+
           </div>
         </div>
       )}
