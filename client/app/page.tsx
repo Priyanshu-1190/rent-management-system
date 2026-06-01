@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import TenantDirectoryModal from "./components/TenantDirectoryModal";
 import type { FormEvent, ReactNode } from "react";
 
@@ -235,10 +235,32 @@ export default function Home() {
   const [editPropAddress, setEditPropAddress] = useState("");
   const [viewingUnitDetails, setViewingUnitDetails] =
     useState<UnitDetails | null>(null);
-  const [viewingPropertyDetails, setViewingPropertyDetails] =
-    useState<any | null>(null);
-  const [viewingPropertyUnits, setViewingPropertyUnits] =
-    useState<Unit[]>([]);
+  const [viewingPropertyDetails, setViewingPropertyDetails] = useState<
+    any | null
+  >(null);
+  const [viewingPropertyUnits, setViewingPropertyUnits] = useState<Unit[]>([]);
+  // Morph transition state for property details
+  const [morphStartRect, setMorphStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    propertyId: number;
+  } | null>(null);
+  const [morphPhase, setMorphPhase] = useState<
+    "idle" | "morphing-in" | "expanded" | "morphing-out"
+  >("idle");
+  const [preloadedUnits, setPreloadedUnits] = useState<Record<number, Unit[]>>(
+    {},
+  );
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [titleStartRect, setTitleStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const titleRef = useRef<HTMLSpanElement>(null);
 
   // Invite state
   const [sentInvites, setSentInvites] = useState<Invite[]>([]);
@@ -287,6 +309,65 @@ export default function Home() {
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Morph animation lifecycle management using FLIP
+  useEffect(() => {
+    if (
+      viewingPropertyDetails &&
+      modalRef.current &&
+      morphStartRect &&
+      morphPhase === "morphing-in"
+    ) {
+      const modal = modalRef.current;
+      const finalRect = modal.getBoundingClientRect();
+
+      let tDeltaX = 0;
+      let tDeltaY = 0;
+      let tScale = 1;
+      let title = null;
+
+      if (titleRef.current && titleStartRect) {
+        title = titleRef.current;
+        const titleFinalRect = title.getBoundingClientRect();
+        tDeltaX = titleStartRect.left - titleFinalRect.left;
+        tDeltaY = titleStartRect.top - titleFinalRect.top;
+        tScale = titleStartRect.height / titleFinalRect.height;
+      }
+
+      const deltaX = morphStartRect.left - finalRect.left;
+      const deltaY = morphStartRect.top - finalRect.top;
+      const scaleX = morphStartRect.width / finalRect.width;
+      const scaleY = morphStartRect.height / finalRect.height;
+
+      modal.style.transition = "none";
+      modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+      modal.style.opacity = "1";
+      modal.style.transformOrigin = "top left";
+
+      if (title && scaleX && scaleY) {
+        title.style.transition = "none";
+        title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        title.style.transformOrigin = "top left";
+        title.style.color = "#2f6f5e";
+      }
+
+      modal.offsetHeight;
+
+      modal.style.transition =
+        "transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 500ms ease";
+      modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+      modal.style.opacity = "1";
+
+      if (title) {
+        title.style.transition =
+          "transform 500ms cubic-bezier(0.16, 1, 0.3, 1), color 500ms ease";
+        title.style.transform = "translate3d(0, 0, 0) scale(1)";
+        title.style.color = "#1b1f1d";
+      }
+
+      setMorphPhase("expanded");
+    }
+  }, [viewingPropertyDetails, morphStartRect, titleStartRect]);
 
   const loadDashboard = async (role?: Role) => {
     const currentRole = role || user?.role;
@@ -415,6 +496,24 @@ export default function Home() {
     }
   };
 
+  const prefetchPropertyUnits = async (propsList: Property[]) => {
+    const cache: Record<number, Unit[]> = {};
+    await Promise.all(
+      propsList.map(async (p) => {
+        try {
+          const res = await fetch(`/api/proxy/units/property/${p.id}`);
+          if (res.ok) {
+            const body = await res.json();
+            cache[p.id] = body;
+          }
+        } catch (err) {
+          console.error("Prefetch units failed for property", p.id, err);
+        }
+      }),
+    );
+    setPreloadedUnits((prev) => ({ ...prev, ...cache }));
+  };
+
   // ── Owner: load properties ──
   const loadProperties = async () => {
     try {
@@ -422,6 +521,7 @@ export default function Home() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to load properties");
       setProperties(body);
+      prefetchPropertyUnits(body);
     } catch (err) {
       setNotice(
         err instanceof Error ? err.message : "Failed to load properties",
@@ -478,8 +578,13 @@ export default function Home() {
       await loadProperties();
       await loadDashboard();
       await loadAvailableUnits();
-      if (viewingPropertyDetails && viewingPropertyDetails.property_id === editingProperty.id) {
-        setViewingPropertyDetails((prev: any) => prev ? { ...prev, property_name: editPropName } : null);
+      if (
+        viewingPropertyDetails &&
+        viewingPropertyDetails.property_id === editingProperty.id
+      ) {
+        setViewingPropertyDetails((prev: any) =>
+          prev ? { ...prev, property_name: editPropName } : null,
+        );
       }
       setNotice(`Property "${body.name}" updated!`);
     } catch (err) {
@@ -498,6 +603,7 @@ export default function Home() {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to load units");
       setPropertyUnits(body);
+      setPreloadedUnits((prev) => ({ ...prev, [propertyId]: body }));
     } catch {
       setPropertyUnits([]);
     }
@@ -520,22 +626,113 @@ export default function Home() {
     }
   };
 
-  const handleViewPropertyDetails = async (property: any) => {
-    setLoading(true);
-    setNotice("");
-    try {
-      const res = await fetch(`/api/proxy/units/property/${property.property_id}`);
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Failed to load units");
-      setViewingPropertyUnits(body);
-      setViewingPropertyDetails(property);
-    } catch (err) {
-      setNotice(
-        err instanceof Error ? err.message : "Failed to load property details",
-      );
-    } finally {
-      setLoading(false);
+  const handleViewPropertyDetails = async (
+    property: any,
+    e?: React.MouseEvent,
+  ) => {
+    const propertyId = property.property_id;
+    const cachedUnits = preloadedUnits[propertyId] || [];
+
+    setViewingPropertyUnits(cachedUnits);
+
+    if (e) {
+      const row = e.currentTarget as HTMLElement;
+      const rect = row.getBoundingClientRect();
+      setMorphStartRect({
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        propertyId: propertyId,
+      });
+
+      const nameEl = row.querySelector(".property-name-text") as HTMLElement;
+      if (nameEl) {
+        const nameRect = nameEl.getBoundingClientRect();
+        setTitleStartRect({
+          left: nameRect.left,
+          top: nameRect.top,
+          width: nameRect.width,
+          height: nameRect.height,
+        });
+      }
+
+      setMorphPhase("morphing-in");
     }
+
+    setViewingPropertyDetails(property);
+
+    try {
+      const res = await fetch(`/api/proxy/units/property/${propertyId}`);
+      const body = await res.json();
+      if (res.ok) {
+        setViewingPropertyUnits(body);
+        setPreloadedUnits((prev) => ({ ...prev, [propertyId]: body }));
+      }
+    } catch (err) {
+      console.error("Revalidation of property units failed", err);
+    }
+  };
+
+  const handleClosePropertyDetails = () => {
+    if (!modalRef.current || !morphStartRect) {
+      setViewingPropertyDetails(null);
+      setMorphPhase("idle");
+      setMorphStartRect(null);
+      return;
+    }
+
+    const modal = modalRef.current;
+    let latestRect = morphStartRect;
+
+    const rowElement = document.querySelector(
+      `[data-property-row="${morphStartRect.propertyId}"]`,
+    );
+    if (rowElement) {
+      const rect = rowElement.getBoundingClientRect();
+      latestRect = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        propertyId: morphStartRect.propertyId,
+      };
+      setMorphStartRect(latestRect);
+    }
+
+    const finalRect = modal.getBoundingClientRect();
+    const deltaX = latestRect.left - finalRect.left;
+    const deltaY = latestRect.top - finalRect.top;
+    const scaleX = latestRect.width / finalRect.width;
+    const scaleY = latestRect.height / finalRect.height;
+
+    setMorphPhase("morphing-out");
+
+    modal.style.transition =
+      "transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 500ms ease";
+    modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+    modal.style.opacity = "0";
+    modal.style.transformOrigin = "top left";
+
+    if (titleRef.current && titleStartRect && scaleX && scaleY) {
+      const title = titleRef.current;
+      const titleFinalRect = title.getBoundingClientRect();
+      const tDeltaX = titleStartRect.left - titleFinalRect.left;
+      const tDeltaY = titleStartRect.top - titleFinalRect.top;
+      const tScale = titleStartRect.height / titleFinalRect.height;
+
+      title.style.transition =
+        "transform 500ms cubic-bezier(0.16, 1, 0.3, 1), color 500ms ease";
+      title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+      title.style.transformOrigin = "top left";
+      title.style.color = "#2f6f5e";
+    }
+
+    setTimeout(() => {
+      setViewingPropertyDetails(null);
+      setMorphPhase("idle");
+      setMorphStartRect(null);
+    }, 500);
   };
 
   const refreshViewingPropertyUnits = async (propertyId: number) => {
@@ -594,7 +791,10 @@ export default function Home() {
       await loadUnits(selectedPropertyId);
       await loadDashboard();
       await loadAvailableUnits();
-      if (viewingPropertyDetails && viewingPropertyDetails.property_id === selectedPropertyId) {
+      if (
+        viewingPropertyDetails &&
+        viewingPropertyDetails.property_id === selectedPropertyId
+      ) {
         await refreshViewingPropertyUnits(selectedPropertyId);
       }
       setNotice(
@@ -677,7 +877,10 @@ export default function Home() {
       await loadProperties();
       await loadDashboard();
       await loadAvailableUnits();
-      if (viewingPropertyDetails && viewingPropertyDetails.property_id === deletingProperty.id) {
+      if (
+        viewingPropertyDetails &&
+        viewingPropertyDetails.property_id === deletingProperty.id
+      ) {
         setViewingPropertyDetails(null);
       }
       setNotice(`Property "${deletingProperty.name}" deleted.`);
@@ -706,7 +909,9 @@ export default function Home() {
       await loadDashboard();
       await loadAvailableUnits();
       if (viewingPropertyDetails) {
-        setViewingPropertyUnits((prev) => prev.filter((u) => u.id !== deletingUnit.id));
+        setViewingPropertyUnits((prev) =>
+          prev.filter((u) => u.id !== deletingUnit.id),
+        );
       }
       setNotice(`Unit "${deletingUnit.name}" deleted.`);
     } catch (err) {
@@ -774,8 +979,6 @@ export default function Home() {
       setAvailableUnits([]);
     }
   };
-
-
 
   const handleSendInvite = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -964,7 +1167,19 @@ export default function Home() {
 
       {notice && (
         <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300 flex items-start gap-2">
-          <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <svg
+            className="w-5 h-5 flex-shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
           <span className="flex-1 leading-normal">{notice}</span>
         </div>
       )}
@@ -1045,8 +1260,12 @@ export default function Home() {
               value={regRole}
               onChange={(event) => setRegRole(event.target.value as Role)}
             >
-              <option value="tenant" className="bg-brand-green-dark text-white">Tenant</option>
-              <option value="owner" className="bg-brand-green-dark text-white">Owner</option>
+              <option value="tenant" className="bg-brand-green-dark text-white">
+                Tenant
+              </option>
+              <option value="owner" className="bg-brand-green-dark text-white">
+                Owner
+              </option>
             </select>
           </label>
           <button
@@ -1064,7 +1283,6 @@ export default function Home() {
   if (!user) {
     return (
       <main className="min-h-screen w-full bg-[#071210] text-[#f3f4f6] selection:bg-brand-gold selection:text-brand-dark">
-        
         {/* Sticky Header */}
         <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-brand-green-dark/75 backdrop-blur-md text-white shadow-lg transition-all duration-300">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
@@ -1112,26 +1330,33 @@ export default function Home() {
         <section className="relative min-h-[90vh] overflow-hidden bg-brand-green-dark text-white flex items-center py-16 lg:py-24">
           {/* Ambient Glows */}
           <div className="absolute top-1/4 left-1/10 w-96 h-96 rounded-full bg-brand-green-emerald/10 blur-3xl animate-pulse-glow" />
-          <div className="absolute bottom-1/4 right-1/10 w-[450px] h-[450px] rounded-full bg-brand-gold/5 blur-3xl animate-pulse-glow" style={{ animationDelay: '4s' }} />
+          <div
+            className="absolute bottom-1/4 right-1/10 w-[450px] h-[450px] rounded-full bg-brand-gold/5 blur-3xl animate-pulse-glow"
+            style={{ animationDelay: "4s" }}
+          />
 
           <div className="mx-auto max-w-7xl w-full px-6 lg:px-8 relative z-10">
             <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
-              
               {/* Hero Left: Text Content */}
               <div className="lg:col-span-7 space-y-6">
                 <div className="inline-flex items-center gap-2 rounded-full border border-brand-green-emerald/30 bg-brand-green-mid/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-green-glow backdrop-blur-sm">
                   <span className="flex h-2 w-2 rounded-full bg-brand-gold animate-pulse" />
                   Your Ultimate Rental Ledger
                 </div>
-                
+
                 <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl font-serif leading-[1.1] text-gradient">
-                  Rent, tenants, receipts, & dues in <span className="italic font-normal text-brand-gold-light">one calm workspace.</span>
+                  Rent, tenants, receipts, & dues in{" "}
+                  <span className="italic font-normal text-brand-gold-light">
+                    one calm workspace.
+                  </span>
                 </h1>
-                
+
                 <p className="max-w-2xl text-base sm:text-lg leading-relaxed text-white/80 font-normal">
-                  A modern, clean workspace designed for owners and tenants. Manage properties, coordinate leases, log payments, and generate invoices with ease.
+                  A modern, clean workspace designed for owners and tenants.
+                  Manage properties, coordinate leases, log payments, and
+                  generate invoices with ease.
                 </p>
-                
+
                 <div className="flex flex-wrap gap-4 pt-2">
                   <a
                     className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light px-6 py-3.5 text-sm font-bold text-brand-dark shadow-lg shadow-brand-gold/15 transition-all hover:scale-[1.03] hover:shadow-xl hover:shadow-brand-gold/25 active:scale-[0.98]"
@@ -1150,30 +1375,40 @@ export default function Home() {
                     Explore Features
                   </a>
                 </div>
-                
+
                 {/* Micro Stats */}
                 <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 max-w-lg">
                   <div>
-                    <p className="text-3xl font-extrabold text-brand-gold">100%</p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">Ledger Accuracy</p>
+                    <p className="text-3xl font-extrabold text-brand-gold">
+                      100%
+                    </p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
+                      Ledger Accuracy
+                    </p>
                   </div>
                   <div>
-                    <p className="text-3xl font-extrabold text-brand-green-glow">Instant</p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">PDF Receipts</p>
+                    <p className="text-3xl font-extrabold text-brand-green-glow">
+                      Instant
+                    </p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
+                      PDF Receipts
+                    </p>
                   </div>
                   <div>
                     <p className="text-3xl font-extrabold text-white">Zero</p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">Clutter</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
+                      Clutter
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Hero Right: Interactive Browser Mockup */}
               <div className="lg:col-span-5 relative flex justify-center">
                 {/* Floating card background decoration */}
                 <div className="absolute -top-6 -left-6 w-32 h-32 bg-brand-green-emerald/20 blur-2xl rounded-full pointer-events-none" />
                 <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-brand-gold/10 blur-3xl rounded-full pointer-events-none" />
-                
+
                 {/* Browser Mockup Window */}
                 <div className="w-full max-w-[480px] rounded-2xl glassmorphism border border-white/15 shadow-2xl overflow-hidden animate-float relative">
                   {/* Browser top bar */}
@@ -1185,55 +1420,92 @@ export default function Home() {
                       rentkhata.in/dashboard
                     </div>
                   </div>
-                  
+
                   {/* Mockup Image */}
                   <div className="relative bg-brand-green-dark/40 p-1">
-                    <img 
-                      src="/dashboard-mockup.png" 
-                      alt="Rent Khata Dashboard Mockup" 
+                    <img
+                      src="/dashboard-mockup.png"
+                      alt="Rent Khata Dashboard Mockup"
                       className="w-full h-auto rounded-b-xl object-cover mix-blend-lighten opacity-95 transition-opacity hover:opacity-100 duration-300"
                     />
                   </div>
-                  
+
                   {/* Floating Badges */}
                   <div className="absolute bottom-4 -left-4 glassmorphism rounded-xl p-3 border border-white/10 shadow-lg animate-float-delayed flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-brand-green-emerald/20 flex items-center justify-center text-brand-green-glow">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.5"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
                     </div>
                     <div>
-                      <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider leading-none">Monthly Rent</p>
-                      <p className="text-xs font-extrabold text-white mt-1">Dues Sorted Automatically</p>
+                      <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider leading-none">
+                        Monthly Rent
+                      </p>
+                      <p className="text-xs font-extrabold text-white mt-1">
+                        Dues Sorted Automatically
+                      </p>
                     </div>
                   </div>
 
                   <div className="absolute -top-4 -right-4 bg-gradient-to-r from-brand-gold to-brand-gold-light rounded-xl p-3 shadow-lg flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-black/10 flex items-center justify-center text-brand-dark">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.5"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
                     </div>
                     <div>
-                      <p className="text-[10px] text-brand-dark/70 font-bold uppercase tracking-wider leading-none">Collected</p>
-                      <p className="text-xs font-extrabold text-brand-dark mt-0.5">₹1,85,000</p>
+                      <p className="text-[10px] text-brand-dark/70 font-bold uppercase tracking-wider leading-none">
+                        Collected
+                      </p>
+                      <p className="text-xs font-extrabold text-brand-dark mt-0.5">
+                        ₹1,85,000
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
-              
             </div>
           </div>
         </section>
 
         {/* Features Grid Section */}
-        <section id="features" className="scroll-mt-2 py-20 bg-brand-green-dark border-t border-white/5 relative">
+        <section
+          id="features"
+          className="scroll-mt-2 py-20 bg-brand-green-dark border-t border-white/5 relative"
+        >
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(46,125,99,0.05),transparent_60%)] pointer-events-none" />
-          
+
           <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-gold">Platform Features</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-gold">
+                Platform Features
+              </h2>
               <p className="mt-3 text-3xl font-bold font-serif sm:text-4xl text-gradient">
                 Everything you need to manage rental operations smoothly
               </p>
               <p className="mt-4 text-white/60">
-                Forget messy spreadsheets and chaotic WhatsApp chats. Rent Khata organizes everything into clean, auditable records.
+                Forget messy spreadsheets and chaotic WhatsApp chats. Rent Khata
+                organizes everything into clean, auditable records.
               </p>
             </div>
 
@@ -1243,60 +1515,140 @@ export default function Home() {
                   title: "Owner Dashboard",
                   body: "Track total properties, units, current occupancy, total rents, actual collections, and pending dues from a single window.",
                   icon: (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
+                    </svg>
                   ),
-                  color: "from-emerald-500/20 to-teal-500/20 text-brand-green-glow"
+                  color:
+                    "from-emerald-500/20 to-teal-500/20 text-brand-green-glow",
                 },
                 {
                   title: "Tenant Portal",
                   body: "Tenants get a focused view of rent status, due dates, outstanding amount, grace periods, and payment history.",
                   icon: (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
                   ),
-                  color: "from-brand-gold/20 to-amber-500/20 text-brand-gold"
+                  color: "from-brand-gold/20 to-amber-500/20 text-brand-gold",
                 },
                 {
                   title: "Property & Unit Operations",
                   body: "Create and edit properties, add individual rental units, customize rent cycles, due dates, late fee rates, and grace periods.",
                   icon: (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2" /></svg>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2"
+                      />
+                    </svg>
                   ),
-                  color: "from-blue-500/20 to-indigo-500/20 text-blue-400"
+                  color: "from-blue-500/20 to-indigo-500/20 text-blue-400",
                 },
                 {
                   title: "Financial Ledger Clarity",
                   body: "Obligations (rents) are tracked independently from transactions (payments), ensuring ledger logs never mismatch.",
                   icon: (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
                   ),
-                  color: "from-purple-500/20 to-pink-500/20 text-purple-400"
+                  color: "from-purple-500/20 to-pink-500/20 text-purple-400",
                 },
                 {
                   title: "PDF Rent Receipts",
                   body: "Generate professional, download-ready PDF receipts for payments, equipped with transaction IDs and timestamp details.",
                   icon: (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
                   ),
-                  color: "from-rose-500/20 to-orange-500/20 text-rose-400"
+                  color: "from-rose-500/20 to-orange-500/20 text-rose-400",
                 },
                 {
                   title: "Leasing & Invitations",
                   body: "Invite tenants to specific units via email. Set lease starting dates, security deposits, and customized invitation notes.",
                   icon: (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 19v-8.93a2 2 0 01.89-1.664l8-5.333a2 2 0 012.22 0l8 5.333A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-2.25-1.5a2 2 0 00-2.22 0l-2.25 1.5m4.72 0V12a9 9 0 00-9-9" /></svg>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M3 19v-8.93a2 2 0 01.89-1.664l8-5.333a2 2 0 012.22 0l8 5.333A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-2.25-1.5a2 2 0 00-2.22 0l-2.25 1.5m4.72 0V12a9 9 0 00-9-9"
+                      />
+                    </svg>
                   ),
-                  color: "from-brand-green-emerald/30 to-brand-green-glow/20 text-brand-green-glow"
-                }
+                  color:
+                    "from-brand-green-emerald/30 to-brand-green-glow/20 text-brand-green-glow",
+                },
               ].map((f, i) => (
                 <div
                   key={i}
                   className="group rounded-2xl glassmorphism p-6 hover:bg-brand-green-mid/70 hover:-translate-y-1 hover:border-brand-green-emerald/40 transition-all duration-300 relative overflow-hidden"
                 >
-                  <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
+                  <div
+                    className={`h-12 w-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}
+                  >
                     {f.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-white group-hover:text-brand-gold transition-colors duration-300">{f.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-white/70">{f.body}</p>
+                  <h3 className="text-lg font-bold text-white group-hover:text-brand-gold transition-colors duration-300">
+                    {f.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/70">
+                    {f.body}
+                  </p>
                 </div>
               ))}
             </div>
@@ -1306,10 +1658,9 @@ export default function Home() {
         {/* Access Section (Authentication) */}
         <section className="bg-brand-green-dark border-t border-white/5 relative overflow-hidden py-20">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-green-emerald/5 blur-3xl rounded-full pointer-events-none" />
-          
+
           <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
             <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
-              
               {/* Text content left */}
               <div className="lg:col-span-7 space-y-6">
                 <div className="inline-flex items-center gap-2 rounded-full border border-brand-gold/20 bg-brand-gold/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-gold backdrop-blur-sm">
@@ -1319,16 +1670,20 @@ export default function Home() {
                   Ready to experience absolute ledger peace?
                 </h2>
                 <p className="max-w-2xl text-white/70 leading-relaxed">
-                  Join hundreds of landlords and tenants already using Rent Khata to eliminate spreadsheet errors, centralize invoices, and keep accounts clear.
+                  Join hundreds of landlords and tenants already using Rent
+                  Khata to eliminate spreadsheet errors, centralize invoices,
+                  and keep accounts clear.
                 </p>
-                
+
                 <div className="space-y-4 pt-4">
                   <div className="flex gap-3">
                     <div className="h-6 w-6 rounded-full bg-brand-green-emerald/30 flex items-center justify-center text-brand-green-glow flex-shrink-0 mt-0.5 text-xs font-bold">
                       ✓
                     </div>
                     <p className="text-sm text-white/80">
-                      <strong>For Owners:</strong> Comprehensive property dashboard, automatic late fee calculations, security deposit status tracker, and simple inviting mechanism.
+                      <strong>For Owners:</strong> Comprehensive property
+                      dashboard, automatic late fee calculations, security
+                      deposit status tracker, and simple inviting mechanism.
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -1336,7 +1691,9 @@ export default function Home() {
                       ✓
                     </div>
                     <p className="text-sm text-white/80">
-                      <strong>For Tenants:</strong> Instant receipt generation, real-time dashboard of pending dues, and email-based contract accepts.
+                      <strong>For Tenants:</strong> Instant receipt generation,
+                      real-time dashboard of pending dues, and email-based
+                      contract accepts.
                     </p>
                   </div>
                 </div>
@@ -1350,13 +1707,12 @@ export default function Home() {
                   )}
                 </div>
               </div>
-              
+
               {/* Auth Panel right */}
               <div className="lg:col-span-5 relative">
                 <div className="absolute inset-0 bg-brand-gold/5 blur-3xl rounded-full pointer-events-none" />
                 {authPanel}
               </div>
-              
             </div>
           </div>
         </section>
@@ -1375,18 +1731,29 @@ export default function Home() {
                   </span>
                 </div>
                 <p className="max-w-md text-sm leading-relaxed text-white/60">
-                  A focused rental operations workspace for properties, tenants, rent schedules, payments, and receipts. Built for simplicity and ledger peace.
+                  A focused rental operations workspace for properties, tenants,
+                  rent schedules, payments, and receipts. Built for simplicity
+                  and ledger peace.
                 </p>
               </div>
-              <nav className="flex flex-wrap gap-x-8 gap-y-4" aria-label="Footer">
-                <a className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors" href="#">
+              <nav
+                className="flex flex-wrap gap-x-8 gap-y-4"
+                aria-label="Footer"
+              >
+                <a
+                  className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors"
+                  href="#"
+                >
                   Home
                 </a>
-                <a className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors" href="#features">
+                <a
+                  className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors"
+                  href="#features"
+                >
                   Features
                 </a>
-                <a 
-                  className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors" 
+                <a
+                  className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors"
                   href="#access"
                   onClick={() => {
                     setAuthMode("login");
@@ -1398,15 +1765,21 @@ export default function Home() {
               </nav>
             </div>
             <div className="mt-8 pt-8 border-t border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs text-white/40">
-              <p>&copy; {new Date().getFullYear()} Rent Khata. All rights reserved.</p>
+              <p>
+                &copy; {new Date().getFullYear()} Rent Khata. All rights
+                reserved.
+              </p>
               <p className="flex gap-4">
-                <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-                <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+                <a href="#" className="hover:text-white transition-colors">
+                  Privacy Policy
+                </a>
+                <a href="#" className="hover:text-white transition-colors">
+                  Terms of Service
+                </a>
               </p>
             </div>
           </div>
         </footer>
-
       </main>
     );
   }
@@ -2236,10 +2609,15 @@ export default function Home() {
                   ownerDashboard.properties.map((property) => (
                     <tr
                       key={property.property_id}
+                      data-property-row={property.property_id}
                       className="border-t border-[#e3e8df] hover:bg-[#eef0eb]/50 cursor-pointer transition-colors"
-                      onClick={() => handleViewPropertyDetails(property)}
+                      onClick={(e) => handleViewPropertyDetails(property, e)}
                     >
-                      <Td className="font-semibold text-[#2f6f5e] hover:underline">{property.property_name}</Td>
+                      <Td className="font-semibold text-[#2f6f5e] hover:underline">
+                        <span className="property-name-text inline-block">
+                          {property.property_name}
+                        </span>
+                      </Td>
                       <Td>{property.total_units}</Td>
                       <Td>{property.occupied_units}</Td>
                       <Td>{formatMoney(property.total_rent)}</Td>
@@ -2570,240 +2948,364 @@ export default function Home() {
       </div>
 
       {viewingPropertyDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative">
-            <div className="absolute right-6 top-6">
-              <button
-                type="button"
-                className="rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95"
-                onClick={() => setViewingPropertyDetails(null)}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          {/* Backdrop overlay */}
+          <div
+            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+              morphPhase === "expanded" ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={handleClosePropertyDetails}
+          />
 
-            <div className="mb-6 pr-10">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#60715f]">
+          {/* Modal card */}
+          <div
+            ref={modalRef}
+            className={`w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+              morphPhase === "expanded"
+                ? "pointer-events-auto"
+                : "pointer-events-none"
+            }`}
+            style={{
+              willChange: "transform",
+            }}
+          >
+            {/* Header: Always visible during transition */}
+            <div className="mb-6 pr-10 relative z-20">
+              <p
+                className="text-xs font-semibold uppercase tracking-[0.18em] text-[#60715f] transition-opacity duration-[500ms]"
+                style={{ opacity: morphPhase === "expanded" ? 1 : 0 }}
+              >
                 Property Details
               </p>
               <h3 className="mt-1 text-2xl font-bold text-[#1b1f1d] flex items-center gap-2">
-                <svg className="w-6 h-6 text-[#2f6f5e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2" />
+                <svg
+                  className="w-6 h-6 text-[#2f6f5e] transition-opacity duration-[500ms]"
+                  style={{ opacity: morphPhase === "expanded" ? 1 : 0 }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2"
+                  />
                 </svg>
-                {viewingPropertyDetails.property_name}
+                <span
+                  ref={titleRef}
+                  style={{ display: "inline-block", willChange: "transform" }}
+                >
+                  {viewingPropertyDetails.property_name}
+                </span>
               </h3>
-              {properties.find(p => p.id === viewingPropertyDetails.property_id)?.address && (
-                <p className="mt-1.5 text-sm text-[#60715f] flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {properties.find(p => p.id === viewingPropertyDetails.property_id)?.address}
-                </p>
-              )}
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-              <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">Total Rent</p>
-                <p className="mt-1 text-xl font-bold text-[#1b1f1d]">
-                  {formatMoney(viewingPropertyDetails.total_rent)}
-                  <span className="text-xs font-normal text-[#60715f] block mt-0.5">Estimated monthly</span>
-                </p>
-              </div>
-              <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">Collected</p>
-                <p className="mt-1 text-xl font-bold text-[#23633d]">
-                  {formatMoney(viewingPropertyDetails.total_collected)}
-                  <span className="text-xs font-normal text-[#60715f] block mt-0.5">This period</span>
-                </p>
-              </div>
-              <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">Pending</p>
-                <p className="mt-1 text-xl font-bold text-[#9a4d21]">
-                  {formatMoney(viewingPropertyDetails.total_pending)}
-                  <span className="text-xs font-normal text-[#60715f] block mt-0.5">Outstanding</span>
-                </p>
-              </div>
-              <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">Occupancy</p>
-                <p className="mt-1 text-xl font-bold text-[#1b1f1d]">
-                  {viewingPropertyDetails.occupied_units} / {viewingPropertyDetails.total_units}
-                  <span className="text-xs font-normal text-[#60715f] block mt-0.5">
-                    {viewingPropertyDetails.total_units > 0 
-                      ? Math.round((viewingPropertyDetails.occupied_units / viewingPropertyDetails.total_units) * 100)
-                      : 0}% Occupied
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-lg font-bold text-[#1b1f1d]">Units in Property</h4>
+            {/* Rest of the contents: Fade-in after morph completes */}
+            <div
+              style={{
+                opacity: morphPhase === "expanded" ? 1 : 0,
+                transition:
+                  morphPhase === "expanded"
+                    ? "opacity 300ms ease-out 200ms"
+                    : "opacity 150ms ease-out",
+              }}
+            >
+              <div className="absolute right-6 top-6">
                 <button
                   type="button"
-                  className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
-                  onClick={() => {
-                    setSelectedPropertyId(viewingPropertyDetails.property_id);
-                    loadUnits(viewingPropertyDetails.property_id);
-                    setViewingPropertyDetails(null);
-                    setNotice(`Property "${viewingPropertyDetails.property_name}" selected. You can now add units to it in the "Add Unit" section.`);
-                    window.scrollTo({ top: 300, behavior: 'smooth' });
-                  }}
+                  className="rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95"
+                  onClick={handleClosePropertyDetails}
                 >
-                  Manage Units & Add New
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
 
-              {viewingPropertyUnits.length === 0 ? (
-                <div className="text-center py-8 text-sm text-[#60715f]">
-                  No units added to this property yet.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-[#e3e8df]">
-                        <th className="pb-3 pr-4 font-semibold text-[#435146]">Unit</th>
-                        <th className="pb-3 pr-4 font-semibold text-[#435146]">Monthly Rent</th>
-                        <th className="pb-3 pr-4 font-semibold text-[#435146]">Tenant</th>
-                        <th className="pb-3 pr-4 font-semibold text-[#435146]">Status</th>
-                        <th className="pb-3 pr-4 font-semibold text-[#435146] text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#e3e8df]">
-                      {viewingPropertyUnits.map((unit) => {
-                        const activeRent = ownerDashboard?.rent_status?.find(
-                          (r) => r.unit_id === unit.id
-                        );
-
-                        return (
-                          <tr key={unit.id} className="hover:bg-[#f7f8f3]/50">
-                            <td className="py-3.5 pr-4 font-medium text-[#1b1f1d]">{unit.name}</td>
-                            <td className="py-3.5 pr-4">{formatMoney(unit.rent_amount)}/mo</td>
-                            <td className="py-3.5 pr-4">
-                              {activeRent ? (
-                                <div>
-                                  <p className="font-semibold text-gray-900">{activeRent.tenant_name}</p>
-                                  <p className="text-xs text-gray-500 font-normal">Active Tenant</p>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-[#8a9a88] italic">Vacant</span>
-                              )}
-                            </td>
-                            <td className="py-3.5 pr-4">
-                              {activeRent ? (
-                                <StatusLabel
-                                  status={activeRent.payment_status}
-                                  dueInDays={activeRent.due_in_days}
-                                  overdueByDays={activeRent.overdue_by_days}
-                                />
-                              ) : (
-                                <span className="inline-flex rounded-full bg-[#f3f4f6] text-[#6b7280] px-2.5 py-1 text-xs font-semibold">
-                                  N/A
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-3.5 pr-4 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  type="button"
-                                  className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
-                                  onClick={() => handleViewUnitDetails(unit.id)}
-                                  title={`View details of ${unit.name}`}
-                                  disabled={loading}
-                                >
-                                  <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                  </svg>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
-                                  onClick={() => {
-                                    setEditingUnit(unit);
-                                    setEditUnitName(unit.name);
-                                    setEditUnitRent(unit.rent_amount.toString());
-                                    setEditUnitLateFee(
-                                      unit.late_fee_percentage.toString(),
-                                    );
-                                    setEditUnitGracePeriod(
-                                      unit.grace_period_days.toString(),
-                                    );
-                                  }}
-                                  title={`Edit ${unit.name}`}
-                                  disabled={loading}
-                                >
-                                  <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="rounded p-1.5 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                                  onClick={() =>
-                                    setDeletingUnit({ id: unit.id, name: unit.name })
-                                  }
-                                  title={`Delete ${unit.name}`}
-                                  disabled={loading}
-                                >
-                                  <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 14 14"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                  >
-                                    <line x1="2" y1="2" x2="12" y2="12" />
-                                    <line x1="12" y1="2" x2="2" y2="12" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+              {properties.find(
+                (p) => p.id === viewingPropertyDetails.property_id,
+              )?.address && (
+                <p className="mt-1.5 text-sm text-[#60715f] flex items-center gap-1.5 mb-6">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  {
+                    properties.find(
+                      (p) => p.id === viewingPropertyDetails.property_id,
+                    )?.address
+                  }
+                </p>
               )}
-            </div>
 
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">
+                    Total Rent
+                  </p>
+                  <p className="mt-1 text-xl font-bold text-[#1b1f1d]">
+                    {formatMoney(viewingPropertyDetails.total_rent)}
+                    <span className="text-xs font-normal text-[#60715f] block mt-0.5">
+                      Estimated monthly
+                    </span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">
+                    Collected
+                  </p>
+                  <p className="mt-1 text-xl font-bold text-[#23633d]">
+                    {formatMoney(viewingPropertyDetails.total_collected)}
+                    <span className="text-xs font-normal text-[#60715f] block mt-0.5">
+                      This period
+                    </span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">
+                    Pending
+                  </p>
+                  <p className="mt-1 text-xl font-bold text-[#9a4d21]">
+                    {formatMoney(viewingPropertyDetails.total_pending)}
+                    <span className="text-xs font-normal text-[#60715f] block mt-0.5">
+                      Outstanding
+                    </span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">
+                    Occupancy
+                  </p>
+                  <p className="mt-1 text-xl font-bold text-[#1b1f1d]">
+                    {viewingPropertyDetails.occupied_units} /{" "}
+                    {viewingPropertyDetails.total_units}
+                    <span className="text-xs font-normal text-[#60715f] block mt-0.5">
+                      {viewingPropertyDetails.total_units > 0
+                        ? Math.round(
+                            (viewingPropertyDetails.occupied_units /
+                              viewingPropertyDetails.total_units) *
+                              100,
+                          )
+                        : 0}
+                      % Occupied
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-lg font-bold text-[#1b1f1d]">
+                    Units in Property
+                  </h4>
+                  <button
+                    type="button"
+                    className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
+                    onClick={() => {
+                      setSelectedPropertyId(viewingPropertyDetails.property_id);
+                      loadUnits(viewingPropertyDetails.property_id);
+                      handleClosePropertyDetails();
+                      setNotice(
+                        `Property "${viewingPropertyDetails.property_name}" selected. You can now add units to it in the "Add Unit" section.`,
+                      );
+                      setTimeout(() => {
+                        window.scrollTo({ top: 300, behavior: "smooth" });
+                      }, 500);
+                    }}
+                  >
+                    Manage Units & Add New
+                  </button>
+                </div>
+
+                {viewingPropertyUnits.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-[#60715f]">
+                    No units added to this property yet.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-[#e3e8df]">
+                          <th className="pb-3 pr-4 font-semibold text-[#435146]">
+                            Unit
+                          </th>
+                          <th className="pb-3 pr-4 font-semibold text-[#435146]">
+                            Monthly Rent
+                          </th>
+                          <th className="pb-3 pr-4 font-semibold text-[#435146]">
+                            Tenant
+                          </th>
+                          <th className="pb-3 pr-4 font-semibold text-[#435146]">
+                            Status
+                          </th>
+                          <th className="pb-3 pr-4 font-semibold text-[#435146] text-right">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#e3e8df]">
+                        {viewingPropertyUnits.map((unit) => {
+                          const activeRent = ownerDashboard?.rent_status?.find(
+                            (r) => r.unit_id === unit.id,
+                          );
+
+                          return (
+                            <tr key={unit.id} className="hover:bg-[#f7f8f3]/50">
+                              <td className="py-3.5 pr-4 font-medium text-[#1b1f1d]">
+                                {unit.name}
+                              </td>
+                              <td className="py-3.5 pr-4">
+                                {formatMoney(unit.rent_amount)}/mo
+                              </td>
+                              <td className="py-3.5 pr-4">
+                                {activeRent ? (
+                                  <div>
+                                    <p className="font-semibold text-gray-900">
+                                      {activeRent.tenant_name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 font-normal">
+                                      Active Tenant
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-[#8a9a88] italic">
+                                    Vacant
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3.5 pr-4">
+                                {activeRent ? (
+                                  <StatusLabel
+                                    status={activeRent.payment_status}
+                                    dueInDays={activeRent.due_in_days}
+                                    overdueByDays={activeRent.overdue_by_days}
+                                  />
+                                ) : (
+                                  <span className="inline-flex rounded-full bg-[#f3f4f6] text-[#6b7280] px-2.5 py-1 text-xs font-semibold">
+                                    N/A
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3.5 pr-4 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                                    onClick={() =>
+                                      handleViewUnitDetails(unit.id)
+                                    }
+                                    title={`View details of ${unit.name}`}
+                                    disabled={loading}
+                                  >
+                                    <svg
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                      <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                                    onClick={() => {
+                                      setEditingUnit(unit);
+                                      setEditUnitName(unit.name);
+                                      setEditUnitRent(
+                                        unit.rent_amount.toString(),
+                                      );
+                                      setEditUnitLateFee(
+                                        unit.late_fee_percentage.toString(),
+                                      );
+                                      setEditUnitGracePeriod(
+                                        unit.grace_period_days.toString(),
+                                      );
+                                    }}
+                                    title={`Edit ${unit.name}`}
+                                    disabled={loading}
+                                  >
+                                    <svg
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="rounded p-1.5 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
+                                    onClick={() =>
+                                      setDeletingUnit({
+                                        id: unit.id,
+                                        name: unit.name,
+                                      })
+                                    }
+                                    title={`Delete ${unit.name}`}
+                                    disabled={loading}
+                                  >
+                                    <svg
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 14 14"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    >
+                                      <line x1="2" y1="2" x2="12" y2="12" />
+                                      <line x1="12" y1="2" x2="2" y2="12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -2812,9 +3314,7 @@ export default function Home() {
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#1b1f1d]">
-              Log Out
-            </h3>
+            <h3 className="text-lg font-semibold text-[#1b1f1d]">Log Out</h3>
             <p className="mt-2 text-sm text-[#60715f]">
               Are you sure you want to log out?
             </p>
@@ -3182,13 +3682,9 @@ export default function Home() {
                 </div>
               )}
             </div>
-
-
           </div>
         </div>
       )}
-
-
 
       <TenantDirectoryModal
         isOpen={showTenantDirectory}
@@ -3242,11 +3738,27 @@ function DataTable({
   );
 }
 
-function Th({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <th className={`pb-3 pr-4 font-semibold text-[#435146] ${className}`}>{children}</th>;
+function Th({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <th className={`pb-3 pr-4 font-semibold text-[#435146] ${className}`}>
+      {children}
+    </th>
+  );
 }
 
-function Td({ children, className = "" }: { children: ReactNode; className?: string }) {
+function Td({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return <td className={`py-3 pr-4 ${className}`}>{children}</td>;
 }
 
