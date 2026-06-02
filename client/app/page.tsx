@@ -354,20 +354,24 @@ export default function Home() {
       modal.offsetHeight;
 
       modal.style.transition =
-        "transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 500ms ease";
+        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
       modal.style.transform = "translate3d(0, 0, 0) scale(1)";
       modal.style.opacity = "1";
 
       if (title) {
         title.style.transition =
-          "transform 500ms cubic-bezier(0.16, 1, 0.3, 1), color 500ms ease";
+          "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
         title.style.transform = "translate3d(0, 0, 0) scale(1)";
         title.style.color = "#1b1f1d";
       }
 
-      setMorphPhase("expanded");
+      const timer = setTimeout(() => {
+        setMorphPhase("expanded");
+      }, 250);
+
+      return () => clearTimeout(timer);
     }
-  }, [viewingPropertyDetails, morphStartRect, titleStartRect]);
+  }, [viewingPropertyDetails, morphStartRect, titleStartRect, morphPhase]);
 
   const loadDashboard = async (role?: Role) => {
     const currentRole = role || user?.role;
@@ -709,7 +713,7 @@ export default function Home() {
     setMorphPhase("morphing-out");
 
     modal.style.transition =
-      "transform 500ms cubic-bezier(0.16, 1, 0.3, 1), opacity 500ms ease";
+      "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
     modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
     modal.style.opacity = "0";
     modal.style.transformOrigin = "top left";
@@ -722,7 +726,7 @@ export default function Home() {
       const tScale = titleStartRect.height / titleFinalRect.height;
 
       title.style.transition =
-        "transform 500ms cubic-bezier(0.16, 1, 0.3, 1), color 500ms ease";
+        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
       title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
       title.style.transformOrigin = "top left";
       title.style.color = "#2f6f5e";
@@ -732,7 +736,7 @@ export default function Home() {
       setViewingPropertyDetails(null);
       setMorphPhase("idle");
       setMorphStartRect(null);
-    }, 500);
+    }, 250);
   };
 
   const refreshViewingPropertyUnits = async (propertyId: number) => {
@@ -2951,7 +2955,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
-            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
               morphPhase === "expanded" ? "opacity-100" : "opacity-0"
             }`}
             onClick={handleClosePropertyDetails}
@@ -2969,17 +2973,46 @@ export default function Home() {
               willChange: "transform",
             }}
           >
+            {/* Close Button - elevated z-index to sit on top of the z-20 header */}
+            <button
+              type="button"
+              className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95 ${
+                morphPhase === "expanded" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}
+              style={{
+                transition:
+                  morphPhase === "expanded"
+                    ? "opacity 250ms ease-out 200ms"
+                    : "opacity 150ms ease-out",
+              }}
+              onClick={handleClosePropertyDetails}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+
             {/* Header: Always visible during transition */}
             <div className="mb-6 pr-10 relative z-20">
               <p
-                className="text-xs font-semibold uppercase tracking-[0.18em] text-[#60715f] transition-opacity duration-[500ms]"
+                className="text-xs font-semibold uppercase tracking-[0.18em] text-[#60715f] transition-opacity duration-[250ms]"
                 style={{ opacity: morphPhase === "expanded" ? 1 : 0 }}
               >
                 Property Details
               </p>
               <h3 className="mt-1 text-2xl font-bold text-[#1b1f1d] flex items-center gap-2">
                 <svg
-                  className="w-6 h-6 text-[#2f6f5e] transition-opacity duration-[500ms]"
+                  className="w-6 h-6 text-[#2f6f5e] transition-opacity duration-[250ms]"
                   style={{ opacity: morphPhase === "expanded" ? 1 : 0 }}
                   fill="none"
                   stroke="currentColor"
@@ -3007,31 +3040,10 @@ export default function Home() {
                 opacity: morphPhase === "expanded" ? 1 : 0,
                 transition:
                   morphPhase === "expanded"
-                    ? "opacity 300ms ease-out 200ms"
+                    ? "opacity 250ms ease-out 200ms"
                     : "opacity 150ms ease-out",
               }}
             >
-              <div className="absolute right-6 top-6">
-                <button
-                  type="button"
-                  className="rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95"
-                  onClick={handleClosePropertyDetails}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
 
               {properties.find(
                 (p) => p.id === viewingPropertyDetails.property_id,
