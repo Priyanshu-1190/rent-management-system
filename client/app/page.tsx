@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import TenantDirectoryModal from "./components/TenantDirectoryModal";
 import type { FormEvent, ReactNode } from "react";
 
@@ -135,11 +135,11 @@ type UnitDetails = {
   due_day: number;
   late_fee_percentage: number;
   grace_period_days: number;
-  tenancy_id: number | null;
-  tenant_name: string | null;
-  tenant_email: string | null;
-  move_in_date: string | null;
-  deposit: number;
+  tenancy_id?: number | null;
+  tenant_name?: string | null;
+  tenant_email?: string | null;
+  move_in_date?: string | null;
+  deposit?: number;
 };
 
 function formatKolkataTime(timestamp: string) {
@@ -261,6 +261,25 @@ export default function Home() {
     height: number;
   } | null>(null);
   const titleRef = useRef<HTMLSpanElement>(null);
+  // Morph transition state for unit details
+  const [unitMorphStartRect, setUnitMorphStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    unitId: number;
+  } | null>(null);
+  const [unitMorphPhase, setUnitMorphPhase] = useState<
+    "idle" | "morphing-in" | "expanded" | "morphing-out"
+  >("idle");
+  const unitModalRef = useRef<HTMLDivElement>(null);
+  const [unitTitleStartRect, setUnitTitleStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const unitTitleRef = useRef<HTMLHeadingElement>(null);
 
   // Invite state
   const [sentInvites, setSentInvites] = useState<Invite[]>([]);
@@ -311,7 +330,7 @@ export default function Home() {
   }, []);
 
   // Morph animation lifecycle management using FLIP
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (
       viewingPropertyDetails &&
       modalRef.current &&
@@ -372,6 +391,69 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [viewingPropertyDetails, morphStartRect, titleStartRect, morphPhase]);
+
+  // Morph animation lifecycle management using FLIP for unit details
+  useLayoutEffect(() => {
+    if (
+      viewingUnitDetails &&
+      unitModalRef.current &&
+      unitMorphStartRect &&
+      unitMorphPhase === "morphing-in"
+    ) {
+      const modal = unitModalRef.current;
+      const finalRect = modal.getBoundingClientRect();
+
+      let tDeltaX = 0;
+      let tDeltaY = 0;
+      let tScale = 1;
+      let title = null;
+
+      if (unitTitleRef.current && unitTitleStartRect) {
+        title = unitTitleRef.current;
+        const titleFinalRect = title.getBoundingClientRect();
+        tDeltaX = unitTitleStartRect.left - titleFinalRect.left;
+        tDeltaY = unitTitleStartRect.top - titleFinalRect.top;
+        tScale = unitTitleStartRect.height / titleFinalRect.height;
+      }
+
+      const deltaX = unitMorphStartRect.left - finalRect.left;
+      const deltaY = unitMorphStartRect.top - finalRect.top;
+      const scaleX = unitMorphStartRect.width / finalRect.width;
+      const scaleY = unitMorphStartRect.height / finalRect.height;
+
+      modal.style.transition = "none";
+      modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+      modal.style.opacity = "1";
+      modal.style.transformOrigin = "top left";
+
+      if (title && scaleX && scaleY) {
+        title.style.transition = "none";
+        title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        title.style.transformOrigin = "top left";
+        title.style.color = "#2f6f5e";
+      }
+
+      modal.offsetHeight;
+
+      modal.style.transition =
+        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+      modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+      modal.style.opacity = "1";
+
+      if (title) {
+        title.style.transition =
+          "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+        title.style.transform = "translate3d(0, 0, 0) scale(1)";
+        title.style.color = "#1b1f1d";
+      }
+
+      const timer = setTimeout(() => {
+        setUnitMorphPhase("expanded");
+      }, 250);
+
+      return () => clearTimeout(timer);
+    }
+  }, [viewingUnitDetails, unitMorphStartRect, unitTitleStartRect, unitMorphPhase]);
 
   const loadDashboard = async (role?: Role) => {
     const currentRole = role || user?.role;
@@ -613,18 +695,78 @@ export default function Home() {
     }
   };
 
-  const handleViewUnitDetails = async (unitId: number) => {
+  const handleViewUnitDetails = async (unitId: number, e?: React.MouseEvent) => {
     setLoading(true);
     setNotice("");
+    const animationStartTime = Date.now();
+
+    // Look up cached unit info so we can morph/render immediately
+    const unit = viewingPropertyUnits.find((u) => u.id === unitId) || propertyUnits.find((u) => u.id === unitId);
+    
+    if (unit) {
+      const prop = properties.find((p) => p.id === unit.property_id) || viewingPropertyDetails;
+      const propertyName = prop ? prop.name || prop.property_name : "";
+
+      setViewingUnitDetails({
+        unit_name: unit.name,
+        property_name: propertyName || "",
+        rent_amount: unit.rent_amount,
+        due_day: unit.due_day,
+        late_fee_percentage: unit.late_fee_percentage,
+        grace_period_days: unit.grace_period_days,
+        tenancy_id: undefined, // undefined tenancy_id represents loading state
+      });
+    }
+
+    if (e) {
+      const button = e.currentTarget as HTMLElement;
+      const container = button.closest("li, tr") as HTMLElement;
+      const rect = container ? container.getBoundingClientRect() : button.getBoundingClientRect();
+
+      setUnitMorphStartRect({
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        unitId: unitId,
+      });
+
+      const nameEl = container ? (container.querySelector(".unit-name-text") as HTMLElement) : null;
+      if (nameEl) {
+        const nameRect = nameEl.getBoundingClientRect();
+        setUnitTitleStartRect({
+          left: nameRect.left,
+          top: nameRect.top,
+          width: nameRect.width,
+          height: nameRect.height,
+        });
+      }
+
+      setUnitMorphPhase("morphing-in");
+    }
+
     try {
       const res = await fetch(`/api/proxy/units/${unitId}/details`);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to load unit details");
+      
+      const elapsed = Date.now() - animationStartTime;
+      const remainingTime = 250 - elapsed;
+      if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      }
+
+      // Update with full unit details including lease/tenant
       setViewingUnitDetails(body);
     } catch (err) {
       setNotice(
         err instanceof Error ? err.message : "Failed to load unit details",
       );
+      if (!unit) {
+        // If we didn't have cached data and loading failed, close modal
+        setUnitMorphPhase("idle");
+        setUnitMorphStartRect(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -638,6 +780,7 @@ export default function Home() {
     const cachedUnits = preloadedUnits[propertyId] || [];
 
     setViewingPropertyUnits(cachedUnits);
+    const animationStartTime = Date.now();
 
     if (e) {
       const row = e.currentTarget as HTMLElement;
@@ -670,6 +813,11 @@ export default function Home() {
       const res = await fetch(`/api/proxy/units/property/${propertyId}`);
       const body = await res.json();
       if (res.ok) {
+        const elapsed = Date.now() - animationStartTime;
+        const remainingTime = 250 - elapsed;
+        if (remainingTime > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remainingTime));
+        }
         setViewingPropertyUnits(body);
         setPreloadedUnits((prev) => ({ ...prev, [propertyId]: body }));
       }
@@ -736,6 +884,69 @@ export default function Home() {
       setViewingPropertyDetails(null);
       setMorphPhase("idle");
       setMorphStartRect(null);
+    }, 250);
+  };
+
+  const handleCloseUnitDetails = () => {
+    if (!unitModalRef.current || !unitMorphStartRect) {
+      setViewingUnitDetails(null);
+      setUnitMorphPhase("idle");
+      setUnitMorphStartRect(null);
+      return;
+    }
+
+    const modal = unitModalRef.current;
+    let latestRect = unitMorphStartRect;
+
+    const rowElement = document.querySelector(
+      `[data-unit-row="${unitMorphStartRect.unitId}"]`,
+    ) || document.querySelector(
+      `[data-property-unit-row="${unitMorphStartRect.unitId}"]`
+    );
+    if (rowElement) {
+      const rect = rowElement.getBoundingClientRect();
+      latestRect = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        unitId: unitMorphStartRect.unitId,
+      };
+      setUnitMorphStartRect(latestRect);
+    }
+
+    const finalRect = modal.getBoundingClientRect();
+    const deltaX = latestRect.left - finalRect.left;
+    const deltaY = latestRect.top - finalRect.top;
+    const scaleX = latestRect.width / finalRect.width;
+    const scaleY = latestRect.height / finalRect.height;
+
+    setUnitMorphPhase("morphing-out");
+
+    modal.style.transition =
+      "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+    modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+    modal.style.opacity = "0";
+    modal.style.transformOrigin = "top left";
+
+    if (unitTitleRef.current && unitTitleStartRect && scaleX && scaleY) {
+      const title = unitTitleRef.current;
+      const titleFinalRect = title.getBoundingClientRect();
+      const tDeltaX = unitTitleStartRect.left - titleFinalRect.left;
+      const tDeltaY = unitTitleStartRect.top - titleFinalRect.top;
+      const tScale = unitTitleStartRect.height / titleFinalRect.height;
+
+      title.style.transition =
+        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+      title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+      title.style.transformOrigin = "top left";
+      title.style.color = "#2f6f5e";
+    }
+
+    setTimeout(() => {
+      setViewingUnitDetails(null);
+      setUnitMorphPhase("idle");
+      setUnitMorphStartRect(null);
     }, 250);
   };
 
@@ -2294,10 +2505,11 @@ export default function Home() {
                     {propertyUnits.map((u) => (
                       <li
                         key={u.id}
+                        data-unit-row={u.id}
                         className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm"
                       >
                         <div className="min-w-0 flex-1">
-                          <span className="font-medium">{u.name}</span>
+                          <span className="unit-name-text font-medium">{u.name}</span>
                           <span className="ml-2 text-[#2f6f5e] font-semibold">
                             {formatMoney(u.rent_amount)}/mo
                           </span>
@@ -2306,7 +2518,7 @@ export default function Home() {
                           <button
                             type="button"
                             className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
-                            onClick={() => handleViewUnitDetails(u.id)}
+                            onClick={(e) => handleViewUnitDetails(u.id, e)}
                             title={`View details of ${u.name}`}
                             disabled={loading}
                           >
@@ -3188,8 +3400,12 @@ export default function Home() {
                           );
 
                           return (
-                            <tr key={unit.id} className="hover:bg-[#f7f8f3]/50">
-                              <td className="py-3.5 pr-4 font-medium text-[#1b1f1d]">
+                            <tr
+                              key={unit.id}
+                              data-property-unit-row={unit.id}
+                              className="hover:bg-[#f7f8f3]/50"
+                            >
+                              <td className="unit-name-text py-3.5 pr-4 font-medium text-[#1b1f1d]">
                                 {unit.name}
                               </td>
                               <td className="py-3.5 pr-4">
@@ -3229,8 +3445,8 @@ export default function Home() {
                                   <button
                                     type="button"
                                     className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
-                                    onClick={() =>
-                                      handleViewUnitDetails(unit.id)
+                                    onClick={(e) =>
+                                      handleViewUnitDetails(unit.id, e)
                                     }
                                     title={`View details of ${unit.name}`}
                                     disabled={loading}
@@ -3574,125 +3790,176 @@ export default function Home() {
 
       {/* Unit Details Modal */}
       {viewingUnitDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-xl font-semibold text-[#1b1f1d]">
-                  {viewingUnitDetails.unit_name}
-                </h3>
-                <p className="text-sm text-[#60715f]">
-                  {viewingUnitDetails.property_name}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="rounded-md p-1 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
-                onClick={() => setViewingUnitDetails(null)}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          {/* Backdrop overlay */}
+          <div
+            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+              unitMorphPhase === "expanded" ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={handleCloseUnitDetails}
+          />
+
+          {/* Modal card */}
+          <div
+            ref={unitModalRef}
+            className={`w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+              unitMorphPhase === "expanded"
+                ? "pointer-events-auto"
+                : "pointer-events-none"
+            }`}
+            style={{
+              willChange: "transform",
+            }}
+          >
+            {/* Close Button - elevated z-index */}
+            <button
+              type="button"
+              className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95 ${
+                unitMorphPhase === "expanded" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}
+              style={{
+                transition:
+                  unitMorphPhase === "expanded"
+                    ? "opacity 250ms ease-out 200ms"
+                    : "opacity 150ms ease-out",
+              }}
+              onClick={handleCloseUnitDetails}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+
+            {/* Header: Always visible during transition */}
+            <div className="mb-5 pr-10 relative z-20">
+              <h3
+                ref={unitTitleRef}
+                className="text-xl font-semibold text-[#1b1f1d]"
+                style={{ display: "inline-block", willChange: "transform" }}
+              >
+                {viewingUnitDetails.unit_name}
+              </h3>
+              <p
+                className="text-sm text-[#60715f] transition-opacity duration-[250ms]"
+                style={{ opacity: unitMorphPhase === "expanded" ? 1 : 0 }}
+              >
+                {viewingUnitDetails.property_name}
+              </p>
             </div>
 
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">
-                  Rent Amount
-                </p>
-                <p className="mt-1 text-xl font-semibold text-[#2f6f5e]">
-                  {formatMoney(viewingUnitDetails.rent_amount)}
-                  <span className="text-sm font-normal text-[#60715f]">
-                    /mo
-                  </span>
-                </p>
+            {/* Rest of the contents: Fade-in after morph completes */}
+            <div
+              style={{
+                opacity: unitMorphPhase === "expanded" ? 1 : 0,
+                transition:
+                  unitMorphPhase === "expanded"
+                    ? "opacity 250ms ease-out 200ms"
+                    : "opacity 150ms ease-out",
+              }}
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">
+                    Rent Amount
+                  </p>
+                  <p className="mt-1 text-xl font-semibold text-[#2f6f5e]">
+                    {formatMoney(viewingUnitDetails.rent_amount)}
+                    <span className="text-sm font-normal text-[#60715f]">
+                      /mo
+                    </span>
+                  </p>
+                </div>
+                <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">
+                    Terms
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-[#1b1f1d]">
+                    Due:{" "}
+                    <span className="font-normal text-[#435146]">
+                      Day {viewingUnitDetails.due_day}
+                    </span>
+                  </p>
+                  <p className="text-sm font-medium text-[#1b1f1d]">
+                    Late Fee:{" "}
+                    <span className="font-normal text-[#435146]">
+                      {viewingUnitDetails.late_fee_percentage}% (Grace:{" "}
+                      {viewingUnitDetails.grace_period_days}d)
+                    </span>
+                  </p>
+                </div>
               </div>
-              <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">
-                  Terms
-                </p>
-                <p className="mt-1 text-sm font-medium text-[#1b1f1d]">
-                  Due:{" "}
-                  <span className="font-normal text-[#435146]">
-                    Day {viewingUnitDetails.due_day}
-                  </span>
-                </p>
-                <p className="text-sm font-medium text-[#1b1f1d]">
-                  Late Fee:{" "}
-                  <span className="font-normal text-[#435146]">
-                    {viewingUnitDetails.late_fee_percentage}% (Grace:{" "}
-                    {viewingUnitDetails.grace_period_days}d)
-                  </span>
-                </p>
-              </div>
-            </div>
 
-            <div className="mt-6 border-t border-[#e3e8df] pt-5">
-              <h4 className="font-semibold text-[#1b1f1d] mb-4 flex items-center gap-2">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                Assigned Tenant
-              </h4>
-              {viewingUnitDetails.tenancy_id ? (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
-                      Tenant Info
-                    </p>
-                    <p className="text-sm font-medium text-[#1b1f1d]">
-                      {viewingUnitDetails.tenant_name || "N/A"}
-                    </p>
-                    <p className="text-sm text-[#435146]">
-                      {viewingUnitDetails.tenant_email}
-                    </p>
+              <div className="mt-6 border-t border-[#e3e8df] pt-5">
+                <h4 className="font-semibold text-[#1b1f1d] mb-4 flex items-center gap-2">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Assigned Tenant
+                </h4>
+                {viewingUnitDetails.tenancy_id === undefined ? (
+                  <div className="animate-pulse space-y-3 py-2">
+                    <div className="h-4 bg-[#eef0eb] rounded w-1/3"></div>
+                    <div className="h-4 bg-[#eef0eb] rounded w-1/2"></div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
-                      Lease Details
-                    </p>
-                    <p className="text-sm font-medium text-[#1b1f1d]">
-                      Move-in:{" "}
-                      <span className="font-normal text-[#435146]">
-                        {formatDate(viewingUnitDetails.move_in_date)}
-                      </span>
-                    </p>
-                    <p className="text-sm font-medium text-[#1b1f1d]">
-                      Deposit:{" "}
-                      <span className="font-normal text-[#435146]">
-                        {formatMoney(viewingUnitDetails.deposit)}
-                      </span>
-                    </p>
+                ) : viewingUnitDetails.tenancy_id ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
+                        Tenant Info
+                      </p>
+                      <p className="text-sm font-medium text-[#1b1f1d]">
+                        {viewingUnitDetails.tenant_name || "N/A"}
+                      </p>
+                      <p className="text-sm text-[#435146]">
+                        {viewingUnitDetails.tenant_email}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
+                        Lease Details
+                      </p>
+                      <p className="text-sm font-medium text-[#1b1f1d]">
+                        Move-in:{" "}
+                        <span className="font-normal text-[#435146]">
+                          {formatDate(viewingUnitDetails.move_in_date ?? null)}
+                        </span>
+                      </p>
+                      <p className="text-sm font-medium text-[#1b1f1d]">
+                        Deposit:{" "}
+                        <span className="font-normal text-[#435146]">
+                          {formatMoney(viewingUnitDetails.deposit ?? 0)}
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="rounded-md bg-[#fff9eb] p-3 border border-[#e0b15c]/50 text-sm text-[#6b4c18]">
-                  No tenant is currently assigned to this unit.
-                </div>
-              )}
+                ) : (
+                  <div className="rounded-md bg-[#fff9eb] p-3 border border-[#e0b15c]/50 text-sm text-[#6b4c18]">
+                    No tenant is currently assigned to this unit.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
