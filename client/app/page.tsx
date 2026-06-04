@@ -281,6 +281,46 @@ export default function Home() {
   } | null>(null);
   const unitTitleRef = useRef<HTMLHeadingElement>(null);
 
+  // Morph transition state for editing property
+  const [editPropMorphStartRect, setEditPropMorphStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    propertyId: number;
+  } | null>(null);
+  const [editPropMorphPhase, setEditPropMorphPhase] = useState<
+    "idle" | "morphing-in" | "expanded" | "morphing-out"
+  >("idle");
+  const editPropModalRef = useRef<HTMLDivElement>(null);
+  const [editPropTitleStartRect, setEditPropTitleStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const editPropTitleRef = useRef<HTMLHeadingElement>(null);
+
+  // Morph transition state for editing unit
+  const [editUnitMorphStartRect, setEditUnitMorphStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    unitId: number;
+  } | null>(null);
+  const [editUnitMorphPhase, setEditUnitMorphPhase] = useState<
+    "idle" | "morphing-in" | "expanded" | "morphing-out"
+  >("idle");
+  const editUnitModalRef = useRef<HTMLDivElement>(null);
+  const [editUnitTitleStartRect, setEditUnitTitleStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const editUnitTitleRef = useRef<HTMLHeadingElement>(null);
+
   // Invite state
   const [sentInvites, setSentInvites] = useState<Invite[]>([]);
   const [receivedInvites, setReceivedInvites] = useState<Invite[]>([]);
@@ -454,6 +494,132 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [viewingUnitDetails, unitMorphStartRect, unitTitleStartRect, unitMorphPhase]);
+
+  // Morph animation lifecycle management using FLIP for editing property
+  useLayoutEffect(() => {
+    if (
+      editingProperty &&
+      editPropModalRef.current &&
+      editPropMorphStartRect &&
+      editPropMorphPhase === "morphing-in"
+    ) {
+      const modal = editPropModalRef.current;
+      const finalRect = modal.getBoundingClientRect();
+
+      let tDeltaX = 0;
+      let tDeltaY = 0;
+      let tScale = 1;
+      let title = null;
+
+      if (editPropTitleRef.current && editPropTitleStartRect) {
+        title = editPropTitleRef.current;
+        const titleFinalRect = title.getBoundingClientRect();
+        tDeltaX = editPropTitleStartRect.left - titleFinalRect.left;
+        tDeltaY = editPropTitleStartRect.top - titleFinalRect.top;
+        tScale = editPropTitleStartRect.height / titleFinalRect.height;
+      }
+
+      const deltaX = editPropMorphStartRect.left - finalRect.left;
+      const deltaY = editPropMorphStartRect.top - finalRect.top;
+      const scaleX = editPropMorphStartRect.width / finalRect.width;
+      const scaleY = editPropMorphStartRect.height / finalRect.height;
+
+      modal.style.transition = "none";
+      modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+      modal.style.opacity = "1";
+      modal.style.transformOrigin = "top left";
+
+      if (title && scaleX && scaleY) {
+        title.style.transition = "none";
+        title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        title.style.transformOrigin = "top left";
+        title.style.color = "#2f6f5e";
+      }
+
+      modal.offsetHeight;
+
+      modal.style.transition =
+        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+      modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+      modal.style.opacity = "1";
+
+      if (title) {
+        title.style.transition =
+          "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+        title.style.transform = "translate3d(0, 0, 0) scale(1)";
+        title.style.color = "#2f6f5e";
+      }
+
+      const timer = setTimeout(() => {
+        setEditPropMorphPhase("expanded");
+      }, 250);
+
+      return () => clearTimeout(timer);
+    }
+  }, [editingProperty, editPropMorphStartRect, editPropTitleStartRect, editPropMorphPhase]);
+
+  // Morph animation lifecycle management using FLIP for editing unit
+  useLayoutEffect(() => {
+    if (
+      editingUnit &&
+      editUnitModalRef.current &&
+      editUnitMorphStartRect &&
+      editUnitMorphPhase === "morphing-in"
+    ) {
+      const modal = editUnitModalRef.current;
+      const finalRect = modal.getBoundingClientRect();
+
+      let tDeltaX = 0;
+      let tDeltaY = 0;
+      let tScale = 1;
+      let title = null;
+
+      if (editUnitTitleRef.current && editUnitTitleStartRect) {
+        title = editUnitTitleRef.current;
+        const titleFinalRect = title.getBoundingClientRect();
+        tDeltaX = editUnitTitleStartRect.left - titleFinalRect.left;
+        tDeltaY = editUnitTitleStartRect.top - titleFinalRect.top;
+        tScale = editUnitTitleStartRect.height / titleFinalRect.height;
+      }
+
+      const deltaX = editUnitMorphStartRect.left - finalRect.left;
+      const deltaY = editUnitMorphStartRect.top - finalRect.top;
+      const scaleX = editUnitMorphStartRect.width / finalRect.width;
+      const scaleY = editUnitMorphStartRect.height / finalRect.height;
+
+      modal.style.transition = "none";
+      modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+      modal.style.opacity = "1";
+      modal.style.transformOrigin = "top left";
+
+      if (title && scaleX && scaleY) {
+        title.style.transition = "none";
+        title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        title.style.transformOrigin = "top left";
+        title.style.color = "#2f6f5e";
+      }
+
+      modal.offsetHeight;
+
+      modal.style.transition =
+        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+      modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+      modal.style.opacity = "1";
+
+      if (title) {
+        title.style.transition =
+          "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+        title.style.transform = "translate3d(0, 0, 0) scale(1)";
+        title.style.color = "#2f6f5e";
+      }
+
+      const timer = setTimeout(() => {
+        setEditUnitMorphPhase("expanded");
+      }, 250);
+
+      return () => clearTimeout(timer);
+    }
+  }, [editingUnit, editUnitMorphStartRect, editUnitTitleStartRect, editUnitMorphPhase]);
 
   const loadDashboard = async (role?: Role) => {
     const currentRole = role || user?.role;
@@ -660,7 +826,7 @@ export default function Home() {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to update property");
-      setEditingProperty(null);
+      handleCloseEditProperty();
       await loadProperties();
       await loadDashboard();
       await loadAvailableUnits();
@@ -721,7 +887,8 @@ export default function Home() {
     if (e) {
       const button = e.currentTarget as HTMLElement;
       const container = button.closest("li, tr") as HTMLElement;
-      const rect = container ? container.getBoundingClientRect() : button.getBoundingClientRect();
+      const nameEl = container ? (container.querySelector(".unit-name-text") as HTMLElement) : null;
+      const rect = nameEl ? nameEl.getBoundingClientRect() : (container ? container.getBoundingClientRect() : button.getBoundingClientRect());
 
       setUnitMorphStartRect({
         left: rect.left,
@@ -731,7 +898,6 @@ export default function Home() {
         unitId: unitId,
       });
 
-      const nameEl = container ? (container.querySelector(".unit-name-text") as HTMLElement) : null;
       if (nameEl) {
         const nameRect = nameEl.getBoundingClientRect();
         setUnitTitleStartRect({
@@ -751,7 +917,7 @@ export default function Home() {
       if (!res.ok) throw new Error(body.error || "Failed to load unit details");
       
       const elapsed = Date.now() - animationStartTime;
-      const remainingTime = 250 - elapsed;
+      const remainingTime = 300 - elapsed;
       if (remainingTime > 0) {
         await new Promise((resolve) => setTimeout(resolve, remainingTime));
       }
@@ -784,7 +950,8 @@ export default function Home() {
 
     if (e) {
       const row = e.currentTarget as HTMLElement;
-      const rect = row.getBoundingClientRect();
+      const nameEl = row.querySelector(".property-name-text") as HTMLElement;
+      const rect = nameEl ? nameEl.getBoundingClientRect() : row.getBoundingClientRect();
       setMorphStartRect({
         left: rect.left,
         top: rect.top,
@@ -793,7 +960,6 @@ export default function Home() {
         propertyId: propertyId,
       });
 
-      const nameEl = row.querySelector(".property-name-text") as HTMLElement;
       if (nameEl) {
         const nameRect = nameEl.getBoundingClientRect();
         setTitleStartRect({
@@ -814,7 +980,7 @@ export default function Home() {
       const body = await res.json();
       if (res.ok) {
         const elapsed = Date.now() - animationStartTime;
-        const remainingTime = 250 - elapsed;
+        const remainingTime = 300 - elapsed;
         if (remainingTime > 0) {
           await new Promise((resolve) => setTimeout(resolve, remainingTime));
         }
@@ -841,7 +1007,8 @@ export default function Home() {
       `[data-property-row="${morphStartRect.propertyId}"]`,
     );
     if (rowElement) {
-      const rect = rowElement.getBoundingClientRect();
+      const nameEl = rowElement.querySelector(".property-name-text") as HTMLElement;
+      const rect = nameEl ? nameEl.getBoundingClientRect() : rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -904,7 +1071,8 @@ export default function Home() {
       `[data-property-unit-row="${unitMorphStartRect.unitId}"]`
     );
     if (rowElement) {
-      const rect = rowElement.getBoundingClientRect();
+      const nameEl = rowElement.querySelector(".unit-name-text") as HTMLElement;
+      const rect = nameEl ? nameEl.getBoundingClientRect() : rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -947,6 +1115,194 @@ export default function Home() {
       setViewingUnitDetails(null);
       setUnitMorphPhase("idle");
       setUnitMorphStartRect(null);
+    }, 250);
+  };
+
+  const handleOpenEditProperty = (p: Property, e?: React.MouseEvent) => {
+    if (e) {
+      const button = e.currentTarget as HTMLElement;
+      const row = button.closest("li") as HTMLElement;
+      const nameEl = row ? (row.querySelector(".property-name-text") as HTMLElement) : null;
+      const rect = nameEl ? nameEl.getBoundingClientRect() : (row ? row.getBoundingClientRect() : button.getBoundingClientRect());
+      setEditPropMorphStartRect({
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        propertyId: p.id,
+      });
+
+      if (nameEl) {
+        const nameRect = nameEl.getBoundingClientRect();
+        setEditPropTitleStartRect({
+          left: nameRect.left,
+          top: nameRect.top,
+          width: nameRect.width,
+          height: nameRect.height,
+        });
+      }
+      setEditPropMorphPhase("morphing-in");
+    }
+    setEditingProperty(p);
+    setEditPropName(p.name);
+    setEditPropAddress(p.address || "");
+  };
+
+  const handleCloseEditProperty = () => {
+    if (!editPropModalRef.current || !editPropMorphStartRect) {
+      setEditingProperty(null);
+      setEditPropMorphPhase("idle");
+      setEditPropMorphStartRect(null);
+      return;
+    }
+
+    const modal = editPropModalRef.current;
+    let latestRect = editPropMorphStartRect;
+
+    const rowElement = document.querySelector(
+      `[data-edit-property-row="${editPropMorphStartRect.propertyId}"]`,
+    );
+    if (rowElement) {
+      const nameEl = rowElement.querySelector(".property-name-text") as HTMLElement;
+      const rect = nameEl ? nameEl.getBoundingClientRect() : rowElement.getBoundingClientRect();
+      latestRect = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        propertyId: editPropMorphStartRect.propertyId,
+      };
+      setEditPropMorphStartRect(latestRect);
+    }
+
+    const finalRect = modal.getBoundingClientRect();
+    const deltaX = latestRect.left - finalRect.left;
+    const deltaY = latestRect.top - finalRect.top;
+    const scaleX = latestRect.width / finalRect.width;
+    const scaleY = latestRect.height / finalRect.height;
+
+    setEditPropMorphPhase("morphing-out");
+
+    modal.style.transition =
+      "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+    modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+    modal.style.opacity = "0";
+    modal.style.transformOrigin = "top left";
+
+    if (editPropTitleRef.current && editPropTitleStartRect && scaleX && scaleY) {
+      const title = editPropTitleRef.current;
+      const titleFinalRect = title.getBoundingClientRect();
+      const tDeltaX = editPropTitleStartRect.left - titleFinalRect.left;
+      const tDeltaY = editPropTitleStartRect.top - titleFinalRect.top;
+      const tScale = editPropTitleStartRect.height / titleFinalRect.height;
+
+      title.style.transition =
+        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+      title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+      title.style.transformOrigin = "top left";
+      title.style.color = "#2f6f5e";
+    }
+
+    setTimeout(() => {
+      setEditingProperty(null);
+      setEditPropMorphPhase("idle");
+      setEditPropMorphStartRect(null);
+    }, 250);
+  };
+
+  const handleOpenEditUnit = (u: Unit, e?: React.MouseEvent) => {
+    if (e) {
+      const button = e.currentTarget as HTMLElement;
+      const container = button.closest("li, tr") as HTMLElement;
+      const nameEl = container ? (container.querySelector(".unit-name-text") as HTMLElement) : null;
+      const rect = nameEl ? nameEl.getBoundingClientRect() : (container ? container.getBoundingClientRect() : button.getBoundingClientRect());
+      setEditUnitMorphStartRect({
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        unitId: u.id,
+      });
+
+      if (nameEl) {
+        const nameRect = nameEl.getBoundingClientRect();
+        setEditUnitTitleStartRect({
+          left: nameRect.left,
+          top: nameRect.top,
+          width: nameRect.width,
+          height: nameRect.height,
+        });
+      }
+      setEditUnitMorphPhase("morphing-in");
+    }
+    setEditingUnit(u);
+    setEditUnitName(u.name);
+    setEditUnitRent(u.rent_amount.toString());
+    setEditUnitLateFee(u.late_fee_percentage.toString());
+    setEditUnitGracePeriod(u.grace_period_days.toString());
+  };
+
+  const handleCloseEditUnit = () => {
+    if (!editUnitModalRef.current || !editUnitMorphStartRect) {
+      setEditingUnit(null);
+      setEditUnitMorphPhase("idle");
+      setEditUnitMorphStartRect(null);
+      return;
+    }
+
+    const modal = editUnitModalRef.current;
+    let latestRect = editUnitMorphStartRect;
+
+    const rowElement = document.querySelector(
+      `[data-edit-unit-row="${editUnitMorphStartRect.unitId}"]`,
+    ) || document.querySelector(
+      `[data-property-edit-unit-row="${editUnitMorphStartRect.unitId}"]`,
+    );
+    if (rowElement) {
+      const nameEl = rowElement.querySelector(".unit-name-text") as HTMLElement;
+      const rect = nameEl ? nameEl.getBoundingClientRect() : rowElement.getBoundingClientRect();
+      latestRect = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        unitId: editUnitMorphStartRect.unitId,
+      };
+      setEditUnitMorphStartRect(latestRect);
+    }
+
+    const finalRect = modal.getBoundingClientRect();
+    const deltaX = latestRect.left - finalRect.left;
+    const deltaY = latestRect.top - finalRect.top;
+    const scaleX = latestRect.width / finalRect.width;
+    const scaleY = latestRect.height / finalRect.height;
+
+    setEditUnitMorphPhase("morphing-out");
+
+    modal.style.transition =
+      "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+    modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+    modal.style.opacity = "0";
+    modal.style.transformOrigin = "top left";
+
+    if (editUnitTitleRef.current && editUnitTitleStartRect && scaleX && scaleY) {
+      const title = editUnitTitleRef.current;
+      const titleFinalRect = title.getBoundingClientRect();
+      const tDeltaX = editUnitTitleStartRect.left - titleFinalRect.left;
+      const tDeltaY = editUnitTitleStartRect.top - titleFinalRect.top;
+      const tScale = editUnitTitleStartRect.height / titleFinalRect.height;
+
+      title.style.transition =
+        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+      title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+      title.style.transformOrigin = "top left";
+      title.style.color = "#2f6f5e";
+    }
+
+    setTimeout(() => {
+      setEditingUnit(null);
+      setEditUnitMorphPhase("idle");
+      setEditUnitMorphStartRect(null);
     }, 250);
   };
 
@@ -1059,7 +1415,7 @@ export default function Home() {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to update unit");
-      setEditingUnit(null);
+      handleCloseEditUnit();
       setEditUnitLateFee("0");
       setEditUnitGracePeriod("0");
       if (selectedPropertyId) await loadUnits(selectedPropertyId);
@@ -2342,10 +2698,11 @@ export default function Home() {
                     {properties.map((p) => (
                       <li
                         key={p.id}
+                        data-edit-property-row={p.id}
                         className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm"
                       >
                         <div className="min-w-0 flex-1">
-                          <span className="font-medium">{p.name}</span>
+                          <span className="property-name-text font-medium">{p.name}</span>
                           {p.address && (
                             <span className="ml-2 text-[#60715f]">
                               {p.address}
@@ -2356,11 +2713,7 @@ export default function Home() {
                           <button
                             type="button"
                             className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
-                            onClick={() => {
-                              setEditingProperty(p);
-                              setEditPropName(p.name);
-                              setEditPropAddress(p.address || "");
-                            }}
+                            onClick={(e) => handleOpenEditProperty(p, e)}
                             title={`Edit ${p.name}`}
                             disabled={loading}
                           >
@@ -2539,17 +2892,7 @@ export default function Home() {
                           <button
                             type="button"
                             className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
-                            onClick={() => {
-                              setEditingUnit(u);
-                              setEditUnitName(u.name);
-                              setEditUnitRent(u.rent_amount.toString());
-                              setEditUnitLateFee(
-                                u.late_fee_percentage.toString(),
-                              );
-                              setEditUnitGracePeriod(
-                                u.grace_period_days.toString(),
-                              );
-                            }}
+                            onClick={(e) => handleOpenEditUnit(u, e)}
                             title={`Edit ${u.name}`}
                             disabled={loading}
                           >
@@ -3468,19 +3811,9 @@ export default function Home() {
                                   <button
                                     type="button"
                                     className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
-                                    onClick={() => {
-                                      setEditingUnit(unit);
-                                      setEditUnitName(unit.name);
-                                      setEditUnitRent(
-                                        unit.rent_amount.toString(),
-                                      );
-                                      setEditUnitLateFee(
-                                        unit.late_fee_percentage.toString(),
-                                      );
-                                      setEditUnitGracePeriod(
-                                        unit.grace_period_days.toString(),
-                                      );
-                                    }}
+                                    onClick={(e) =>
+                                      handleOpenEditUnit(unit, e)
+                                    }
                                     title={`Edit ${unit.name}`}
                                     disabled={loading}
                                   >
@@ -3665,125 +3998,203 @@ export default function Home() {
 
       {/* Edit Property Modal */}
       {editingProperty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#2f6f5e]">
-              Edit Property
-            </h3>
-            <form onSubmit={handleEditProperty} className="mt-4 grid gap-3">
-              <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                Property Name
-                <input
-                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                  type="text"
-                  value={editPropName}
-                  onChange={(e) => setEditPropName(e.target.value)}
-                  required
-                  minLength={2}
-                />
-              </label>
-              <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                Address{" "}
-                <span className="font-normal text-[#8a9a88]">(optional)</span>
-                <input
-                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                  type="text"
-                  value={editPropAddress}
-                  onChange={(e) => setEditPropAddress(e.target.value)}
-                />
-              </label>
-              <div className="mt-2 flex gap-3 justify-end">
-                <button
-                  type="button"
-                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
-                  onClick={() => setEditingProperty(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
-                  disabled={loading}
-                >
-                  {loading ? "Updating…" : "Save Changes"}
-                </button>
-              </div>
-            </form>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          {/* Backdrop overlay */}
+          <div
+            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+              editPropMorphPhase === "expanded" ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={handleCloseEditProperty}
+          />
+
+          {/* Modal card */}
+          <div
+            ref={editPropModalRef}
+            className={`mx-4 w-full max-w-sm rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+              editPropMorphPhase === "expanded"
+                ? "pointer-events-auto"
+                : "pointer-events-none"
+            }`}
+            style={{
+              willChange: "transform",
+            }}
+          >
+            {/* Header: Always visible during transition */}
+            <div className="mb-4 pr-10 relative z-20">
+              <h3
+                ref={editPropTitleRef}
+                className="text-lg font-bold text-[#2f6f5e]"
+                style={{ display: "inline-block", willChange: "transform" }}
+              >
+                Edit Property
+              </h3>
+            </div>
+
+            {/* Rest of the contents: Fade-in after morph completes */}
+            <div
+              style={{
+                opacity: editPropMorphPhase === "expanded" ? 1 : 0,
+                transition:
+                  editPropMorphPhase === "expanded"
+                    ? "opacity 250ms ease-out 200ms"
+                    : "opacity 150ms ease-out",
+              }}
+            >
+              <form onSubmit={handleEditProperty} className="grid gap-3">
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Property Name
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="text"
+                    value={editPropName}
+                    onChange={(e) => setEditPropName(e.target.value)}
+                    required
+                    minLength={2}
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Address{" "}
+                  <span className="font-normal text-[#8a9a88]">(optional)</span>
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    type="text"
+                    value={editPropAddress}
+                    onChange={(e) => setEditPropAddress(e.target.value)}
+                  />
+                </label>
+                <div className="mt-2 flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                    onClick={handleCloseEditProperty}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                    disabled={loading}
+                  >
+                    {loading ? "Updating…" : "Save Changes"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
 
       {/* Edit Unit Modal */}
       {editingUnit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-md rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#2f6f5e]">Edit Unit</h3>
-            <form onSubmit={handleEditUnit} className="mt-4 grid gap-3">
-              <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                Unit Name
-                <input
-                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                  type="text"
-                  value={editUnitName}
-                  onChange={(e) => setEditUnitName(e.target.value)}
-                  required
-                />
-              </label>
-              <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                Monthly Rent (₹)
-                <input
-                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={editUnitRent}
-                  onChange={(e) => setEditUnitRent(e.target.value)}
-                  required
-                />
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          {/* Backdrop overlay */}
+          <div
+            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+              editUnitMorphPhase === "expanded" ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={handleCloseEditUnit}
+          />
+
+          {/* Modal card */}
+          <div
+            ref={editUnitModalRef}
+            className={`mx-4 w-full max-w-md rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+              editUnitMorphPhase === "expanded"
+                ? "pointer-events-auto"
+                : "pointer-events-none"
+            }`}
+            style={{
+              willChange: "transform",
+            }}
+          >
+            {/* Header: Always visible during transition */}
+            <div className="mb-4 pr-10 relative z-20">
+              <h3
+                ref={editUnitTitleRef}
+                className="text-lg font-bold text-[#2f6f5e]"
+                style={{ display: "inline-block", willChange: "transform" }}
+              >
+                Edit Unit
+              </h3>
+            </div>
+
+            {/* Rest of the contents: Fade-in after morph completes */}
+            <div
+              style={{
+                opacity: editUnitMorphPhase === "expanded" ? 1 : 0,
+                transition:
+                  editUnitMorphPhase === "expanded"
+                    ? "opacity 250ms ease-out 200ms"
+                    : "opacity 150ms ease-out",
+              }}
+            >
+              <form onSubmit={handleEditUnit} className="grid gap-3">
                 <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                  Late Fee (%)
+                  Unit Name
                   <input
                     className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={editUnitLateFee}
-                    onChange={(e) => setEditUnitLateFee(e.target.value)}
+                    type="text"
+                    value={editUnitName}
+                    onChange={(e) => setEditUnitName(e.target.value)}
+                    required
                   />
                 </label>
                 <label className="grid gap-1 text-sm font-medium text-[#435146]">
-                  Grace Period (Days)
+                  Monthly Rent (₹)
                   <input
                     className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
                     type="number"
-                    min="0"
-                    max="31"
+                    min="1"
                     step="1"
-                    value={editUnitGracePeriod}
-                    onChange={(e) => setEditUnitGracePeriod(e.target.value)}
+                    value={editUnitRent}
+                    onChange={(e) => setEditUnitRent(e.target.value)}
+                    required
                   />
                 </label>
-              </div>
-              <div className="mt-2 flex gap-3 justify-end">
-                <button
-                  type="button"
-                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
-                  onClick={() => setEditingUnit(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
-                  disabled={loading}
-                >
-                  {loading ? "Updating…" : "Save Changes"}
-                </button>
-              </div>
-            </form>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Late Fee (%)
+                    <input
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={editUnitLateFee}
+                      onChange={(e) => setEditUnitLateFee(e.target.value)}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    Grace Period (Days)
+                    <input
+                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      type="number"
+                      min="0"
+                      max="31"
+                      step="1"
+                      value={editUnitGracePeriod}
+                      onChange={(e) => setEditUnitGracePeriod(e.target.value)}
+                    />
+                  </label>
+                </div>
+                <div className="mt-2 flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                    onClick={handleCloseEditUnit}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                    disabled={loading}
+                  >
+                    {loading ? "Updating…" : "Save Changes"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
