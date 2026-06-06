@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND_URL, getAuthToken } from "@/app/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 type RouteContext = { params: Promise<{ path: string[] }> };
 
 async function proxyRequest(request: NextRequest, context: RouteContext) {
