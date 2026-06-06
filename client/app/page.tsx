@@ -239,6 +239,12 @@ export default function Home() {
     any | null
   >(null);
   const [viewingPropertyUnits, setViewingPropertyUnits] = useState<Unit[]>([]);
+
+  // Log payment state
+  const [loggingPaymentRent, setLoggingPaymentRent] = useState<OwnerDashboard["rent_status"][number] | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentTxnId, setPaymentTxnId] = useState("");
   // Morph transition state for property details
   const [morphStartRect, setMorphStartRect] = useState<{
     left: number;
@@ -1647,6 +1653,49 @@ export default function Home() {
       setNotice("Invite cancelled.");
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Failed to cancel invite");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenLogPayment = (rent: OwnerDashboard["rent_status"][number]) => {
+    setLoggingPaymentRent(rent);
+    setPaymentAmount(rent.pending.toString());
+    setPaymentMethod("cash");
+    setPaymentTxnId("");
+  };
+
+  const handleLogPayment = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!loggingPaymentRent) return;
+
+    setLoading(true);
+    setNotice("");
+
+    try {
+      const response = await fetch(`/api/proxy/rent/pay/${loggingPaymentRent.rent_id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: parseFloat(paymentAmount),
+          method: paymentMethod,
+          txn_id: paymentTxnId || undefined,
+        }),
+      });
+
+      const body = await response.json();
+
+      if (!response.ok) {
+        throw new Error(body.error || "Failed to log payment");
+      }
+
+      setNotice("Payment logged successfully!");
+      setLoggingPaymentRent(null);
+      await loadDashboard();
+    } catch (err) {
+      setNotice(
+        err instanceof Error ? err.message : "Failed to log payment",
+      );
     } finally {
       setLoading(false);
     }
@@ -3209,6 +3258,7 @@ export default function Home() {
                   <Th>Pending</Th>
                   <Th>Status</Th>
                   <Th>Receipts</Th>
+                  <Th className="text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody>
@@ -3254,12 +3304,23 @@ export default function Home() {
                           )}
                         </div>
                       </Td>
+                      <Td className="text-right">
+                        {rent.payment_status !== "paid" && (
+                          <button
+                            type="button"
+                            className="rounded-md bg-[#2f6f5e] hover:bg-[#235346] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                            onClick={() => handleOpenLogPayment(rent)}
+                          >
+                            Log Payment
+                          </button>
+                        )}
+                      </Td>
                     </tr>
                   ))
                 ) : (
                   <tr className="border-t border-[#e3e8df]">
                     <td
-                      colSpan={9}
+                      colSpan={10}
                       className="py-4 text-center text-sm text-[#60715f]"
                     >
                       No payment status information available.
@@ -4372,6 +4433,110 @@ export default function Home() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log Rent Payment Modal */}
+      {loggingPaymentRent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#2f6f5e]">Log Rent Payment</h3>
+                <p className="text-xs text-[#60715f]">
+                  Log payment for {loggingPaymentRent.tenant_name} ({loggingPaymentRent.unit_name})
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-md p-1.5 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
+                onClick={() => setLoggingPaymentRent(null)}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleLogPayment} className="grid gap-4">
+              <div className="rounded-lg bg-white p-3 border border-[#e3e8df] text-sm space-y-1">
+                <div className="flex justify-between"><span className="text-[#60715f]">Period:</span> <span className="font-semibold text-gray-800">{formatPeriod(loggingPaymentRent.month, loggingPaymentRent.year)}</span></div>
+                <div className="flex justify-between"><span className="text-[#60715f]">Rent Due:</span> <span className="font-semibold text-gray-800">{formatMoney(loggingPaymentRent.amount)}</span></div>
+                <div className="flex justify-between"><span className="text-[#60715f]">Already Paid:</span> <span className="font-semibold text-gray-800">{formatMoney(loggingPaymentRent.paid)}</span></div>
+                <div className="flex justify-between border-t border-[#e3e8df] pt-1 mt-1 font-semibold"><span className="text-[#9a4d21]">Outstanding:</span> <span className="text-[#9a4d21]">{formatMoney(loggingPaymentRent.pending)}</span></div>
+              </div>
+              
+              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                Payment Amount (₹)
+                <input
+                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  max={loggingPaymentRent.pending}
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  required
+                />
+              </label>
+              
+              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                Payment Method
+                <select
+                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  required
+                >
+                  <option value="cash">Cash</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="upi">UPI (GPay/PhonePe/Paytm)</option>
+                  <option value="card">Credit/Debit Card</option>
+                  <option value="cheque">Cheque</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              
+              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                Transaction ID / Notes
+                <span className="font-normal text-[#8a9a88] text-xs"> (optional)</span>
+                <input
+                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  type="text"
+                  value={paymentTxnId}
+                  onChange={(e) => setPaymentTxnId(e.target.value)}
+                  placeholder="e.g. TXN123456789"
+                />
+              </label>
+              
+              <div className="mt-2 flex gap-3 justify-end">
+                <button
+                  type="button"
+                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                  onClick={() => setLoggingPaymentRent(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                  disabled={loading || !paymentAmount}
+                >
+                  {loading ? "Logging…" : "Log Payment"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
