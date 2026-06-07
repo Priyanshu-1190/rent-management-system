@@ -5,4 +5,9 @@ const createPropertySchema = z.object({
   address: z.string().optional(),
 });
 
-module.exports = { createPropertySchema };
+const leaseAgreementSchema = z.object({
+  lease_agreement: z.string().nullable().optional(),
+});
+
+module.exports = { createPropertySchema, leaseAgreementSchema };
+

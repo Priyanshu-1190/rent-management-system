@@ -42,4 +42,16 @@ const updateOwnerProperty = async (ownerId, propertyId, data) => {
   return result.rows[0];
 };
 
-module.exports = { createProperty, getOwnerProperties, deleteOwnerProperty, updateOwnerProperty };
+const updatePropertyLeaseAgreement = async (ownerId, propertyId, leaseAgreement) => {
+  const result = await pool.query(
+    `UPDATE properties
+     SET lease_agreement = $1
+     WHERE id = $2 AND owner_id = $3
+     RETURNING *`,
+    [leaseAgreement, propertyId, ownerId]
+  );
+  return result.rows[0];
+};
+
+module.exports = { createProperty, getOwnerProperties, deleteOwnerProperty, updateOwnerProperty, updatePropertyLeaseAgreement };
+

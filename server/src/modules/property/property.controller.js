@@ -1,4 +1,4 @@
-const { createProperty, getOwnerProperties, deleteOwnerProperty, updateOwnerProperty } = require("./property.service");
+const { createProperty, getOwnerProperties, deleteOwnerProperty, updateOwnerProperty, updatePropertyLeaseAgreement } = require("./property.service");
 
 const addProperty = async (req, res, next) => {
   try {
@@ -88,4 +88,31 @@ const removeProperty = async (req, res, next) => {
   }
 };
 
-module.exports = { addProperty, editProperty, listProperties, removeProperty };
+const updateLeaseAgreement = async (req, res, next) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const propertyId = Number(req.params.id);
+    if (!Number.isInteger(propertyId) || propertyId <= 0) {
+      return res.status(400).json({ error: "Valid property id is required" });
+    }
+
+    const { lease_agreement } = req.body;
+    const leaseText = lease_agreement !== undefined && lease_agreement !== null ? String(lease_agreement) : null;
+
+    const updated = await updatePropertyLeaseAgreement(req.user.id, propertyId, leaseText);
+
+    if (!updated) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    return res.json(updated);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = { addProperty, editProperty, listProperties, removeProperty, updateLeaseAgreement };
+

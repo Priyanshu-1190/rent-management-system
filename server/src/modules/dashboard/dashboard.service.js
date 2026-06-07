@@ -313,7 +313,30 @@ const getTenantDashboard = async (tenantId) => {
     { total_rent: 0, total_paid: 0, total_pending: 0 }
   );
 
-  return { summary, rent_history };
+  const activeTenancyResult = await pool.query(
+    `SELECT 
+       properties.id AS property_id,
+       properties.name AS property_name,
+       properties.address AS property_address,
+       properties.lease_agreement,
+       units.name AS unit_name,
+       tenancies.move_in_date,
+       tenancies.deposit
+     FROM tenancies
+     INNER JOIN units ON units.id = tenancies.unit_id
+     INNER JOIN properties ON properties.id = units.property_id
+     WHERE tenancies.tenant_id = $1 AND tenancies.is_active = TRUE
+     LIMIT 1`,
+    [tenantId]
+  );
+
+  const active_tenancy = activeTenancyResult.rows[0] ? {
+    ...activeTenancyResult.rows[0],
+    deposit: toNumber(activeTenancyResult.rows[0].deposit)
+  } : null;
+
+  return { summary, rent_history, active_tenancy };
 };
 
 module.exports = { getOwnerDashboard, getTenantDashboard };
+

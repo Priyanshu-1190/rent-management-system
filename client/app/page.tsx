@@ -83,12 +83,22 @@ type TenantDashboard = {
       transaction_id: string | null;
     }>;
   }>;
+  active_tenancy?: {
+    property_id: number;
+    property_name: string;
+    property_address: string | null;
+    lease_agreement: string | null;
+    unit_name: string;
+    move_in_date: string | null;
+    deposit: number;
+  } | null;
 };
 
 type Property = {
   id: number;
   name: string;
   address: string | null;
+  lease_agreement?: string | null;
   created_at: string;
 };
 
@@ -238,6 +248,11 @@ export default function Home() {
   const [viewingPropertyDetails, setViewingPropertyDetails] = useState<
     any | null
   >(null);
+  
+  // Lease agreement states
+  const [editingLeaseProp, setEditingLeaseProp] = useState<Property | null>(null);
+  const [editLeaseText, setEditLeaseText] = useState("");
+  const [showLeaseEditModal, setShowLeaseEditModal] = useState(false);
   const [viewingPropertyUnits, setViewingPropertyUnits] = useState<Unit[]>([]);
 
   // Log payment state
@@ -854,6 +869,51 @@ export default function Home() {
     }
   };
 
+  // ── Owner: save lease agreement ──
+  const handleSaveLeaseAgreement = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingLeaseProp) return;
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/properties/${editingLeaseProp.id}/lease-agreement`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lease_agreement: editLeaseText,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to save lease agreement");
+      
+      // Update properties list state
+      setProperties((prev) =>
+        prev.map((p) => (p.id === editingLeaseProp.id ? { ...p, lease_agreement: editLeaseText } : p))
+      );
+      
+      // Update viewing property details state if currently viewing it
+      if (
+        viewingPropertyDetails &&
+        viewingPropertyDetails.property_id === editingLeaseProp.id
+      ) {
+        setViewingPropertyDetails((prev: any) =>
+          prev ? { ...prev, lease_agreement: editLeaseText } : null
+        );
+      }
+      
+      setShowLeaseEditModal(false);
+      setEditingLeaseProp(null);
+      setEditLeaseText("");
+      setNotice(`Lease agreement for "${editingLeaseProp.name}" saved!`);
+    } catch (err) {
+      setNotice(
+        err instanceof Error ? err.message : "Failed to save lease agreement"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ── Owner: load units for a property ──
   const loadUnits = async (propertyId: number) => {
     try {
@@ -979,7 +1039,11 @@ export default function Home() {
       setMorphPhase("morphing-in");
     }
 
-    setViewingPropertyDetails(property);
+    const fullProperty = properties.find((p) => p.id === propertyId);
+    setViewingPropertyDetails({
+      ...property,
+      lease_agreement: fullProperty?.lease_agreement || null
+    });
 
     try {
       const res = await fetch(`/api/proxy/units/property/${propertyId}`);
@@ -3492,6 +3556,74 @@ export default function Home() {
               />
             </div>
 
+            {tenantDashboard.active_tenancy ? (
+              <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Active Lease Agreement
+                  </h3>
+                  <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
+                    Active Tenancy
+                  </span>
+                </div>
+                
+                <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-60 overflow-y-auto font-mono">
+                  {tenantDashboard.active_tenancy.lease_agreement ? (
+                    tenantDashboard.active_tenancy.lease_agreement
+                  ) : (
+                    <span className="text-[#8a9a88] italic">
+                      Your property owner has not uploaded a lease agreement for this property yet.
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-4 border-t border-[#e3e8df] pt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs text-[#60715f]">
+                  <div>
+                    <span className="block font-medium text-[#435146]">Property</span>
+                    <span className="text-sm font-semibold text-[#1b1f1d]">
+                      {tenantDashboard.active_tenancy.property_name}
+                    </span>
+                    {tenantDashboard.active_tenancy.property_address && (
+                      <span className="block text-[10px] text-[#8a9a88] mt-0.5">
+                        {tenantDashboard.active_tenancy.property_address}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block font-medium text-[#435146]">Unit</span>
+                    <span className="text-sm font-semibold text-[#1b1f1d]">
+                      {tenantDashboard.active_tenancy.unit_name}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block font-medium text-[#435146]">Move-in Date</span>
+                    <span className="text-sm font-semibold text-[#1b1f1d]">
+                      {formatDate(tenantDashboard.active_tenancy.move_in_date)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block font-medium text-[#435146]">Security Deposit</span>
+                    <span className="text-sm font-semibold text-[#23633d]">
+                      {formatMoney(tenantDashboard.active_tenancy.deposit)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
             <DataTable title="Rent History">
               <thead>
                 <tr>
@@ -3927,6 +4059,58 @@ export default function Home() {
                   </div>
                 )}
               </div>
+
+              {/* Lease Agreement Section */}
+              <div className="mt-6 rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-lg font-bold text-[#1b1f1d] flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-[#2f6f5e]"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Lease Agreement
+                  </h4>
+                  <button
+                    type="button"
+                    className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
+                    onClick={() => {
+                      const fullProp = properties.find(
+                        (p) => p.id === viewingPropertyDetails.property_id
+                      );
+                      setEditingLeaseProp(fullProp || {
+                        id: viewingPropertyDetails.property_id,
+                        name: viewingPropertyDetails.property_name,
+                        address: properties.find((p) => p.id === viewingPropertyDetails.property_id)?.address || null,
+                        lease_agreement: viewingPropertyDetails.lease_agreement || null,
+                        created_at: ""
+                      });
+                      setEditLeaseText(viewingPropertyDetails.lease_agreement || "");
+                      setShowLeaseEditModal(true);
+                    }}
+                  >
+                    {viewingPropertyDetails.lease_agreement ? "Edit Lease Agreement" : "Write Lease Agreement"}
+                  </button>
+                </div>
+
+                <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-80 overflow-y-auto">
+                  {viewingPropertyDetails.lease_agreement ? (
+                    viewingPropertyDetails.lease_agreement
+                  ) : (
+                    <span className="text-[#8a9a88] italic">
+                      No lease agreement has been written for this property yet. Click "Write Lease Agreement" to set up terms and conditions.
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -4141,6 +4325,69 @@ export default function Home() {
                 </div>
               </form>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lease Agreement Edit Modal */}
+      {showLeaseEditModal && editingLeaseProp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-200"
+            onClick={() => {
+              setShowLeaseEditModal(false);
+              setEditingLeaseProp(null);
+            }}
+          />
+
+          {/* Modal card */}
+          <div className="w-full max-w-2xl rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10">
+            <div className="mb-4 pr-10">
+              <h3 className="text-lg font-bold text-[#2f6f5e]">
+                Write Lease Agreement — {editingLeaseProp.name}
+              </h3>
+              <p className="text-xs text-[#60715f] mt-1">
+                Draft terms, rules, and payment policies for all tenants of this property.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveLeaseAgreement} className="grid gap-4">
+              <textarea
+                className="w-full h-80 rounded-md border border-[#c9d0c5] px-3 py-2 text-sm text-[#1b1f1d] outline-none focus:border-[#3d7b65] bg-white font-mono leading-relaxed"
+                placeholder={`LEASE AGREEMENT
+This agreement is made on [Date] between the Owner and the Tenant...
+1. Rent: Due on the specified day of each month.
+2. Utilities: Tenant is responsible for...`}
+                value={editLeaseText}
+                onChange={(e) => setEditLeaseText(e.target.value)}
+              />
+
+              <div className="flex justify-between items-center text-xs text-[#60715f]">
+                <span>Line breaks and spaces will be preserved.</span>
+                <span className="font-semibold">{editLeaseText.length} characters</span>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                  onClick={() => {
+                    setShowLeaseEditModal(false);
+                    setEditingLeaseProp(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-md bg-[#2f6f5e] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                  disabled={loading}
+                >
+                  {loading ? "Saving…" : "Save Lease Agreement"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
