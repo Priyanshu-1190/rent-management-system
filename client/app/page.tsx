@@ -139,12 +139,15 @@ type AvailableUnit = {
 };
 
 type UnitDetails = {
+  unit_id?: number;
   unit_name: string;
   property_name: string;
   rent_amount: number;
   due_day: number;
   late_fee_percentage: number;
   grace_period_days: number;
+  unit_lease_agreement?: string | null;
+  property_lease_agreement?: string | null;
   tenancy_id?: number | null;
   tenant_name?: string | null;
   tenant_email?: string | null;
@@ -253,6 +256,18 @@ export default function Home() {
   const [editingLeaseProp, setEditingLeaseProp] = useState<Property | null>(null);
   const [editLeaseText, setEditLeaseText] = useState("");
   const [showLeaseEditModal, setShowLeaseEditModal] = useState(false);
+  
+  // Unit lease agreement states
+  const [editingUnitLease, setEditingUnitLease] = useState<UnitDetails | null>(null);
+  const [unitLeaseText, setUnitLeaseText] = useState("");
+  const [unitLeaseMode, setUnitLeaseMode] = useState<"inherit" | "custom">("inherit");
+  const [showUnitLeaseModal, setShowUnitLeaseModal] = useState(false);
+
+  // Creation-time lease agreement states
+  const [propLeaseAgreement, setPropLeaseAgreement] = useState("");
+  const [addUnitLeaseMode, setAddUnitLeaseMode] = useState<"inherit" | "custom">("inherit");
+  const [addUnitLeaseText, setAddUnitLeaseText] = useState("");
+  
   const [viewingPropertyUnits, setViewingPropertyUnits] = useState<Unit[]>([]);
 
   // Log payment state
@@ -814,12 +829,14 @@ export default function Home() {
         body: JSON.stringify({
           name: propName,
           address: propAddress || undefined,
+          lease_agreement: propLeaseAgreement || undefined,
         }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to add property");
       setPropName("");
       setPropAddress("");
+      setPropLeaseAgreement("");
       await loadProperties();
       await loadDashboard();
       setNotice(`Property "${body.name}" created!`);
@@ -908,6 +925,47 @@ export default function Home() {
     } catch (err) {
       setNotice(
         err instanceof Error ? err.message : "Failed to save lease agreement"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Owner: save unit lease agreement ──
+  const handleSaveUnitLeaseAgreement = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingUnitLease || !editingUnitLease.unit_id) return;
+    setLoading(true);
+    setNotice("");
+    const leaseToSave = unitLeaseMode === "custom" ? unitLeaseText : null;
+    try {
+      const res = await fetch(`/api/proxy/units/${editingUnitLease.unit_id}/lease-agreement`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lease_agreement: leaseToSave,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to save unit lease agreement");
+
+      // Update unit details modal state
+      setViewingUnitDetails((prev) =>
+        prev ? { ...prev, unit_lease_agreement: leaseToSave } : null
+      );
+
+      // Refresh units list in details modal if property details is open
+      if (viewingPropertyDetails) {
+        await refreshViewingPropertyUnits(viewingPropertyDetails.property_id);
+      }
+
+      setShowUnitLeaseModal(false);
+      setEditingUnitLease(null);
+      setUnitLeaseText("");
+      setNotice(`Lease agreement for unit updated!`);
+    } catch (err) {
+      setNotice(
+        err instanceof Error ? err.message : "Failed to save unit lease agreement"
       );
     } finally {
       setLoading(false);
@@ -1421,6 +1479,7 @@ export default function Home() {
           rent_amount: rent,
           late_fee_percentage: lateFee,
           grace_period_days: gracePeriod,
+          lease_agreement: addUnitLeaseMode === "custom" && addUnitLeaseText ? addUnitLeaseText : null,
         }),
       });
       const body = await res.json();
@@ -1429,6 +1488,8 @@ export default function Home() {
       setUnitRent("");
       setUnitLateFee("0");
       setUnitGracePeriod("0");
+      setAddUnitLeaseMode("inherit");
+      setAddUnitLeaseText("");
       await loadUnits(selectedPropertyId);
       await loadDashboard();
       await loadAvailableUnits();
@@ -2793,6 +2854,16 @@ export default function Home() {
                     placeholder="e.g. 42 MG Road, Kolkata"
                   />
                 </label>
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Lease Agreement{" "}
+                  <span className="font-normal text-[#8a9a88]">(optional)</span>
+                  <textarea
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65] h-24 text-xs font-mono"
+                    value={propLeaseAgreement}
+                    onChange={(e) => setPropLeaseAgreement(e.target.value)}
+                    placeholder="Standard terms and conditions for this property..."
+                  />
+                </label>
                 <button
                   className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
                   type="submit"
@@ -2953,6 +3024,43 @@ export default function Home() {
                         onChange={(e) => setUnitGracePeriod(e.target.value)}
                       />
                     </label>
+                  </div>
+                  {/* Creation-time Unit Lease Selection */}
+                  <div className="grid gap-2 p-3 rounded-lg border border-[#d8ded2] bg-[#f7f8f3]">
+                    <span className="text-xs font-semibold text-[#435146]">Lease Agreement Option</span>
+                    <div className="flex gap-4 text-xs font-medium text-[#435146]">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="addUnitLeaseMode"
+                          value="inherit"
+                          checked={addUnitLeaseMode === "inherit"}
+                          onChange={() => setAddUnitLeaseMode("inherit")}
+                          className="accent-[#2f6f5e]"
+                        />
+                        Inherit from Property
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="addUnitLeaseMode"
+                          value="custom"
+                          checked={addUnitLeaseMode === "custom"}
+                          onChange={() => setAddUnitLeaseMode("custom")}
+                          className="accent-[#2f6f5e]"
+                        />
+                        Write Custom Lease
+                      </label>
+                    </div>
+
+                    {addUnitLeaseMode === "custom" && (
+                      <textarea
+                        className="rounded-md border border-[#c9d0c5] px-3 py-2 text-xs font-mono text-[#1b1f1d] outline-none focus:border-[#3d7b65] h-24 bg-white mt-1"
+                        placeholder="Custom lease agreement terms for this unit..."
+                        value={addUnitLeaseText}
+                        onChange={(e) => setAddUnitLeaseText(e.target.value)}
+                      />
+                    )}
                   </div>
                   <button
                     className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
@@ -4392,6 +4500,111 @@ This agreement is made on [Date] between the Owner and the Tenant...
         </div>
       )}
 
+      {/* Unit Lease Agreement Edit Modal */}
+      {showUnitLeaseModal && editingUnitLease && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-200"
+            onClick={() => {
+              setShowUnitLeaseModal(false);
+              setEditingUnitLease(null);
+            }}
+          />
+
+          {/* Modal card */}
+          <div className="w-full max-w-2xl rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10">
+            <div className="mb-4 pr-10">
+              <h3 className="text-lg font-bold text-[#2f6f5e]">
+                Write Lease Agreement — {editingUnitLease.unit_name}
+              </h3>
+              <p className="text-xs text-[#60715f] mt-1">
+                Configure whether this unit inherits property terms or uses its own custom terms.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveUnitLeaseAgreement} className="grid gap-4">
+              <div className="grid gap-2 p-3 rounded-lg border border-[#d8ded2] bg-white">
+                <span className="text-xs font-semibold text-[#435146]">Option</span>
+                <div className="flex gap-6 text-sm font-medium text-[#435146]">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="unitLeaseMode"
+                      value="inherit"
+                      checked={unitLeaseMode === "inherit"}
+                      onChange={() => {
+                        setUnitLeaseMode("inherit");
+                        setUnitLeaseText(editingUnitLease.property_lease_agreement || "");
+                      }}
+                      className="accent-[#2f6f5e]"
+                    />
+                    Keep the same agreement as the property (Inherit)
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="unitLeaseMode"
+                      value="custom"
+                      checked={unitLeaseMode === "custom"}
+                      onChange={() => {
+                        setUnitLeaseMode("custom");
+                        setUnitLeaseText(editingUnitLease.unit_lease_agreement || editingUnitLease.property_lease_agreement || "");
+                      }}
+                      className="accent-[#2f6f5e]"
+                    />
+                    Set a unit-specific agreement (Custom)
+                  </label>
+                </div>
+              </div>
+
+              <textarea
+                className={`w-full h-80 rounded-md border border-[#c9d0c5] px-3 py-2 text-sm text-[#1b1f1d] outline-none focus:border-[#3d7b65] bg-white font-mono leading-relaxed ${
+                  unitLeaseMode === "inherit" ? "opacity-60 bg-gray-50 cursor-not-allowed" : ""
+                }`}
+                placeholder="Draft custom terms and conditions for this specific unit..."
+                value={unitLeaseText}
+                onChange={(e) => {
+                  if (unitLeaseMode === "custom") {
+                    setUnitLeaseText(e.target.value);
+                  }
+                }}
+                disabled={unitLeaseMode === "inherit"}
+              />
+
+              <div className="flex justify-between items-center text-xs text-[#60715f]">
+                <span>
+                  {unitLeaseMode === "inherit"
+                    ? "Currently inheriting property terms. Switch to Custom to edit."
+                    : "Line breaks and spaces will be preserved."}
+                </span>
+                <span className="font-semibold">{unitLeaseText.length} characters</span>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                  onClick={() => {
+                    setShowUnitLeaseModal(false);
+                    setEditingUnitLease(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-md bg-[#2f6f5e] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                  disabled={loading}
+                >
+                  {loading ? "Saving…" : "Save Lease Agreement"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Edit Unit Modal */}
       {editingUnit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
@@ -4678,6 +4891,68 @@ This agreement is made on [Date] between the Owner and the Tenant...
                     No tenant is currently assigned to this unit.
                   </div>
                 )}
+              </div>
+
+              {/* Unit Lease Agreement Section */}
+              <div className="mt-6 border-t border-[#e3e8df] pt-5">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-semibold text-[#1b1f1d] flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-[#2f6f5e]"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Lease Agreement
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    {viewingUnitDetails.unit_lease_agreement ? (
+                      <span className="inline-flex rounded-full bg-[#dcfce7] text-[#15803d] px-2.5 py-0.5 text-xs font-semibold">
+                        Unit-Specific
+                      </span>
+                    ) : viewingUnitDetails.property_lease_agreement ? (
+                      <span className="inline-flex rounded-full bg-[#f3f4f6] text-[#4b5563] px-2.5 py-0.5 text-xs font-semibold">
+                        Inherited
+                      </span>
+                    ) : (
+                      <span className="inline-flex rounded-full bg-[#fee2e2] text-[#991b1b] px-2.5 py-0.5 text-xs font-semibold">
+                        Not Set
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3 py-1 text-xs font-semibold text-white shadow-sm transition-all"
+                      onClick={() => {
+                        setEditingUnitLease(viewingUnitDetails);
+                        const hasCustom = !!viewingUnitDetails.unit_lease_agreement;
+                        setUnitLeaseMode(hasCustom ? "custom" : "inherit");
+                        setUnitLeaseText(viewingUnitDetails.unit_lease_agreement || viewingUnitDetails.property_lease_agreement || "");
+                        setShowUnitLeaseModal(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-xs text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-3 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
+                  {viewingUnitDetails.unit_lease_agreement ? (
+                    viewingUnitDetails.unit_lease_agreement
+                  ) : viewingUnitDetails.property_lease_agreement ? (
+                    viewingUnitDetails.property_lease_agreement
+                  ) : (
+                    <span className="text-[#8a9a88] italic">
+                      No lease agreement terms set for this unit or the property.
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -23,8 +23,8 @@ const getUnitByNameAndPropertyId = async (propertyId, name) => {
 
 const createUnit = async (propertyId, data) => {
   const result = await pool.query(
-    `INSERT INTO units (property_id, name, rent_amount, due_day, late_fee_percentage, grace_period_days)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO units (property_id, name, rent_amount, due_day, late_fee_percentage, grace_period_days, lease_agreement)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
     [
       propertyId,
@@ -33,6 +33,7 @@ const createUnit = async (propertyId, data) => {
       data.due_day,
       data.late_fee_percentage || 0,
       data.grace_period_days || 0,
+      data.lease_agreement || null,
     ]
   );
 
@@ -70,8 +71,10 @@ const getUnitDetails = async (ownerId, unitId) => {
       u.due_day,
       u.late_fee_percentage,
       u.grace_period_days,
+      u.lease_agreement AS unit_lease_agreement,
       p.id AS property_id,
       p.name AS property_name,
+      p.lease_agreement AS property_lease_agreement,
       t.id AS tenancy_id,
       t.move_in_date,
       t.deposit,
@@ -114,4 +117,17 @@ const updateOwnerUnit = async (ownerId, unitId, data) => {
   return result.rows[0];
 };
 
-module.exports = { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty, updateOwnerUnit, getUnitById, getUnitDetails };
+const updateUnitLeaseAgreement = async (ownerId, unitId, leaseAgreement) => {
+  const result = await pool.query(
+    `UPDATE units u
+     SET lease_agreement = $1
+     FROM properties p
+     WHERE u.id = $2 AND u.property_id = p.id AND p.owner_id = $3
+     RETURNING u.*`,
+    [leaseAgreement, unitId, ownerId]
+  );
+  return result.rows[0];
+};
+
+module.exports = { getOwnerPropertyById, getUnitByNameAndPropertyId, createUnit, deleteOwnerUnit, getUnitsByProperty, updateOwnerUnit, getUnitById, getUnitDetails, updateUnitLeaseAgreement };
+

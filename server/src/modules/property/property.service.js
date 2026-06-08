@@ -2,10 +2,10 @@ const pool = require("../../config/db");
 
 const createProperty = async (ownerId, data) => {
   const result = await pool.query(
-    `INSERT INTO properties (owner_id, name, address)
-     VALUES ($1, $2, $3)
+    `INSERT INTO properties (owner_id, name, address, lease_agreement)
+     VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [ownerId, data.name, data.address]
+    [ownerId, data.name, data.address, data.lease_agreement || null]
   );
 
   return result.rows[0];

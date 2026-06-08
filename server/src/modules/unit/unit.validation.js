@@ -22,6 +22,12 @@ const createUnitSchema = z.object({
     .min(0, "Grace period cannot be negative")
     .optional()
     .default(0),
+  lease_agreement: z.string().nullable().optional(),
 });
 
-module.exports = { createUnitSchema };
+const unitLeaseAgreementSchema = z.object({
+  lease_agreement: z.string().nullable().optional(),
+});
+
+module.exports = { createUnitSchema, unitLeaseAgreementSchema };
+
