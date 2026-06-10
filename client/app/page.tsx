@@ -270,6 +270,9 @@ export default function Home() {
   
   const [viewingPropertyUnits, setViewingPropertyUnits] = useState<Unit[]>([]);
 
+  // Receipt expansion states
+  const [expandedReceipts, setExpandedReceipts] = useState<Record<number, boolean>>({});
+
   // Log payment state
   const [loggingPaymentRent, setLoggingPaymentRent] = useState<OwnerDashboard["rent_status"][number] | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -3457,18 +3460,58 @@ export default function Home() {
                       <Td>
                         <div className="flex flex-col gap-2">
                           {rent.payments && rent.payments.length ? (
-                            rent.payments.map((payment) => (
+                            rent.payments.length === 1 ? (
                               <button
-                                key={payment.payment_id}
-                                className="w-fit rounded-md border border-[#2f6f5e] px-3 py-1 text-sm font-semibold text-[#2f6f5e]"
+                                key={rent.payments[0].payment_id}
+                                className="w-fit rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
                                 type="button"
                                 onClick={() =>
-                                  downloadReceipt(payment.payment_id)
+                                  downloadReceipt(rent.payments[0].payment_id)
                                 }
                               >
-                                Receipt #{payment.payment_id}
+                                Receipt #{rent.payments[0].payment_id}
                               </button>
-                            ))
+                            ) : (
+                              <div className="relative flex flex-col gap-1.5">
+                                <button
+                                  type="button"
+                                  className="w-fit flex items-center gap-1.5 rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                                  onClick={() =>
+                                    setExpandedReceipts((prev) => ({
+                                      ...prev,
+                                      [rent.rent_id]: !prev[rent.rent_id],
+                                    }))
+                                  }
+                                >
+                                  <span>Receipts ({rent.payments.length})</span>
+                                  <span
+                                    className={`inline-block transition-transform duration-200 ${
+                                      expandedReceipts[rent.rent_id]
+                                        ? "rotate-180"
+                                        : ""
+                                    }`}
+                                  >
+                                    ▾
+                                  </span>
+                                </button>
+                                {expandedReceipts[rent.rent_id] && (
+                                  <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2f6f5e]/30 mt-1">
+                                    {rent.payments.map((payment) => (
+                                      <button
+                                        key={payment.payment_id}
+                                        className="w-fit text-left rounded-md px-2 py-0.5 text-xs font-semibold text-[#2f6f5e] hover:bg-[#f3f7f5] transition-colors"
+                                        type="button"
+                                        onClick={() =>
+                                          downloadReceipt(payment.payment_id)
+                                        }
+                                      >
+                                        Receipt #{payment.payment_id}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )
                           ) : (
                             <span className="text-sm text-[#60715f]">
                               No payment
@@ -3770,18 +3813,58 @@ export default function Home() {
                       <Td>
                         <div className="flex flex-col gap-2">
                           {rent.payments.length ? (
-                            rent.payments.map((payment) => (
+                            rent.payments.length === 1 ? (
                               <button
-                                key={payment.payment_id}
-                                className="w-fit rounded-md border border-[#2f6f5e] px-3 py-1 text-sm font-semibold text-[#2f6f5e]"
+                                key={rent.payments[0].payment_id}
+                                className="w-fit rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
                                 type="button"
                                 onClick={() =>
-                                  downloadReceipt(payment.payment_id)
+                                  downloadReceipt(rent.payments[0].payment_id)
                                 }
                               >
-                                Receipt #{payment.payment_id}
+                                Receipt #{rent.payments[0].payment_id}
                               </button>
-                            ))
+                            ) : (
+                              <div className="relative flex flex-col gap-1.5">
+                                <button
+                                  type="button"
+                                  className="w-fit flex items-center gap-1.5 rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                                  onClick={() =>
+                                    setExpandedReceipts((prev) => ({
+                                      ...prev,
+                                      [rent.rent_id]: !prev[rent.rent_id],
+                                    }))
+                                  }
+                                >
+                                  <span>Receipts ({rent.payments.length})</span>
+                                  <span
+                                    className={`inline-block transition-transform duration-200 ${
+                                      expandedReceipts[rent.rent_id]
+                                        ? "rotate-180"
+                                        : ""
+                                    }`}
+                                  >
+                                    ▾
+                                  </span>
+                                </button>
+                                {expandedReceipts[rent.rent_id] && (
+                                  <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2f6f5e]/30 mt-1">
+                                    {rent.payments.map((payment) => (
+                                      <button
+                                        key={payment.payment_id}
+                                        className="w-fit text-left rounded-md px-2 py-0.5 text-xs font-semibold text-[#2f6f5e] hover:bg-[#f3f7f5] transition-colors"
+                                        type="button"
+                                        onClick={() =>
+                                          downloadReceipt(payment.payment_id)
+                                        }
+                                      >
+                                        Receipt #{payment.payment_id}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )
                           ) : (
                             <span className="text-sm text-[#60715f]">
                               No payment
