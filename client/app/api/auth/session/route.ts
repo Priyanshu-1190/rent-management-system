@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import {
   BACKEND_URL,
   COOKIE_NAME,
-  COOKIE_OPTIONS,
   getAuthToken,
   decodeJwtPayload,
 } from "@/app/lib/auth";

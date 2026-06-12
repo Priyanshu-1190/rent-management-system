@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
-
-const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
+import { BACKEND_URL } from "@/app/lib/auth";
 
 export async function GET() {
   try {
-    const response = await fetch(`${backendUrl}/db-test`, {
+    const response = await fetch(`${BACKEND_URL}/db-test`, {
       cache: "no-store",
     });
 
     if (!response.ok) {
       return NextResponse.json(
         {
-          error: `Backend responded with status ${response.status}. Make sure the Express server is running on ${backendUrl}.`,
+          error: `Backend responded with status ${response.status}. Make sure the Express server is running on ${BACKEND_URL}.`,
         },
         { status: response.status }
       );
@@ -24,7 +23,7 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        error: `Backend is not reachable at ${backendUrl}. Start it with: cd server && npm run dev`,
+        error: `Backend is not reachable at ${BACKEND_URL}. Start it with: cd server && npm run dev`,
       },
       { status: 503 }
     );

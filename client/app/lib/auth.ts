@@ -1,17 +1,20 @@
 import { cookies } from "next/headers";
 
 export const COOKIE_NAME = "auth_token";
-export const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5000";
+if (!process.env.BACKEND_URL) {
+  throw new Error("Missing required environment variable: BACKEND_URL");
+}
+export const BACKEND_URL = process.env.BACKEND_URL;
 
 export const COOKIE_OPTIONS: {
   httpOnly: boolean;
-  secure: boolean;
+  secure: false;
   sameSite: "lax";
   path: string;
   maxAge: number;
 } = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: false,
   sameSite: "lax",
   path: "/",
   maxAge: 7 * 24 * 60 * 60, // 7 days — matches backend JWT expiry
