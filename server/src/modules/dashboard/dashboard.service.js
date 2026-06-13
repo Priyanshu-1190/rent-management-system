@@ -1,9 +1,11 @@
 const pool = require("../../config/db");
+const { autoGenerateRentSchedules } = require("../rent/rent.service");
 
 const toNumber = (value) => Number(value || 0);
 const isOutstandingStatus = (status) => ["pending", "partial", "overdue"].includes(status);
 
 const getOwnerDashboard = async (ownerId) => {
+  await autoGenerateRentSchedules();
   const propertyResult = await pool.query(
     `
     WITH unit_counts AS (
@@ -206,6 +208,7 @@ const getOwnerDashboard = async (ownerId) => {
 };
 
 const getTenantDashboard = async (tenantId) => {
+  await autoGenerateRentSchedules();
   const rentResult = await pool.query(
     `
     WITH payment_totals AS (

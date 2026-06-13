@@ -9,6 +9,16 @@ const createHttpError = (status, message) => {
 
 const toNumber = (value) => Number(value || 0);
 
+const addMonths = (dateStr, months) => {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1 + months, day);
+  const targetYear = date.getFullYear();
+  const targetMonth = date.getMonth() + 1;
+  const maxDay = new Date(targetYear, targetMonth, 0).getDate();
+  const safeDay = Math.min(day, maxDay);
+  return `${targetYear}-${String(targetMonth).padStart(2, "0")}-${String(safeDay).padStart(2, "0")}`;
+};
+
 const getDueDate = (year, month, moveInDateStr) => {
   const moveInParts = String(moveInDateStr || "").split("-");
   const parsedDay = Number(moveInParts[2]);
@@ -69,7 +79,34 @@ const generateMonthlyRent = async (tenancyId, month, year) => {
     throw createHttpError(404, "Active tenancy not found");
   }
 
-  const dueDate = getDueDate(year, month, unit.move_in_date);
+  // Get existing rent schedules for this tenancy
+  const existingSchedulesRes = await pool.query(
+    `SELECT month, year, due_date
+     FROM rent_schedules
+     WHERE tenancy_id = $1
+     ORDER BY year DESC, month DESC`,
+    [tenancyId]
+  );
+
+  let dueDate;
+  if (existingSchedulesRes.rows.length > 0) {
+    const latest = existingSchedulesRes.rows[0];
+    const latestVal = latest.year * 12 + latest.month;
+    const targetVal = year * 12 + month;
+    if (targetVal > latestVal) {
+      const diff = targetVal - latestVal;
+      dueDate = addMonths(latest.due_date, diff);
+    } else {
+      dueDate = getDueDate(year, month, unit.move_in_date);
+    }
+  } else {
+    // No existing schedules. Find first due date strictly after move-in.
+    const moveInParts = String(unit.move_in_date || "").split("-");
+    const moveInYear = Number(moveInParts[0]);
+    const moveInMonth = Number(moveInParts[1]);
+    const d0 = getDueDate(moveInYear, moveInMonth, unit.move_in_date);
+    dueDate = d0;
+  }
 
   const result = await pool.query(
     `INSERT INTO rent_schedules (tenancy_id, month, year, amount, due_date)
@@ -216,4 +253,67 @@ const applyLateFees = async () => {
   return { appliedCount: result.rowCount, notificationsSent };
 };
 
-module.exports = { generateMonthlyRent, addPayment, applyLateFees };
+const autoGenerateRentSchedules = async () => {
+  // Get all active tenancies
+  const activeTenanciesRes = await pool.query(
+    `SELECT id, move_in_date FROM tenancies WHERE is_active = TRUE`
+  );
+
+  const now = new Date();
+  const targetYear = now.getFullYear();
+  const targetMonth = now.getMonth() + 1; // 1-indexed current month
+
+  for (const tenancy of activeTenanciesRes.rows) {
+    const tenancyId = tenancy.id;
+    const moveInDate = tenancy.move_in_date;
+
+    if (!moveInDate) continue;
+
+    // Get the latest generated rent schedule for this tenancy
+    const latestRes = await pool.query(
+      `SELECT month, year FROM rent_schedules
+       WHERE tenancy_id = $1
+       ORDER BY year DESC, month DESC
+       LIMIT 1`,
+      [tenancyId]
+    );
+
+    let startMonth, startYear;
+    if (latestRes.rows.length > 0) {
+      const latest = latestRes.rows[0];
+      startMonth = latest.month + 1;
+      startYear = latest.year;
+      if (startMonth > 12) {
+        startMonth = 1;
+        startYear++;
+      }
+    } else {
+      const parts = moveInDate.split("-").map(Number);
+      startYear = parts[0];
+      startMonth = parts[1];
+    }
+
+    let currMonth = startMonth;
+    let currYear = startYear;
+
+    // Generate up to target month/year
+    while (currYear < targetYear || (currYear === targetYear && currMonth <= targetMonth)) {
+      try {
+        await generateMonthlyRent(tenancyId, currMonth, currYear);
+      } catch (err) {
+        // Ignore duplicate rent schedules error (status 409)
+        if (err.status !== 409) {
+          console.error(`[Auto-Generate] Failed for tenancy ${tenancyId}, period ${currMonth}/${currYear}:`, err.message);
+        }
+      }
+
+      currMonth++;
+      if (currMonth > 12) {
+        currMonth = 1;
+        currYear++;
+      }
+    }
+  }
+};
+
+module.exports = { generateMonthlyRent, addPayment, applyLateFees, autoGenerateRentSchedules };
