@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 
 type Tenant = {
@@ -87,13 +87,16 @@ export default function TenantDirectory() {
       const data = await response.json();
       setTenants(data);
     } catch (err) {
-      setError("Error fetching tenants: " + (err instanceof Error ? err.message : "Unknown error"));
+      setError(
+        "Error fetching tenants: " +
+          (err instanceof Error ? err.message : "Unknown error"),
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const filterTenants = () => {
+  const filteredTenants = useMemo(() => {
     switch (activeTab) {
       case "active":
         return tenants.filter((t) => t.status === "active");
@@ -104,16 +107,17 @@ export default function TenantDirectory() {
       default:
         return tenants;
     }
-  };
+  }, [tenants, activeTab]);
 
-  const filteredTenants = filterTenants();
-
-  const counts = {
-    all: tenants.length,
-    active: tenants.filter((t) => t.status === "active").length,
-    past: tenants.filter((t) => t.status === "past").length,
-    invited: tenants.filter((t) => t.status === "invited").length,
-  };
+  const counts = useMemo(
+    () => ({
+      all: tenants.length,
+      active: tenants.filter((t) => t.status === "active").length,
+      past: tenants.filter((t) => t.status === "past").length,
+      invited: tenants.filter((t) => t.status === "invited").length,
+    }),
+    [tenants],
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -264,7 +268,9 @@ export default function TenantDirectory() {
                       <div className="font-medium text-gray-900">
                         {tenant.name || "Pending"}
                       </div>
-                      <div className="text-xs text-gray-500">{tenant.email}</div>
+                      <div className="text-xs text-gray-500">
+                        {tenant.email}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       {tenant.property_name}

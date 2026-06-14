@@ -56,7 +56,11 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
 
   if (request.method !== "GET" && request.method !== "HEAD") {
     if (contentType?.includes("application/json")) {
-      body = JSON.stringify(await request.json());
+      try {
+        body = JSON.stringify(await request.json());
+      } catch (e) {
+        body = null;
+      }
     }
   }
 
