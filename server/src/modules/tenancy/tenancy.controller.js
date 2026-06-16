@@ -4,6 +4,7 @@ const {
   hasActiveTenancy,
   assignTenant,
   getTenantsByOwner,
+  terminateTenancy,
 } = require("./tenancy.service");
 
 const createTenancy = async (req, res, next) => {
@@ -80,4 +81,26 @@ const listTenants = async (req, res, next) => {
   }
 };
 
-module.exports = { createTenancy, listTenants };
+const deleteTenancy = async (req, res, next) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const tenancyId = Number(req.params.id);
+    if (!Number.isInteger(tenancyId) || tenancyId <= 0) {
+      return res.status(400).json({ error: "Valid tenancy ID is required" });
+    }
+
+    const tenancy = await terminateTenancy(req.user.id, tenancyId);
+    if (!tenancy) {
+      return res.status(404).json({ error: "Tenancy not found or access denied" });
+    }
+
+    return res.json({ message: "Tenant removed successfully", tenancy });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = { createTenancy, listTenants, deleteTenancy };

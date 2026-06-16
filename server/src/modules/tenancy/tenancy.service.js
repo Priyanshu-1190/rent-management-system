@@ -108,4 +108,17 @@ const getTenantsByOwner = async (ownerId) => {
   return result.rows;
 };
 
-module.exports = { getOwnerUnitDetails, findTenantById, hasActiveTenancy, assignTenant, getTenantsByOwner };
+const terminateTenancy = async (ownerId, tenancyId) => {
+  const result = await pool.query(
+    `UPDATE tenancies
+     SET is_active = FALSE, move_out_date = CURRENT_DATE
+     FROM units u
+     INNER JOIN properties p ON p.id = u.property_id
+     WHERE tenancies.id = $1 AND tenancies.unit_id = u.id AND p.owner_id = $2
+     RETURNING tenancies.*`,
+    [tenancyId, ownerId]
+  );
+  return result.rows[0];
+};
+
+module.exports = { getOwnerUnitDetails, findTenantById, hasActiveTenancy, assignTenant, getTenantsByOwner, terminateTenancy };

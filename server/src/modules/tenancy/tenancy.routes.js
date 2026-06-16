@@ -1,10 +1,11 @@
 const router = require("express").Router();
 const { protect } = require("../../middleware/auth.middleware");
 const { validate } = require("../../middleware/validate.middleware");
-const { createTenancy, listTenants } = require("./tenancy.controller");
+const { createTenancy, listTenants, deleteTenancy } = require("./tenancy.controller");
 const { createTenancySchema } = require("./tenancy.validation");
 
 router.get("/", protect, listTenants);
 router.post("/", protect, validate(createTenancySchema), createTenancy);
+router.delete("/:id", protect, deleteTenancy);
 
 module.exports = router;
