@@ -195,6 +195,385 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
+/**
+ * Extracted view for the Owner Dashboard
+ */
+function OwnerDashboardView({
+  dashboard,
+  onViewProperty,
+  onLogPayment,
+  downloadReceipt,
+  expandedReceipts,
+  setExpandedReceipts,
+}: {
+  dashboard: OwnerDashboard;
+  onViewProperty: (property: any, e: React.MouseEvent) => void;
+  onLogPayment: (rent: any) => void;
+  downloadReceipt: (id: number) => void;
+  expandedReceipts: Record<number, boolean>;
+  setExpandedReceipts: React.Dispatch<
+    React.SetStateAction<Record<number, boolean>>
+  >;
+}) {
+  return (
+    <section className="grid gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Metric
+          label="Total Rent"
+          value={formatMoney(dashboard.totals.total_rent)}
+        />
+        <Metric
+          label="Collected"
+          value={formatMoney(dashboard.totals.total_collected)}
+        />
+        <Metric
+          label="Pending"
+          value={formatMoney(dashboard.totals.total_pending)}
+          tone="warn"
+        />
+        <Metric
+          label="Occupancy"
+          value={`${dashboard.totals.occupied_units}/${dashboard.totals.total_units}`}
+        />
+      </div>
+
+      <DataTable title="Property Overview">
+        <thead>
+          <tr>
+            <Th>Property</Th>
+            <Th>Units</Th>
+            <Th>Occupied</Th>
+            <Th>Total Rent</Th>
+            <Th>Collected</Th>
+            <Th>Pending</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {dashboard.properties.length > 0 ? (
+            dashboard.properties.map((property) => (
+              <tr
+                key={property.property_id}
+                data-property-row={property.property_id}
+                className="border-t border-[#e3e8df] hover:bg-[#eef0eb]/50 cursor-pointer transition-colors"
+                onClick={(e) => onViewProperty(property, e)}
+              >
+                <Td className="font-semibold text-[#2f6f5e] hover:underline">
+                  <span className="property-name-text inline-block">
+                    {property.property_name}
+                  </span>
+                </Td>
+                <Td>{property.total_units}</Td>
+                <Td>{property.occupied_units}</Td>
+                <Td>{formatMoney(property.total_rent)}</Td>
+                <Td>{formatMoney(property.total_collected)}</Td>
+                <Td>{formatMoney(property.total_pending)}</Td>
+              </tr>
+            ))
+          ) : (
+            <tr className="border-t border-[#e3e8df]">
+              <td
+                colSpan={6}
+                className="py-4 text-center text-sm text-[#60715f]"
+              >
+                No properties available.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </DataTable>
+
+      <DataTable title="Payment Status">
+        <thead>
+          <tr>
+            <Th>Tenant</Th>
+            <Th>Property</Th>
+            <Th>Unit</Th>
+            <Th>Period</Th>
+            <Th>Rent</Th>
+            <Th>Paid</Th>
+            <Th>Pending</Th>
+            <Th>Status</Th>
+            <Th>Receipts</Th>
+            <Th className="text-right">Actions</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {dashboard.rent_status.length > 0 ? (
+            dashboard.rent_status.map((rent) => (
+              <tr key={rent.rent_id} className="border-t border-[#e3e8df]">
+                <Td>{rent.tenant_name}</Td>
+                <Td>{rent.property_name}</Td>
+                <Td>{rent.unit_name}</Td>
+                <Td>{formatPeriod(rent.month, rent.year)}</Td>
+                <Td>{formatMoney(rent.amount)}</Td>
+                <Td>{formatMoney(rent.paid)}</Td>
+                <Td>{formatMoney(rent.pending)}</Td>
+                <Td>
+                  <StatusLabel
+                    status={rent.payment_status}
+                    dueInDays={rent.due_in_days}
+                    overdueByDays={rent.overdue_by_days}
+                  />
+                </Td>
+                <Td>
+                  <div className="flex flex-col gap-2">
+                    {rent.payments?.length ? (
+                      <div className="relative flex flex-col gap-1.5">
+                        <button
+                          type="button"
+                          className="w-fit flex items-center gap-1.5 rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                          onClick={() =>
+                            setExpandedReceipts((prev) => ({
+                              ...prev,
+                              [rent.rent_id]: !prev[rent.rent_id],
+                            }))
+                          }
+                        >
+                          <span>Receipts ({rent.payments.length})</span>
+                          <span
+                            className={`transition-transform ${expandedReceipts[rent.rent_id] ? "rotate-180" : ""}`}
+                          >
+                            ▾
+                          </span>
+                        </button>
+                        {expandedReceipts[rent.rent_id] && (
+                          <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2f6f5e]/30">
+                            {rent.payments.map((p) => (
+                              <button
+                                key={p.payment_id}
+                                className="text-left text-xs font-semibold text-[#2f6f5e] hover:underline"
+                                onClick={() => downloadReceipt(p.payment_id)}
+                              >
+                                Receipt #{p.payment_id}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-[#60715f]">No payment</span>
+                    )}
+                  </div>
+                </Td>
+                <Td className="text-right">
+                  {rent.payment_status !== "paid" && (
+                    <button
+                      type="button"
+                      className="rounded-md bg-[#2f6f5e] hover:bg-[#235346] px-3 py-1.5 text-xs font-semibold text-white transition-all"
+                      onClick={() => onLogPayment(rent)}
+                    >
+                      Log Payment
+                    </button>
+                  )}
+                </Td>
+              </tr>
+            ))
+          ) : (
+            <tr className="border-t border-[#e3e8df]">
+              <td
+                colSpan={10}
+                className="py-4 text-center text-sm text-[#60715f]"
+              >
+                No payment status information available.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </DataTable>
+    </section>
+  );
+}
+
+/**
+ * Extracted view for the Tenant Dashboard
+ */
+function TenantDashboardView({
+  dashboard,
+  downloadReceipt,
+  expandedReceipts,
+  setExpandedReceipts,
+}: {
+  dashboard: TenantDashboard;
+  downloadReceipt: (id: number) => void;
+  expandedReceipts: Record<number, boolean>;
+  setExpandedReceipts: React.Dispatch<
+    React.SetStateAction<Record<number, boolean>>
+  >;
+}) {
+  return (
+    <section className="grid gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+        <Metric
+          label="Total Rent"
+          value={formatMoney(dashboard.summary.total_rent)}
+        />
+        <Metric
+          label="Paid"
+          value={formatMoney(dashboard.summary.total_paid)}
+        />
+        <Metric
+          label="Pending"
+          value={formatMoney(dashboard.summary.total_pending)}
+          tone="warn"
+        />
+      </div>
+
+      {dashboard.active_tenancy && (
+        <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Active Lease Agreement
+            </h3>
+            <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
+              Active Tenancy
+            </span>
+          </div>
+          <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-60 overflow-y-auto font-mono">
+            {dashboard.active_tenancy.lease_agreement || (
+              <span className="text-[#8a9a88] italic">
+                No lease agreement uploaded yet.
+              </span>
+            )}
+          </div>
+          <div className="mt-4 border-t border-[#e3e8df] pt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs text-[#60715f]">
+            <div>
+              <span className="block font-medium text-[#435146]">Property</span>
+              <span className="text-sm font-semibold text-[#1b1f1d]">
+                {dashboard.active_tenancy.property_name}
+              </span>
+            </div>
+            <div>
+              <span className="block font-medium text-[#435146]">Unit</span>
+              <span className="text-sm font-semibold text-[#1b1f1d]">
+                {dashboard.active_tenancy.unit_name}
+              </span>
+            </div>
+            <div>
+              <span className="block font-medium text-[#435146]">
+                Move-in Date
+              </span>
+              <span className="text-sm font-semibold text-[#1b1f1d]">
+                {formatDate(dashboard.active_tenancy.move_in_date)}
+              </span>
+            </div>
+            <div>
+              <span className="block font-medium text-[#435146]">
+                Security Deposit
+              </span>
+              <span className="text-sm font-semibold text-[#23633d]">
+                {formatMoney(dashboard.active_tenancy.deposit)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <DataTable title="Rent History">
+        <thead>
+          <tr>
+            <Th>Property</Th>
+            <Th>Unit</Th>
+            <Th>Period</Th>
+            <Th>Due Date</Th>
+            <Th>Rent</Th>
+            <Th>Paid</Th>
+            <Th>Pending</Th>
+            <Th>Status</Th>
+            <Th>Receipts</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {dashboard.rent_history.length > 0 ? (
+            dashboard.rent_history.map((rent) => (
+              <tr
+                key={rent.rent_id}
+                className="border-t border-[#e3e8df] align-top"
+              >
+                <Td>{rent.property_name}</Td>
+                <Td>{rent.unit_name}</Td>
+                <Td>{formatPeriod(rent.month, rent.year)}</Td>
+                <Td>{formatDate(rent.due_date)}</Td>
+                <Td>{formatMoney(rent.amount)}</Td>
+                <Td>{formatMoney(rent.paid)}</Td>
+                <Td>{formatMoney(rent.pending)}</Td>
+                <Td>
+                  <StatusLabel
+                    status={rent.payment_status}
+                    dueInDays={rent.due_in_days}
+                    overdueByDays={rent.overdue_by_days}
+                  />
+                </Td>
+                <Td>
+                  <div className="flex flex-col gap-2">
+                    {rent.payments.length ? (
+                      <div className="relative flex flex-col gap-1.5">
+                        <button
+                          type="button"
+                          className="w-fit flex items-center gap-1.5 rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                          onClick={() =>
+                            setExpandedReceipts((prev) => ({
+                              ...prev,
+                              [rent.rent_id]: !prev[rent.rent_id],
+                            }))
+                          }
+                        >
+                          <span>Receipts ({rent.payments.length})</span>
+                          <span
+                            className={`transition-transform ${expandedReceipts[rent.rent_id] ? "rotate-180" : ""}`}
+                          >
+                            ▾
+                          </span>
+                        </button>
+                        {expandedReceipts[rent.rent_id] && (
+                          <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2f6f5e]/30 mt-1">
+                            {rent.payments.map((p) => (
+                              <button
+                                key={p.payment_id}
+                                className="w-fit text-left text-xs font-semibold text-[#2f6f5e] hover:underline"
+                                onClick={() => downloadReceipt(p.payment_id)}
+                              >
+                                Receipt #{p.payment_id}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-[#60715f]">No payment</span>
+                    )}
+                  </div>
+                </Td>
+              </tr>
+            ))
+          ) : (
+            <tr className="border-t border-[#e3e8df]">
+              <td
+                colSpan={9}
+                className="py-4 text-center text-sm text-[#60715f]"
+              >
+                No rent history available.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </DataTable>
+    </section>
+  );
+}
+
 export default function Home() {
   const [apiStatus, setApiStatus] = useState("");
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -251,30 +630,42 @@ export default function Home() {
   const [viewingPropertyDetails, setViewingPropertyDetails] = useState<
     any | null
   >(null);
-  
+
   // Lease agreement states
-  const [editingLeaseProp, setEditingLeaseProp] = useState<Property | null>(null);
+  const [editingLeaseProp, setEditingLeaseProp] = useState<Property | null>(
+    null,
+  );
   const [editLeaseText, setEditLeaseText] = useState("");
   const [showLeaseEditModal, setShowLeaseEditModal] = useState(false);
-  
+
   // Unit lease agreement states
-  const [editingUnitLease, setEditingUnitLease] = useState<UnitDetails | null>(null);
+  const [editingUnitLease, setEditingUnitLease] = useState<UnitDetails | null>(
+    null,
+  );
   const [unitLeaseText, setUnitLeaseText] = useState("");
-  const [unitLeaseMode, setUnitLeaseMode] = useState<"inherit" | "custom">("inherit");
+  const [unitLeaseMode, setUnitLeaseMode] = useState<"inherit" | "custom">(
+    "inherit",
+  );
   const [showUnitLeaseModal, setShowUnitLeaseModal] = useState(false);
 
   // Creation-time lease agreement states
   const [propLeaseAgreement, setPropLeaseAgreement] = useState("");
-  const [addUnitLeaseMode, setAddUnitLeaseMode] = useState<"inherit" | "custom">("inherit");
+  const [addUnitLeaseMode, setAddUnitLeaseMode] = useState<
+    "inherit" | "custom"
+  >("inherit");
   const [addUnitLeaseText, setAddUnitLeaseText] = useState("");
-  
+
   const [viewingPropertyUnits, setViewingPropertyUnits] = useState<Unit[]>([]);
 
   // Receipt expansion states
-  const [expandedReceipts, setExpandedReceipts] = useState<Record<number, boolean>>({});
+  const [expandedReceipts, setExpandedReceipts] = useState<
+    Record<number, boolean>
+  >({});
 
   // Log payment state
-  const [loggingPaymentRent, setLoggingPaymentRent] = useState<OwnerDashboard["rent_status"][number] | null>(null);
+  const [loggingPaymentRent, setLoggingPaymentRent] = useState<
+    OwnerDashboard["rent_status"][number] | null
+  >(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [paymentTxnId, setPaymentTxnId] = useState("");
@@ -532,7 +923,12 @@ export default function Home() {
 
       return () => clearTimeout(timer);
     }
-  }, [viewingUnitDetails, unitMorphStartRect, unitTitleStartRect, unitMorphPhase]);
+  }, [
+    viewingUnitDetails,
+    unitMorphStartRect,
+    unitTitleStartRect,
+    unitMorphPhase,
+  ]);
 
   // Morph animation lifecycle management using FLIP for editing property
   useLayoutEffect(() => {
@@ -595,7 +991,12 @@ export default function Home() {
 
       return () => clearTimeout(timer);
     }
-  }, [editingProperty, editPropMorphStartRect, editPropTitleStartRect, editPropMorphPhase]);
+  }, [
+    editingProperty,
+    editPropMorphStartRect,
+    editPropTitleStartRect,
+    editPropMorphPhase,
+  ]);
 
   // Morph animation lifecycle management using FLIP for editing unit
   useLayoutEffect(() => {
@@ -658,7 +1059,12 @@ export default function Home() {
 
       return () => clearTimeout(timer);
     }
-  }, [editingUnit, editUnitMorphStartRect, editUnitTitleStartRect, editUnitMorphPhase]);
+  }, [
+    editingUnit,
+    editUnitMorphStartRect,
+    editUnitTitleStartRect,
+    editUnitMorphPhase,
+  ]);
 
   const loadDashboard = async (role?: Role) => {
     const currentRole = role || user?.role;
@@ -890,44 +1296,54 @@ export default function Home() {
   };
 
   // ── Owner: save lease agreement ──
-  const handleSaveLeaseAgreement = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSaveLeaseAgreement = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
     if (!editingLeaseProp) return;
     setLoading(true);
     setNotice("");
     try {
-      const res = await fetch(`/api/proxy/properties/${editingLeaseProp.id}/lease-agreement`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lease_agreement: editLeaseText,
-        }),
-      });
+      const res = await fetch(
+        `/api/proxy/properties/${editingLeaseProp.id}/lease-agreement`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lease_agreement: editLeaseText,
+          }),
+        },
+      );
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Failed to save lease agreement");
-      
+      if (!res.ok)
+        throw new Error(body.error || "Failed to save lease agreement");
+
       // Update properties list state
       setProperties((prev) =>
-        prev.map((p) => (p.id === editingLeaseProp.id ? { ...p, lease_agreement: editLeaseText } : p))
+        prev.map((p) =>
+          p.id === editingLeaseProp.id
+            ? { ...p, lease_agreement: editLeaseText }
+            : p,
+        ),
       );
-      
+
       // Update viewing property details state if currently viewing it
       if (
         viewingPropertyDetails &&
         viewingPropertyDetails.property_id === editingLeaseProp.id
       ) {
         setViewingPropertyDetails((prev: any) =>
-          prev ? { ...prev, lease_agreement: editLeaseText } : null
+          prev ? { ...prev, lease_agreement: editLeaseText } : null,
         );
       }
-      
+
       setShowLeaseEditModal(false);
       setEditingLeaseProp(null);
       setEditLeaseText("");
       setNotice(`Lease agreement for "${editingLeaseProp.name}" saved!`);
     } catch (err) {
       setNotice(
-        err instanceof Error ? err.message : "Failed to save lease agreement"
+        err instanceof Error ? err.message : "Failed to save lease agreement",
       );
     } finally {
       setLoading(false);
@@ -935,26 +1351,32 @@ export default function Home() {
   };
 
   // ── Owner: save unit lease agreement ──
-  const handleSaveUnitLeaseAgreement = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSaveUnitLeaseAgreement = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
     if (!editingUnitLease || !editingUnitLease.unit_id) return;
     setLoading(true);
     setNotice("");
     const leaseToSave = unitLeaseMode === "custom" ? unitLeaseText : null;
     try {
-      const res = await fetch(`/api/proxy/units/${editingUnitLease.unit_id}/lease-agreement`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lease_agreement: leaseToSave,
-        }),
-      });
+      const res = await fetch(
+        `/api/proxy/units/${editingUnitLease.unit_id}/lease-agreement`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lease_agreement: leaseToSave,
+          }),
+        },
+      );
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Failed to save unit lease agreement");
+      if (!res.ok)
+        throw new Error(body.error || "Failed to save unit lease agreement");
 
       // Update unit details modal state
       setViewingUnitDetails((prev) =>
-        prev ? { ...prev, unit_lease_agreement: leaseToSave } : null
+        prev ? { ...prev, unit_lease_agreement: leaseToSave } : null,
       );
 
       // Refresh units list in details modal if property details is open
@@ -968,8 +1390,46 @@ export default function Home() {
       setNotice(`Lease agreement for unit updated!`);
     } catch (err) {
       setNotice(
-        err instanceof Error ? err.message : "Failed to save unit lease agreement"
+        err instanceof Error
+          ? err.message
+          : "Failed to save unit lease agreement",
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKickTenant = async (tenancyId: number) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to remove this tenant from the unit? This will end the active tenancy.",
+    );
+    if (!confirmed) return;
+
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/tenancies/${tenancyId}`, {
+        method: "DELETE",
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to remove tenant");
+
+      setNotice("Tenant removed successfully.");
+
+      // Refresh dashboard overview
+      await loadDashboard();
+
+      // Refresh unit details modal view
+      if (viewingUnitDetails?.unit_id) {
+        await handleViewUnitDetails(viewingUnitDetails.unit_id);
+      }
+
+      // Refresh units list in details modal if property details is open
+      if (viewingPropertyDetails) {
+        await refreshViewingPropertyUnits(viewingPropertyDetails.property_id);
+      }
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Failed to remove tenant");
     } finally {
       setLoading(false);
     }
@@ -988,16 +1448,23 @@ export default function Home() {
     }
   };
 
-  const handleViewUnitDetails = async (unitId: number, e?: React.MouseEvent) => {
+  const handleViewUnitDetails = async (
+    unitId: number,
+    e?: React.MouseEvent,
+  ) => {
     setLoading(true);
     setNotice("");
     const animationStartTime = Date.now();
 
     // Look up cached unit info so we can morph/render immediately
-    const unit = viewingPropertyUnits.find((u) => u.id === unitId) || propertyUnits.find((u) => u.id === unitId);
-    
+    const unit =
+      viewingPropertyUnits.find((u) => u.id === unitId) ||
+      propertyUnits.find((u) => u.id === unitId);
+
     if (unit) {
-      const prop = properties.find((p) => p.id === unit.property_id) || viewingPropertyDetails;
+      const prop =
+        properties.find((p) => p.id === unit.property_id) ||
+        viewingPropertyDetails;
       const propertyName = prop ? prop.name || prop.property_name : "";
 
       setViewingUnitDetails({
@@ -1014,8 +1481,14 @@ export default function Home() {
     if (e) {
       const button = e.currentTarget as HTMLElement;
       const container = button.closest("li, tr") as HTMLElement;
-      const nameEl = container ? (container.querySelector(".unit-name-text") as HTMLElement) : null;
-      const rect = nameEl ? nameEl.getBoundingClientRect() : (container ? container.getBoundingClientRect() : button.getBoundingClientRect());
+      const nameEl = container
+        ? (container.querySelector(".unit-name-text") as HTMLElement)
+        : null;
+      const rect = nameEl
+        ? nameEl.getBoundingClientRect()
+        : container
+          ? container.getBoundingClientRect()
+          : button.getBoundingClientRect();
 
       setUnitMorphStartRect({
         left: rect.left,
@@ -1042,7 +1515,7 @@ export default function Home() {
       const res = await fetch(`/api/proxy/units/${unitId}/details`);
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to load unit details");
-      
+
       const elapsed = Date.now() - animationStartTime;
       const remainingTime = 300 - elapsed;
       if (remainingTime > 0) {
@@ -1078,7 +1551,9 @@ export default function Home() {
     if (e) {
       const row = e.currentTarget as HTMLElement;
       const nameEl = row.querySelector(".property-name-text") as HTMLElement;
-      const rect = nameEl ? nameEl.getBoundingClientRect() : row.getBoundingClientRect();
+      const rect = nameEl
+        ? nameEl.getBoundingClientRect()
+        : row.getBoundingClientRect();
       setMorphStartRect({
         left: rect.left,
         top: rect.top,
@@ -1103,7 +1578,7 @@ export default function Home() {
     const fullProperty = properties.find((p) => p.id === propertyId);
     setViewingPropertyDetails({
       ...property,
-      lease_agreement: fullProperty?.lease_agreement || null
+      lease_agreement: fullProperty?.lease_agreement || null,
     });
 
     try {
@@ -1138,8 +1613,12 @@ export default function Home() {
       `[data-property-row="${morphStartRect.propertyId}"]`,
     );
     if (rowElement) {
-      const nameEl = rowElement.querySelector(".property-name-text") as HTMLElement;
-      const rect = nameEl ? nameEl.getBoundingClientRect() : rowElement.getBoundingClientRect();
+      const nameEl = rowElement.querySelector(
+        ".property-name-text",
+      ) as HTMLElement;
+      const rect = nameEl
+        ? nameEl.getBoundingClientRect()
+        : rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -1196,14 +1675,18 @@ export default function Home() {
     const modal = unitModalRef.current;
     let latestRect = unitMorphStartRect;
 
-    const rowElement = document.querySelector(
-      `[data-unit-row="${unitMorphStartRect.unitId}"]`,
-    ) || document.querySelector(
-      `[data-property-unit-row="${unitMorphStartRect.unitId}"]`
-    );
+    const rowElement =
+      document.querySelector(
+        `[data-unit-row="${unitMorphStartRect.unitId}"]`,
+      ) ||
+      document.querySelector(
+        `[data-property-unit-row="${unitMorphStartRect.unitId}"]`,
+      );
     if (rowElement) {
       const nameEl = rowElement.querySelector(".unit-name-text") as HTMLElement;
-      const rect = nameEl ? nameEl.getBoundingClientRect() : rowElement.getBoundingClientRect();
+      const rect = nameEl
+        ? nameEl.getBoundingClientRect()
+        : rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -1253,8 +1736,14 @@ export default function Home() {
     if (e) {
       const button = e.currentTarget as HTMLElement;
       const row = button.closest("li") as HTMLElement;
-      const nameEl = row ? (row.querySelector(".property-name-text") as HTMLElement) : null;
-      const rect = nameEl ? nameEl.getBoundingClientRect() : (row ? row.getBoundingClientRect() : button.getBoundingClientRect());
+      const nameEl = row
+        ? (row.querySelector(".property-name-text") as HTMLElement)
+        : null;
+      const rect = nameEl
+        ? nameEl.getBoundingClientRect()
+        : row
+          ? row.getBoundingClientRect()
+          : button.getBoundingClientRect();
       setEditPropMorphStartRect({
         left: rect.left,
         top: rect.top,
@@ -1294,8 +1783,12 @@ export default function Home() {
       `[data-edit-property-row="${editPropMorphStartRect.propertyId}"]`,
     );
     if (rowElement) {
-      const nameEl = rowElement.querySelector(".property-name-text") as HTMLElement;
-      const rect = nameEl ? nameEl.getBoundingClientRect() : rowElement.getBoundingClientRect();
+      const nameEl = rowElement.querySelector(
+        ".property-name-text",
+      ) as HTMLElement;
+      const rect = nameEl
+        ? nameEl.getBoundingClientRect()
+        : rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -1320,7 +1813,12 @@ export default function Home() {
     modal.style.opacity = "0";
     modal.style.transformOrigin = "top left";
 
-    if (editPropTitleRef.current && editPropTitleStartRect && scaleX && scaleY) {
+    if (
+      editPropTitleRef.current &&
+      editPropTitleStartRect &&
+      scaleX &&
+      scaleY
+    ) {
       const title = editPropTitleRef.current;
       const titleFinalRect = title.getBoundingClientRect();
       const tDeltaX = editPropTitleStartRect.left - titleFinalRect.left;
@@ -1345,8 +1843,14 @@ export default function Home() {
     if (e) {
       const button = e.currentTarget as HTMLElement;
       const container = button.closest("li, tr") as HTMLElement;
-      const nameEl = container ? (container.querySelector(".unit-name-text") as HTMLElement) : null;
-      const rect = nameEl ? nameEl.getBoundingClientRect() : (container ? container.getBoundingClientRect() : button.getBoundingClientRect());
+      const nameEl = container
+        ? (container.querySelector(".unit-name-text") as HTMLElement)
+        : null;
+      const rect = nameEl
+        ? nameEl.getBoundingClientRect()
+        : container
+          ? container.getBoundingClientRect()
+          : button.getBoundingClientRect();
       setEditUnitMorphStartRect({
         left: rect.left,
         top: rect.top,
@@ -1384,14 +1888,18 @@ export default function Home() {
     const modal = editUnitModalRef.current;
     let latestRect = editUnitMorphStartRect;
 
-    const rowElement = document.querySelector(
-      `[data-edit-unit-row="${editUnitMorphStartRect.unitId}"]`,
-    ) || document.querySelector(
-      `[data-property-edit-unit-row="${editUnitMorphStartRect.unitId}"]`,
-    );
+    const rowElement =
+      document.querySelector(
+        `[data-edit-unit-row="${editUnitMorphStartRect.unitId}"]`,
+      ) ||
+      document.querySelector(
+        `[data-property-edit-unit-row="${editUnitMorphStartRect.unitId}"]`,
+      );
     if (rowElement) {
       const nameEl = rowElement.querySelector(".unit-name-text") as HTMLElement;
-      const rect = nameEl ? nameEl.getBoundingClientRect() : rowElement.getBoundingClientRect();
+      const rect = nameEl
+        ? nameEl.getBoundingClientRect()
+        : rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -1416,7 +1924,12 @@ export default function Home() {
     modal.style.opacity = "0";
     modal.style.transformOrigin = "top left";
 
-    if (editUnitTitleRef.current && editUnitTitleStartRect && scaleX && scaleY) {
+    if (
+      editUnitTitleRef.current &&
+      editUnitTitleStartRect &&
+      scaleX &&
+      scaleY
+    ) {
       const title = editUnitTitleRef.current;
       const titleFinalRect = title.getBoundingClientRect();
       const tDeltaX = editUnitTitleStartRect.left - titleFinalRect.left;
@@ -1482,7 +1995,10 @@ export default function Home() {
           rent_amount: rent,
           late_fee_percentage: lateFee,
           grace_period_days: gracePeriod,
-          lease_agreement: addUnitLeaseMode === "custom" && addUnitLeaseText ? addUnitLeaseText : null,
+          lease_agreement:
+            addUnitLeaseMode === "custom" && addUnitLeaseText
+              ? addUnitLeaseText
+              : null,
         }),
       });
       const body = await res.json();
@@ -1786,7 +2302,9 @@ export default function Home() {
     }
   };
 
-  const handleOpenLogPayment = (rent: OwnerDashboard["rent_status"][number]) => {
+  const handleOpenLogPayment = (
+    rent: OwnerDashboard["rent_status"][number],
+  ) => {
     setLoggingPaymentRent(rent);
     setPaymentAmount(rent.pending.toString());
     setPaymentMethod("cash");
@@ -1801,15 +2319,18 @@ export default function Home() {
     setNotice("");
 
     try {
-      const response = await fetch(`/api/proxy/rent/pay/${loggingPaymentRent.rent_id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: parseFloat(paymentAmount),
-          method: paymentMethod,
-          txn_id: paymentTxnId || undefined,
-        }),
-      });
+      const response = await fetch(
+        `/api/proxy/rent/pay/${loggingPaymentRent.rent_id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: parseFloat(paymentAmount),
+            method: paymentMethod,
+            txn_id: paymentTxnId || undefined,
+          }),
+        },
+      );
 
       const body = await response.json();
 
@@ -1821,9 +2342,7 @@ export default function Home() {
       setLoggingPaymentRent(null);
       await loadDashboard();
     } catch (err) {
-      setNotice(
-        err instanceof Error ? err.message : "Failed to log payment",
-      );
+      setNotice(err instanceof Error ? err.message : "Failed to log payment");
     } finally {
       setLoading(false);
     }
@@ -2889,7 +3408,9 @@ export default function Home() {
                         className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm"
                       >
                         <div className="min-w-0 flex-1">
-                          <span className="property-name-text font-medium">{p.name}</span>
+                          <span className="property-name-text font-medium">
+                            {p.name}
+                          </span>
                           {p.address && (
                             <span className="ml-2 text-[#60715f]">
                               {p.address}
@@ -3030,7 +3551,9 @@ export default function Home() {
                   </div>
                   {/* Creation-time Unit Lease Selection */}
                   <div className="grid gap-2 p-3 rounded-lg border border-[#d8ded2] bg-[#f7f8f3]">
-                    <span className="text-xs font-semibold text-[#435146]">Lease Agreement Option</span>
+                    <span className="text-xs font-semibold text-[#435146]">
+                      Lease Agreement Option
+                    </span>
                     <div className="flex gap-4 text-xs font-medium text-[#435146]">
                       <label className="flex items-center gap-1.5 cursor-pointer">
                         <input
@@ -3086,7 +3609,9 @@ export default function Home() {
                         className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm"
                       >
                         <div className="min-w-0 flex-1">
-                          <span className="unit-name-text font-medium">{u.name}</span>
+                          <span className="unit-name-text font-medium">
+                            {u.name}
+                          </span>
                           <span className="ml-2 text-[#2f6f5e] font-semibold">
                             {formatMoney(u.rent_amount)}/mo
                           </span>
@@ -3730,20 +4255,23 @@ export default function Home() {
                     Active Tenancy
                   </span>
                 </div>
-                
+
                 <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-60 overflow-y-auto font-mono">
                   {tenantDashboard.active_tenancy.lease_agreement ? (
                     tenantDashboard.active_tenancy.lease_agreement
                   ) : (
                     <span className="text-[#8a9a88] italic">
-                      Your property owner has not uploaded a lease agreement for this property yet.
+                      Your property owner has not uploaded a lease agreement for
+                      this property yet.
                     </span>
                   )}
                 </div>
 
                 <div className="mt-4 border-t border-[#e3e8df] pt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs text-[#60715f]">
                   <div>
-                    <span className="block font-medium text-[#435146]">Property</span>
+                    <span className="block font-medium text-[#435146]">
+                      Property
+                    </span>
                     <span className="text-sm font-semibold text-[#1b1f1d]">
                       {tenantDashboard.active_tenancy.property_name}
                     </span>
@@ -3754,19 +4282,25 @@ export default function Home() {
                     )}
                   </div>
                   <div>
-                    <span className="block font-medium text-[#435146]">Unit</span>
+                    <span className="block font-medium text-[#435146]">
+                      Unit
+                    </span>
                     <span className="text-sm font-semibold text-[#1b1f1d]">
                       {tenantDashboard.active_tenancy.unit_name}
                     </span>
                   </div>
                   <div>
-                    <span className="block font-medium text-[#435146]">Move-in Date</span>
+                    <span className="block font-medium text-[#435146]">
+                      Move-in Date
+                    </span>
                     <span className="text-sm font-semibold text-[#1b1f1d]">
                       {formatDate(tenantDashboard.active_tenancy.move_in_date)}
                     </span>
                   </div>
                   <div>
-                    <span className="block font-medium text-[#435146]">Security Deposit</span>
+                    <span className="block font-medium text-[#435146]">
+                      Security Deposit
+                    </span>
                     <span className="text-sm font-semibold text-[#23633d]">
                       {formatMoney(tenantDashboard.active_tenancy.deposit)}
                     </span>
@@ -3916,7 +4450,9 @@ export default function Home() {
             <button
               type="button"
               className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95 ${
-                morphPhase === "expanded" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                morphPhase === "expanded"
+                  ? "opacity-100 pointer-events-auto"
+                  : "opacity-0 pointer-events-none"
               }`}
               style={{
                 transition:
@@ -3983,7 +4519,6 @@ export default function Home() {
                     : "opacity 150ms ease-out",
               }}
             >
-
               {properties.find(
                 (p) => p.id === viewingPropertyDetails.property_id,
               )?.address && (
@@ -4195,9 +4730,7 @@ export default function Home() {
                                   <button
                                     type="button"
                                     className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
-                                    onClick={(e) =>
-                                      handleOpenEditUnit(unit, e)
-                                    }
+                                    onClick={(e) => handleOpenEditUnit(unit, e)}
                                     title={`Edit ${unit.name}`}
                                     disabled={loading}
                                   >
@@ -4275,20 +4808,31 @@ export default function Home() {
                     className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
                     onClick={() => {
                       const fullProp = properties.find(
-                        (p) => p.id === viewingPropertyDetails.property_id
+                        (p) => p.id === viewingPropertyDetails.property_id,
                       );
-                      setEditingLeaseProp(fullProp || {
-                        id: viewingPropertyDetails.property_id,
-                        name: viewingPropertyDetails.property_name,
-                        address: properties.find((p) => p.id === viewingPropertyDetails.property_id)?.address || null,
-                        lease_agreement: viewingPropertyDetails.lease_agreement || null,
-                        created_at: ""
-                      });
-                      setEditLeaseText(viewingPropertyDetails.lease_agreement || "");
+                      setEditingLeaseProp(
+                        fullProp || {
+                          id: viewingPropertyDetails.property_id,
+                          name: viewingPropertyDetails.property_name,
+                          address:
+                            properties.find(
+                              (p) =>
+                                p.id === viewingPropertyDetails.property_id,
+                            )?.address || null,
+                          lease_agreement:
+                            viewingPropertyDetails.lease_agreement || null,
+                          created_at: "",
+                        },
+                      );
+                      setEditLeaseText(
+                        viewingPropertyDetails.lease_agreement || "",
+                      );
                       setShowLeaseEditModal(true);
                     }}
                   >
-                    {viewingPropertyDetails.lease_agreement ? "Edit Lease Agreement" : "Write Lease Agreement"}
+                    {viewingPropertyDetails.lease_agreement
+                      ? "Edit Lease Agreement"
+                      : "Write Lease Agreement"}
                   </button>
                 </div>
 
@@ -4297,7 +4841,9 @@ export default function Home() {
                     viewingPropertyDetails.lease_agreement
                   ) : (
                     <span className="text-[#8a9a88] italic">
-                      No lease agreement has been written for this property yet. Click "Write Lease Agreement" to set up terms and conditions.
+                      No lease agreement has been written for this property yet.
+                      Click "Write Lease Agreement" to set up terms and
+                      conditions.
                     </span>
                   )}
                 </div>
@@ -4539,7 +5085,8 @@ export default function Home() {
                 Write Lease Agreement — {editingLeaseProp.name}
               </h3>
               <p className="text-xs text-[#60715f] mt-1">
-                Draft terms, rules, and payment policies for all tenants of this property.
+                Draft terms, rules, and payment policies for all tenants of this
+                property.
               </p>
             </div>
 
@@ -4556,7 +5103,9 @@ This agreement is made on [Date] between the Owner and the Tenant...
 
               <div className="flex justify-between items-center text-xs text-[#60715f]">
                 <span>Line breaks and spaces will be preserved.</span>
-                <span className="font-semibold">{editLeaseText.length} characters</span>
+                <span className="font-semibold">
+                  {editLeaseText.length} characters
+                </span>
               </div>
 
               <div className="flex gap-3 justify-end">
@@ -4602,13 +5151,19 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 Write Lease Agreement — {editingUnitLease.unit_name}
               </h3>
               <p className="text-xs text-[#60715f] mt-1">
-                Configure whether this unit inherits property terms or uses its own custom terms.
+                Configure whether this unit inherits property terms or uses its
+                own custom terms.
               </p>
             </div>
 
-            <form onSubmit={handleSaveUnitLeaseAgreement} className="grid gap-4">
+            <form
+              onSubmit={handleSaveUnitLeaseAgreement}
+              className="grid gap-4"
+            >
               <div className="grid gap-2 p-3 rounded-lg border border-[#d8ded2] bg-white">
-                <span className="text-xs font-semibold text-[#435146]">Option</span>
+                <span className="text-xs font-semibold text-[#435146]">
+                  Option
+                </span>
                 <div className="flex gap-6 text-sm font-medium text-[#435146]">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input
@@ -4618,7 +5173,9 @@ This agreement is made on [Date] between the Owner and the Tenant...
                       checked={unitLeaseMode === "inherit"}
                       onChange={() => {
                         setUnitLeaseMode("inherit");
-                        setUnitLeaseText(editingUnitLease.property_lease_agreement || "");
+                        setUnitLeaseText(
+                          editingUnitLease.property_lease_agreement || "",
+                        );
                       }}
                       className="accent-[#2f6f5e]"
                     />
@@ -4632,7 +5189,11 @@ This agreement is made on [Date] between the Owner and the Tenant...
                       checked={unitLeaseMode === "custom"}
                       onChange={() => {
                         setUnitLeaseMode("custom");
-                        setUnitLeaseText(editingUnitLease.unit_lease_agreement || editingUnitLease.property_lease_agreement || "");
+                        setUnitLeaseText(
+                          editingUnitLease.unit_lease_agreement ||
+                            editingUnitLease.property_lease_agreement ||
+                            "",
+                        );
                       }}
                       className="accent-[#2f6f5e]"
                     />
@@ -4643,7 +5204,9 @@ This agreement is made on [Date] between the Owner and the Tenant...
 
               <textarea
                 className={`w-full h-80 rounded-md border border-[#c9d0c5] px-3 py-2 text-sm text-[#1b1f1d] outline-none focus:border-[#3d7b65] bg-white font-mono leading-relaxed ${
-                  unitLeaseMode === "inherit" ? "opacity-60 bg-gray-50 cursor-not-allowed" : ""
+                  unitLeaseMode === "inherit"
+                    ? "opacity-60 bg-gray-50 cursor-not-allowed"
+                    : ""
                 }`}
                 placeholder="Draft custom terms and conditions for this specific unit..."
                 value={unitLeaseText}
@@ -4661,7 +5224,9 @@ This agreement is made on [Date] between the Owner and the Tenant...
                     ? "Currently inheriting property terms. Switch to Custom to edit."
                     : "Line breaks and spaces will be preserved."}
                 </span>
-                <span className="font-semibold">{unitLeaseText.length} characters</span>
+                <span className="font-semibold">
+                  {unitLeaseText.length} characters
+                </span>
               </div>
 
               <div className="flex gap-3 justify-end">
@@ -4830,7 +5395,9 @@ This agreement is made on [Date] between the Owner and the Tenant...
             <button
               type="button"
               className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95 ${
-                unitMorphPhase === "expanded" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                unitMorphPhase === "expanded"
+                  ? "opacity-100 pointer-events-auto"
+                  : "opacity-0 pointer-events-none"
               }`}
               style={{
                 transition:
@@ -4939,34 +5506,62 @@ This agreement is made on [Date] between the Owner and the Tenant...
                     <div className="h-4 bg-[#eef0eb] rounded w-1/2"></div>
                   </div>
                 ) : viewingUnitDetails.tenancy_id ? (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
-                        Tenant Info
-                      </p>
-                      <p className="text-sm font-medium text-[#1b1f1d]">
-                        {viewingUnitDetails.tenant_name || "N/A"}
-                      </p>
-                      <p className="text-sm text-[#435146]">
-                        {viewingUnitDetails.tenant_email}
-                      </p>
+                  <div className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
+                          Tenant Info
+                        </p>
+                        <p className="text-sm font-medium text-[#1b1f1d]">
+                          {viewingUnitDetails.tenant_name || "N/A"}
+                        </p>
+                        <p className="text-sm text-[#435146]">
+                          {viewingUnitDetails.tenant_email}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
+                          Lease Details
+                        </p>
+                        <p className="text-sm font-medium text-[#1b1f1d]">
+                          Move-in:{" "}
+                          <span className="font-normal text-[#435146]">
+                            {formatDate(
+                              viewingUnitDetails.move_in_date ?? null,
+                            )}
+                          </span>
+                        </p>
+                        <p className="text-sm font-medium text-[#1b1f1d]">
+                          Deposit:{" "}
+                          <span className="font-normal text-[#435146]">
+                            {formatMoney(viewingUnitDetails.deposit ?? 0)}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
-                        Lease Details
-                      </p>
-                      <p className="text-sm font-medium text-[#1b1f1d]">
-                        Move-in:{" "}
-                        <span className="font-normal text-[#435146]">
-                          {formatDate(viewingUnitDetails.move_in_date ?? null)}
-                        </span>
-                      </p>
-                      <p className="text-sm font-medium text-[#1b1f1d]">
-                        Deposit:{" "}
-                        <span className="font-normal text-[#435146]">
-                          {formatMoney(viewingUnitDetails.deposit ?? 0)}
-                        </span>
-                      </p>
+                    <div className="flex justify-end pt-2 border-t border-dashed border-[#e3e8df]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleKickTenant(viewingUnitDetails.tenancy_id!)
+                        }
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#fca5a5] bg-red-50 hover:bg-red-100 hover:text-red-950 px-3 py-1.5 text-xs font-semibold text-[#b91c1c] shadow-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        Remove Tenant
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -5014,9 +5609,14 @@ This agreement is made on [Date] between the Owner and the Tenant...
                       className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3 py-1 text-xs font-semibold text-white shadow-sm transition-all"
                       onClick={() => {
                         setEditingUnitLease(viewingUnitDetails);
-                        const hasCustom = !!viewingUnitDetails.unit_lease_agreement;
+                        const hasCustom =
+                          !!viewingUnitDetails.unit_lease_agreement;
                         setUnitLeaseMode(hasCustom ? "custom" : "inherit");
-                        setUnitLeaseText(viewingUnitDetails.unit_lease_agreement || viewingUnitDetails.property_lease_agreement || "");
+                        setUnitLeaseText(
+                          viewingUnitDetails.unit_lease_agreement ||
+                            viewingUnitDetails.property_lease_agreement ||
+                            "",
+                        );
                         setShowUnitLeaseModal(true);
                       }}
                     >
@@ -5032,7 +5632,8 @@ This agreement is made on [Date] between the Owner and the Tenant...
                     viewingUnitDetails.property_lease_agreement
                   ) : (
                     <span className="text-[#8a9a88] italic">
-                      No lease agreement terms set for this unit or the property.
+                      No lease agreement terms set for this unit or the
+                      property.
                     </span>
                   )}
                 </div>
@@ -5048,9 +5649,12 @@ This agreement is made on [Date] between the Owner and the Tenant...
           <div className="w-full max-w-md rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-lg font-bold text-[#2f6f5e]">Log Rent Payment</h3>
+                <h3 className="text-lg font-bold text-[#2f6f5e]">
+                  Log Rent Payment
+                </h3>
                 <p className="text-xs text-[#60715f]">
-                  Log payment for {loggingPaymentRent.tenant_name} ({loggingPaymentRent.unit_name})
+                  Log payment for {loggingPaymentRent.tenant_name} (
+                  {loggingPaymentRent.unit_name})
                 </p>
               </div>
               <button
@@ -5073,15 +5677,38 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 </svg>
               </button>
             </div>
-            
+
             <form onSubmit={handleLogPayment} className="grid gap-4">
               <div className="rounded-lg bg-white p-3 border border-[#e3e8df] text-sm space-y-1">
-                <div className="flex justify-between"><span className="text-[#60715f]">Period:</span> <span className="font-semibold text-gray-800">{formatPeriod(loggingPaymentRent.month, loggingPaymentRent.year)}</span></div>
-                <div className="flex justify-between"><span className="text-[#60715f]">Rent Due:</span> <span className="font-semibold text-gray-800">{formatMoney(loggingPaymentRent.amount)}</span></div>
-                <div className="flex justify-between"><span className="text-[#60715f]">Already Paid:</span> <span className="font-semibold text-gray-800">{formatMoney(loggingPaymentRent.paid)}</span></div>
-                <div className="flex justify-between border-t border-[#e3e8df] pt-1 mt-1 font-semibold"><span className="text-[#9a4d21]">Outstanding:</span> <span className="text-[#9a4d21]">{formatMoney(loggingPaymentRent.pending)}</span></div>
+                <div className="flex justify-between">
+                  <span className="text-[#60715f]">Period:</span>{" "}
+                  <span className="font-semibold text-gray-800">
+                    {formatPeriod(
+                      loggingPaymentRent.month,
+                      loggingPaymentRent.year,
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#60715f]">Rent Due:</span>{" "}
+                  <span className="font-semibold text-gray-800">
+                    {formatMoney(loggingPaymentRent.amount)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#60715f]">Already Paid:</span>{" "}
+                  <span className="font-semibold text-gray-800">
+                    {formatMoney(loggingPaymentRent.paid)}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-[#e3e8df] pt-1 mt-1 font-semibold">
+                  <span className="text-[#9a4d21]">Outstanding:</span>{" "}
+                  <span className="text-[#9a4d21]">
+                    {formatMoney(loggingPaymentRent.pending)}
+                  </span>
+                </div>
               </div>
-              
+
               <label className="grid gap-1 text-sm font-medium text-[#435146]">
                 Payment Amount (₹)
                 <input
@@ -5095,7 +5722,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
                   required
                 />
               </label>
-              
+
               <label className="grid gap-1 text-sm font-medium text-[#435146]">
                 Payment Method
                 <select
@@ -5112,10 +5739,13 @@ This agreement is made on [Date] between the Owner and the Tenant...
                   <option value="other">Other</option>
                 </select>
               </label>
-              
+
               <label className="grid gap-1 text-sm font-medium text-[#435146]">
                 Transaction ID / Notes
-                <span className="font-normal text-[#8a9a88] text-xs"> (optional)</span>
+                <span className="font-normal text-[#8a9a88] text-xs">
+                  {" "}
+                  (optional)
+                </span>
                 <input
                   className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
                   type="text"
@@ -5124,7 +5754,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
                   placeholder="e.g. TXN123456789"
                 />
               </label>
-              
+
               <div className="mt-2 flex gap-3 justify-end">
                 <button
                   type="button"
