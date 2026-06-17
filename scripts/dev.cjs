@@ -8,7 +8,7 @@ function run(name, cwd, args) {
   const child = spawn(npmCommand, args, {
     cwd,
     stdio: "inherit",
-    shell: false,
+    shell: true,
   });
 
   child.on("exit", (code) => {

@@ -52,7 +52,7 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
   const contentType = request.headers.get("content-type");
   if (contentType) headers["Content-Type"] = contentType;
 
-  let body: BodyInit | null = null;
+  let body: any = null;
 
   if (request.method !== "GET" && request.method !== "HEAD") {
     if (contentType?.includes("application/json")) {
@@ -61,8 +61,15 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
       } catch (e) {
         body = null;
       }
+    } else if (contentType?.includes("multipart/form-data")) {
+      try {
+        body = Buffer.from(await request.arrayBuffer());
+      } catch (e) {
+        body = null;
+      }
     }
   }
+
 
   try {
     const response = await fetch(backendUrl, {

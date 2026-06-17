@@ -13,6 +13,12 @@ type User = {
   name?: string;
 };
 
+type Toast = {
+  id: number;
+  message: string;
+  type: "success" | "error" | "info";
+};
+
 type OwnerDashboard = {
   totals: {
     total_properties: number;
@@ -100,6 +106,7 @@ type Property = {
   address: string | null;
   lease_agreement?: string | null;
   created_at: string;
+  images?: Array<{ id: number; image_path: string }>;
 };
 
 type Unit = {
@@ -637,6 +644,22 @@ export default function Home() {
   );
   const [editLeaseText, setEditLeaseText] = useState("");
   const [showLeaseEditModal, setShowLeaseEditModal] = useState(false);
+
+  // Property images states
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [selectedAddFiles, setSelectedAddFiles] = useState<File[]>([]);
+
+  // Toast notifications states
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const addToast = (message: string, type: "success" | "error" | "info" = "info") => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4500);
+  };
+
 
   // Unit lease agreement states
   const [editingUnitLease, setEditingUnitLease] = useState<UnitDetails | null>(
@@ -1229,8 +1252,18 @@ export default function Home() {
   // ── Owner: add property ──
   const handleAddProperty = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLoading(true);
     setNotice("");
+
+    // Local file size validation (10MB limit)
+    for (let i = 0; i < selectedAddFiles.length; i++) {
+      const file = selectedAddFiles[i];
+      if (file.size > 10 * 1024 * 1024) {
+        addToast(`File "${file.name}" is too large (maximum 10MB)`, "error");
+        return;
+      }
+    }
+
+    setLoading(true);
     try {
       const res = await fetch("/api/proxy/properties", {
         method: "POST",
@@ -1243,14 +1276,41 @@ export default function Home() {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Failed to add property");
+
+      if (selectedAddFiles.length > 0) {
+        const formData = new FormData();
+        selectedAddFiles.forEach((file) => {
+          formData.append("images", file);
+        });
+        const uploadRes = await fetch(
+          `/api/proxy/properties/${body.id}/images`,
+          {
+            method: "POST",
+            body: formData,
+          },
+        );
+        if (!uploadRes.ok) {
+          const uploadBody = await uploadRes.json();
+          addToast(
+            `Property created, but picture upload failed: ${uploadBody.error || "Unknown error"}`,
+            "error"
+          );
+        }
+      }
+
       setPropName("");
       setPropAddress("");
       setPropLeaseAgreement("");
+      setSelectedAddFiles([]);
       await loadProperties();
       await loadDashboard();
-      setNotice(`Property "${body.name}" created!`);
+      if (selectedAddFiles.length > 0) {
+        addToast(`Property "${body.name}" created with pictures!`, "success");
+      } else {
+        addToast(`Property "${body.name}" created!`, "success");
+      }
     } catch (err) {
-      setNotice(err instanceof Error ? err.message : "Failed to add property");
+      addToast(err instanceof Error ? err.message : "Failed to add property", "error");
     } finally {
       setLoading(false);
     }
@@ -1345,6 +1405,81 @@ export default function Home() {
       setNotice(
         err instanceof Error ? err.message : "Failed to save lease agreement",
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Owner: upload property pictures ──
+  const handleUploadImages = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (
+      !event.target.files ||
+      event.target.files.length === 0 ||
+      !viewingPropertyDetails
+    )
+      return;
+    setNotice("");
+
+    // Local file size validation (10MB limit)
+    for (let i = 0; i < event.target.files.length; i++) {
+      const file = event.target.files[i];
+      if (file.size > 10 * 1024 * 1024) {
+        addToast(`File "${file.name}" is too large (maximum 10MB)`, "error");
+        return;
+      }
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      for (let i = 0; i < event.target.files.length; i++) {
+        formData.append("images", event.target.files[i]);
+      }
+      const res = await fetch(
+        `/api/proxy/properties/${viewingPropertyDetails.property_id}/images`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to upload images");
+
+      await loadProperties();
+      await loadDashboard();
+      addToast(
+        `Uploaded ${event.target.files.length} property picture(s) successfully!`,
+        "success"
+      );
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Failed to upload images", "error");
+    } finally {
+      setLoading(false);
+      if (imageInputRef.current) {
+        imageInputRef.current.value = "";
+      }
+    }
+  };
+
+  // ── Owner: delete property picture ──
+  const handleDeleteImage = async (imageId: number) => {
+    if (!confirm("Are you sure you want to delete this picture?")) return;
+    setLoading(true);
+    setNotice("");
+    try {
+      const res = await fetch(`/api/proxy/properties/images/${imageId}`, {
+        method: "DELETE",
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Failed to delete image");
+
+      await loadProperties();
+      await loadDashboard();
+      addToast("Property picture deleted!", "success");
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Failed to delete image", "error");
     } finally {
       setLoading(false);
     }
@@ -3386,6 +3521,50 @@ export default function Home() {
                     placeholder="Standard terms and conditions for this property..."
                   />
                 </label>
+                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  Property Pictures{" "}
+                  <span className="font-normal text-[#8a9a88]">(optional)</span>
+                  <input
+                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65] text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#eef0eb] file:text-[#2f6f5e] hover:file:bg-[#e3e8df] file:cursor-pointer"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        setSelectedAddFiles(Array.from(e.target.files));
+                      }
+                    }}
+                  />
+                </label>
+
+                {selectedAddFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {selectedAddFiles.map((file, idx) => (
+                      <div
+                        key={idx}
+                        className="group relative w-12 h-12 rounded-md border border-[#e3e8df] overflow-hidden"
+                      >
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt="preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[10px] font-bold"
+                          onClick={() =>
+                            setSelectedAddFiles((prev) =>
+                              prev.filter((_, i) => i !== idx),
+                            )
+                          }
+                          title="Remove picture"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <button
                   className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
                   type="submit"
@@ -4848,10 +5027,190 @@ export default function Home() {
                   )}
                 </div>
               </div>
+
+              {/* Property Pictures Gallery */}
+              <div className="mt-6 rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
+                  <h4 className="text-lg font-bold text-[#1b1f1d] flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-[#2f6f5e]"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375 0 11-.75 0 .375 0 01.75 0z"
+                      />
+                    </svg>
+                    Property Pictures
+                  </h4>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                      onChange={handleUploadImages}
+                    />
+                    <button
+                      type="button"
+                      className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
+                      onClick={() => imageInputRef.current?.click()}
+                      disabled={loading}
+                    >
+                      Upload Pictures
+                    </button>
+                  </div>
+                </div>
+
+                {/* Grid of existing pictures */}
+                {(() => {
+                  const currentProperty = properties.find(
+                    (p) => p.id === viewingPropertyDetails.property_id,
+                  );
+                  const propertyImages = currentProperty?.images || [];
+
+                  if (propertyImages.length === 0) {
+                    return (
+                      <div className="text-center py-6 text-sm text-[#8a9a88] bg-[#f7f8f3] rounded-md border border-dashed border-[#c9d0c5]">
+                        No pictures uploaded for this property yet. Upload some
+                        pictures to show the property details!
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {propertyImages.map((img: any) => (
+                        <div
+                          key={img.id}
+                          className="group relative aspect-video overflow-hidden rounded-lg border border-[#e3e8df] bg-[#f7f8f3] shadow-sm hover:shadow-md transition-all duration-200"
+                        >
+                          <img
+                            src={`/api/proxy/properties/images/${img.image_path}`}
+                            alt="Property"
+                            className="h-full w-full object-cover cursor-zoom-in transition-transform duration-300 group-hover:scale-105"
+                            onClick={() =>
+                              setLightboxImage(
+                                `/api/proxy/properties/images/${img.image_path}`,
+                              )
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="absolute right-2 top-2 rounded-md bg-white/95 p-1.5 text-[#c44d4d] shadow-sm transition-opacity opacity-0 group-hover:opacity-100 hover:bg-[#fde8e8] duration-200"
+                            onClick={() => handleDeleteImage(img.id)}
+                            title="Delete Picture"
+                            disabled={loading}
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              <line x1="10" y1="11" x2="10" y2="17" />
+                              <line x1="14" y1="11" x2="14" y2="17" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Lightbox Modal */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm cursor-zoom-out"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            type="button"
+            className="absolute right-6 top-6 rounded-full bg-white/10 p-2 text-white/80 hover:bg-white/20 hover:text-white transition-all"
+            onClick={() => setLightboxImage(null)}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+          <div
+            className="relative max-w-[90vw] max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={lightboxImage}
+              alt="Property Full Preview"
+              className="max-w-full max-h-[90vh] rounded-lg object-contain shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notifications */}
+      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`pointer-events-auto flex items-start gap-3 rounded-lg border p-4 shadow-lg transition-all duration-300 transform translate-y-0 ${
+              t.type === "success"
+                ? "border-[#2f6f5e]/20 bg-[#f3f7f5] text-[#2f6f5e]"
+                : t.type === "error"
+                ? "border-red-500/20 bg-red-50/90 text-red-700"
+                : "border-[#e3e8df] bg-white text-[#435146]"
+            }`}
+          >
+            {t.type === "success" && (
+              <svg className="w-5 h-5 text-[#2f6f5e] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            {t.type === "error" && (
+              <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            )}
+            {t.type === "info" && (
+              <svg className="w-5 h-5 text-[#435146] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            <div className="flex-1 text-sm font-semibold leading-relaxed">{t.message}</div>
+            <button
+              type="button"
+              className="text-gray-400 hover:text-gray-600 transition-colors text-xs font-bold font-mono pl-1"
+              onClick={() => setToasts((prev) => prev.filter((toast) => toast.id !== t.id))}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (

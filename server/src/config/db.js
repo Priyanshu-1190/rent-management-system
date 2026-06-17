@@ -12,4 +12,17 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+// Auto-initialize property_images table if it does not exist
+pool.query(`
+  CREATE TABLE IF NOT EXISTS property_images (
+    id SERIAL PRIMARY KEY,
+    property_id INT REFERENCES properties(id) ON DELETE CASCADE,
+    image_path TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`).catch((err) => {
+  console.error("[DB INIT ERROR] Failed to initialize property_images table:", err);
+});
+
 module.exports = pool;
+

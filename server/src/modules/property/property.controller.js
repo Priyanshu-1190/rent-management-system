@@ -115,5 +115,100 @@ const updateLeaseAgreement = async (req, res, next) => {
   }
 };
 
-module.exports = { addProperty, editProperty, listProperties, removeProperty, updateLeaseAgreement };
+const path = require("path");
+const fs = require("fs");
+const { addPropertyImage, deletePropertyImage } = require("./property.service");
+
+const uploadDir = path.join(__dirname, "../../../uploads/properties");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const getPropertyImageFile = async (req, res, next) => {
+  try {
+    const { filename } = req.params;
+    if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
+      return res.status(400).json({ error: "Invalid filename" });
+    }
+    const filePath = path.join(uploadDir, filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "Image not found" });
+    }
+    return res.sendFile(filePath);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const uploadPropertyImages = async (req, res, next) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const propertyId = Number(req.params.id);
+    if (!Number.isInteger(propertyId) || propertyId <= 0) {
+      return res.status(400).json({ error: "Valid property id is required" });
+    }
+
+    const ownerProperties = await getOwnerProperties(req.user.id);
+    const hasProperty = ownerProperties.some((p) => p.id === propertyId);
+    if (!hasProperty) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: "No files uploaded" });
+    }
+
+    const savedImages = [];
+    for (const file of req.files) {
+      const saved = await addPropertyImage(propertyId, file.filename);
+      savedImages.push(saved);
+    }
+
+    return res.status(201).json(savedImages);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const removePropertyImage = async (req, res, next) => {
+  try {
+    if (req.user.role !== "owner") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const imageId = Number(req.params.imageId);
+    if (!Number.isInteger(imageId) || imageId <= 0) {
+      return res.status(400).json({ error: "Valid image id is required" });
+    }
+
+    const deletedImage = await deletePropertyImage(req.user.id, imageId);
+    if (!deletedImage) {
+      return res.status(404).json({ error: "Image not found or not owned by you" });
+    }
+
+    const filePath = path.join(uploadDir, deletedImage.image_path);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    return res.json({ message: "Image deleted", id: imageId });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = {
+  addProperty,
+  editProperty,
+  listProperties,
+  removeProperty,
+  updateLeaseAgreement,
+  getPropertyImageFile,
+  uploadPropertyImages,
+  removePropertyImage
+};
+
 
