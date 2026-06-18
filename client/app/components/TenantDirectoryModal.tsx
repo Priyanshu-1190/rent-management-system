@@ -40,11 +40,16 @@ interface TenantDirectoryModalProps {
   onClose: () => void;
 }
 
-export default function TenantDirectoryModal({ isOpen, onClose }: TenantDirectoryModalProps) {
+export default function TenantDirectoryModal({
+  isOpen,
+  onClose,
+}: TenantDirectoryModalProps) {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "active" | "past" | "invited">("all");
+  const [activeTab, setActiveTab] = useState<
+    "all" | "active" | "past" | "invited"
+  >("all");
 
   const fetchTenants = async () => {
     setLoading(true);
@@ -61,8 +66,10 @@ export default function TenantDirectoryModal({ isOpen, onClose }: TenantDirector
 
       const data = await response.json();
       setTenants(data);
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred",
+      );
     } finally {
       setLoading(false);
     }
@@ -199,24 +206,46 @@ export default function TenantDirectoryModal({ isOpen, onClose }: TenantDirector
             <table className="w-full border-collapse text-left text-sm text-gray-500">
               <thead className="bg-gray-50 text-xs uppercase text-gray-700 font-semibold">
                 <tr>
-                  <th scope="col" className="px-6 py-4">Name / Email</th>
-                  <th scope="col" className="px-6 py-4">Property</th>
-                  <th scope="col" className="px-6 py-4">Unit</th>
-                  <th scope="col" className="px-6 py-4">Move-in Date</th>
-                  <th scope="col" className="px-6 py-4">Deposit</th>
-                  <th scope="col" className="px-6 py-4 font-semibold text-center">Status</th>
+                  <th scope="col" className="px-6 py-4">
+                    Name / Email
+                  </th>
+                  <th scope="col" className="px-6 py-4">
+                    Property
+                  </th>
+                  <th scope="col" className="px-6 py-4">
+                    Unit
+                  </th>
+                  <th scope="col" className="px-6 py-4">
+                    Move-in Date
+                  </th>
+                  <th scope="col" className="px-6 py-4">
+                    Deposit
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-4 font-semibold text-center"
+                  >
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 border-t border-gray-200">
                 {filteredTenants.map((tenant) => (
-                  <tr key={`${tenant.type}-${tenant.tenancy_id}`} className="hover:bg-gray-50">
+                  <tr
+                    key={`${tenant.type}-${tenant.tenancy_id}`}
+                    className="hover:bg-gray-50"
+                  >
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {tenant.name || "Pending"}
-                      <div className="text-xs text-gray-500 font-normal mt-0.5">{tenant.email}</div>
+                      <div className="text-xs text-gray-500 font-normal mt-0.5">
+                        {tenant.email}
+                      </div>
                     </td>
                     <td className="px-6 py-4">{tenant.property_name}</td>
                     <td className="px-6 py-4">{tenant.unit_name}</td>
-                    <td className="px-6 py-4">{formatDate(tenant.move_in_date)}</td>
+                    <td className="px-6 py-4">
+                      {formatDate(tenant.move_in_date)}
+                    </td>
                     <td className="px-6 py-4">{formatMoney(tenant.deposit)}</td>
                     <td className="px-6 py-4 text-center">
                       <span
@@ -224,12 +253,12 @@ export default function TenantDirectoryModal({ isOpen, onClose }: TenantDirector
                           tenant.status === "active"
                             ? "bg-green-100 text-green-800"
                             : tenant.status === "past"
-                            ? "bg-gray-100 text-gray-800"
-                            : tenant.status === "invited"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : tenant.status === "accepted"
-                            ? "bg-cyan-100 text-cyan-800"
-                            : "bg-red-100 text-red-800"
+                              ? "bg-gray-100 text-gray-800"
+                              : tenant.status === "invited"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : tenant.status === "accepted"
+                                  ? "bg-cyan-100 text-cyan-800"
+                                  : "bg-red-100 text-red-800"
                         }`}
                       >
                         {tenant.status}

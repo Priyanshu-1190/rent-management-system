@@ -127,10 +127,11 @@ if (!fs.existsSync(uploadDir)) {
 const getPropertyImageFile = async (req, res, next) => {
   try {
     const { filename } = req.params;
-    if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
+    const safeFilename = path.basename(filename);
+    if (filename !== safeFilename) {
       return res.status(400).json({ error: "Invalid filename" });
     }
-    const filePath = path.join(uploadDir, filename);
+    const filePath = path.join(uploadDir, safeFilename);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: "Image not found" });
     }
@@ -210,5 +211,3 @@ module.exports = {
   uploadPropertyImages,
   removePropertyImage
 };
-
-
