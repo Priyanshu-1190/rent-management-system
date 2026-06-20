@@ -786,6 +786,14 @@ export default function Home() {
   const [showInvitesModal, setShowInvitesModal] = useState(false);
   const [showTenantDirectory, setShowTenantDirectory] = useState(false);
 
+  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   // Restore session from httpOnly cookie on mount
   useEffect(() => {
     fetch("/api/auth/session")
@@ -2730,7 +2738,14 @@ export default function Home() {
         {/* Sticky Header */}
         <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-brand-green-dark/75 backdrop-blur-md text-white shadow-lg transition-all duration-300">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <a href="#" className="flex items-center gap-2 group">
+            <a
+              href="#"
+              className="flex items-center gap-2 group"
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-brand-gold to-brand-gold-light text-[#1b1f1d] font-bold text-xl shadow-md shadow-brand-gold/10 group-hover:scale-105 transition-transform">
                 ₹
               </div>
@@ -2742,15 +2757,17 @@ export default function Home() {
               <a
                 className="relative px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-brand-gold after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300"
                 href="#features"
+                onClick={(e) => handleScrollTo(e, "features")}
               >
                 Features
               </a>
               <a
                 className="relative px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-brand-gold after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300"
                 href="#access"
-                onClick={() => {
+                onClick={(e) => {
                   setAuthMode("login");
                   setNotice("");
+                  handleScrollTo(e, "access");
                 }}
               >
                 Login
@@ -2759,9 +2776,10 @@ export default function Home() {
               <a
                 className="rounded-lg bg-gradient-to-r from-brand-gold to-brand-gold-light px-4 py-2 text-sm font-bold text-brand-dark shadow-md shadow-brand-gold/20 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-brand-gold/30 active:scale-[0.98]"
                 href="#access"
-                onClick={() => {
+                onClick={(e) => {
                   setAuthMode("register");
                   setNotice("");
+                  handleScrollTo(e, "access");
                 }}
               >
                 Create Account
@@ -2805,9 +2823,10 @@ export default function Home() {
                   <a
                     className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light px-6 py-3.5 text-sm font-bold text-brand-dark shadow-lg shadow-brand-gold/15 transition-all hover:scale-[1.03] hover:shadow-xl hover:shadow-brand-gold/25 active:scale-[0.98]"
                     href="#access"
-                    onClick={() => {
+                    onClick={(e) => {
                       setAuthMode("register");
                       setNotice("");
+                      handleScrollTo(e, "access");
                     }}
                   >
                     Start Managing
@@ -2815,6 +2834,7 @@ export default function Home() {
                   <a
                     className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/30 active:scale-[0.98]"
                     href="#features"
+                    onClick={(e) => handleScrollTo(e, "features")}
                   >
                     Explore Features
                   </a>
@@ -3187,21 +3207,27 @@ export default function Home() {
                 <a
                   className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors"
                   href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                 >
                   Home
                 </a>
                 <a
                   className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors"
                   href="#features"
+                  onClick={(e) => handleScrollTo(e, "features")}
                 >
                   Features
                 </a>
                 <a
                   className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors"
                   href="#access"
-                  onClick={() => {
+                  onClick={(e) => {
                     setAuthMode("login");
                     setNotice("");
+                    handleScrollTo(e, "access");
                   }}
                 >
                   Login
@@ -3214,10 +3240,18 @@ export default function Home() {
                 reserved.
               </p>
               <p className="flex gap-4">
-                <a href="#" className="hover:text-white transition-colors">
+                <a
+                  href="#"
+                  className="hover:text-white transition-colors"
+                  onClick={(e) => e.preventDefault()}
+                >
                   Privacy Policy
                 </a>
-                <a href="#" className="hover:text-white transition-colors">
+                <a
+                  href="#"
+                  className="hover:text-white transition-colors"
+                  onClick={(e) => e.preventDefault()}
+                >
                   Terms of Service
                 </a>
               </p>
