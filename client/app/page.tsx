@@ -822,6 +822,18 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Listen for ?invite=true query parameter to trigger invite modal
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("invite") === "true") {
+        setShowInvitesModal(true);
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, []);
+
   // Intercept notice banner messages and route them to Toast alerts for logged-in users
   useEffect(() => {
     if (notice && user) {
@@ -6146,6 +6158,10 @@ This agreement is made on [Date] between the Owner and the Tenant...
       <TenantDirectoryModal
         isOpen={showTenantDirectory}
         onClose={() => setShowTenantDirectory(false)}
+        onInviteClick={() => {
+          setShowTenantDirectory(false);
+          setShowInvitesModal(true);
+        }}
       />
     </main>
   );

@@ -38,11 +38,39 @@ function formatMoney(value: number) {
 interface TenantDirectoryModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onInviteClick?: () => void;
+}
+
+function TableRowSkeleton() {
+  return (
+    <tr className="animate-pulse border-t border-[#e3e8df]">
+      <td className="px-6 py-4">
+        <div className="h-4 bg-[#eef0eb] rounded w-2/3 mb-2"></div>
+        <div className="h-3 bg-[#eef0eb]/70 rounded w-1/2"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-[#eef0eb] rounded w-3/4"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-[#eef0eb] rounded w-1/2"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-[#eef0eb] rounded w-2/3"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-[#eef0eb] rounded w-1/3"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-6 bg-[#eef0eb]/80 rounded-full w-16 mx-auto"></div>
+      </td>
+    </tr>
+  );
 }
 
 export default function TenantDirectoryModal({
   isOpen,
   onClose,
+  onInviteClick,
 }: TenantDirectoryModalProps) {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
@@ -193,13 +221,49 @@ export default function TenantDirectoryModal({
         </div>
 
         {/* Table Content */}
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </div>
-        ) : filteredTenants.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            No tenants found in this section.
+        {!loading && filteredTenants.length === 0 ? (
+          <div className="text-center py-16 px-4 bg-white rounded-lg border border-[#e3e8df] flex flex-col items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-[#f3f5f0] flex items-center justify-center mb-4 text-[#2f6f5e]">
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M18 18.72a9.003 9.003 0 00-18 0M12 10a4 4 0 11-8 0 4 4 0 018 0zM23 18.72a9 9 0 00-10.364-5.326M19 10a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-[#1b1f1d] mb-1">
+              No Tenants Found
+            </h3>
+            <p className="text-sm text-[#60715f] max-w-sm mb-6">
+              {activeTab === "all"
+                ? "You don't have any tenants assigned to properties or active invitations."
+                : `You don't have any ${activeTab} tenants.`}
+            </p>
+            {onInviteClick && (
+              <button
+                type="button"
+                onClick={onInviteClick}
+                className="inline-flex items-center gap-2 rounded-md bg-[#2f6f5e] hover:bg-[#235346] px-4 py-2 text-sm font-semibold text-white transition-all shadow-sm active:scale-[0.98]"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Invite a Tenant
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -230,42 +294,52 @@ export default function TenantDirectoryModal({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 border-t border-gray-200">
-                {filteredTenants.map((tenant) => (
-                  <tr
-                    key={`${tenant.type}-${tenant.tenancy_id}`}
-                    className="hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {tenant.name || "Pending"}
-                      <div className="text-xs text-gray-500 font-normal mt-0.5">
-                        {tenant.email}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">{tenant.property_name}</td>
-                    <td className="px-6 py-4">{tenant.unit_name}</td>
-                    <td className="px-6 py-4">
-                      {formatDate(tenant.move_in_date)}
-                    </td>
-                    <td className="px-6 py-4">{formatMoney(tenant.deposit)}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                          tenant.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : tenant.status === "past"
-                              ? "bg-gray-100 text-gray-800"
-                              : tenant.status === "invited"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : tenant.status === "accepted"
-                                  ? "bg-cyan-100 text-cyan-800"
-                                  : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {tenant.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {loading ? (
+                  <>
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                    <TableRowSkeleton />
+                  </>
+                ) : (
+                  filteredTenants.map((tenant) => (
+                    <tr
+                      key={`${tenant.type}-${tenant.tenancy_id}`}
+                      className="hover:bg-gray-50"
+                    >
+                      <td className="px-6 py-4 font-medium text-gray-900">
+                        {tenant.name || "Pending"}
+                        <div className="text-xs text-gray-500 font-normal mt-0.5">
+                          {tenant.email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">{tenant.property_name}</td>
+                      <td className="px-6 py-4">{tenant.unit_name}</td>
+                      <td className="px-6 py-4">
+                        {formatDate(tenant.move_in_date)}
+                      </td>
+                      <td className="px-6 py-4">{formatMoney(tenant.deposit)}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                            tenant.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : tenant.status === "past"
+                                ? "bg-gray-100 text-gray-800"
+                                : tenant.status === "invited"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : tenant.status === "accepted"
+                                    ? "bg-cyan-100 text-cyan-800"
+                                    : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {tenant.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

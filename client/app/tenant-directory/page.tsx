@@ -53,6 +53,37 @@ function getStatusBadgeClass(status: string) {
   }
 }
 
+function TableRowSkeleton({ showMoveOut = false }: { showMoveOut?: boolean }) {
+  return (
+    <tr className="animate-pulse border-t border-gray-200">
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+        <div className="h-3 bg-gray-200/70 rounded w-1/2"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+      </td>
+      {showMoveOut && (
+        <td className="px-6 py-4">
+          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        </td>
+      )}
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-6 bg-gray-200/80 rounded-full w-16"></div>
+      </td>
+    </tr>
+  );
+}
+
 export default function TenantDirectory() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
@@ -206,29 +237,49 @@ export default function TenantDirectory() {
           </div>
         </div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-gray-600">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-              Loading tenants...
-            </div>
-          </div>
-        )}
-
         {/* Empty State */}
-        {!loading && filteredTenants.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500">
+        {!loading && filteredTenants.length === 0 ? (
+          <div className="text-center py-16 px-4 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4 text-[#2f6f5e]">
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M18 18.72a9.003 9.003 0 00-18 0M12 10a4 4 0 11-8 0 4 4 0 018 0zM23 18.72a9 9 0 00-10.364-5.326M19 10a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+              No Tenants Found
+            </h3>
+            <p className="text-sm text-gray-500 max-w-sm mb-6">
               {activeTab === "all"
                 ? "No tenants found. Create your first property and invite tenants."
                 : `No ${activeTab} tenants.`}
             </p>
+            <Link
+              href="/?invite=true"
+              className="inline-flex items-center gap-2 rounded-md bg-[#2f6f5e] hover:bg-[#235346] px-4 py-2 text-sm font-semibold text-white transition-all shadow-sm"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Invite a Tenant
+            </Link>
           </div>
-        )}
-
-        {/* Table */}
-        {!loading && filteredTenants.length > 0 && (
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full bg-white rounded-lg shadow">
               <thead className="bg-gray-100 border-b border-gray-200">
@@ -259,44 +310,54 @@ export default function TenantDirectory() {
                 </tr>
               </thead>
               <tbody>
-                {filteredTenants.map((tenant, idx) => (
-                  <tr
-                    key={tenant.tenancy_id}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
-                    <td className="px-6 py-4 text-sm">
-                      <div className="font-medium text-gray-900">
-                        {tenant.name || "Pending"}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {tenant.email}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {tenant.property_name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {tenant.unit_name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {formatDate(tenant.move_in_date)}
-                    </td>
-                    {activeTab === "past" && (
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {formatDate(tenant.move_out_date)}
+                {loading ? (
+                  <>
+                    <TableRowSkeleton showMoveOut={activeTab === "past"} />
+                    <TableRowSkeleton showMoveOut={activeTab === "past"} />
+                    <TableRowSkeleton showMoveOut={activeTab === "past"} />
+                    <TableRowSkeleton showMoveOut={activeTab === "past"} />
+                    <TableRowSkeleton showMoveOut={activeTab === "past"} />
+                  </>
+                ) : (
+                  filteredTenants.map((tenant, idx) => (
+                    <tr
+                      key={tenant.tenancy_id}
+                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    >
+                      <td className="px-6 py-4 text-sm">
+                        <div className="font-medium text-gray-900">
+                          {tenant.name || "Pending"}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {tenant.email}
+                        </div>
                       </td>
-                    )}
-                    <td className="px-6 py-4 text-sm font-medium text-gray-700">
-                      {formatMoney(tenant.deposit)}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className={getStatusBadgeClass(tenant.status)}>
-                        {tenant.status.charAt(0).toUpperCase() +
-                          tenant.status.slice(1)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {tenant.property_name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {tenant.unit_name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {formatDate(tenant.move_in_date)}
+                      </td>
+                      {activeTab === "past" && (
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {formatDate(tenant.move_out_date)}
+                        </td>
+                      )}
+                      <td className="px-6 py-4 text-sm font-medium text-gray-700">
+                        {formatMoney(tenant.deposit)}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={getStatusBadgeClass(tenant.status)}>
+                          {tenant.status.charAt(0).toUpperCase() +
+                            tenant.status.slice(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
