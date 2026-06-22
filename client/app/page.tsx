@@ -652,14 +652,16 @@ export default function Home() {
 
   // Toast notifications states
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const addToast = (message: string, type: "success" | "error" | "info" = "info") => {
+  const addToast = (
+    message: string,
+    type: "success" | "error" | "info" = "info",
+  ) => {
     const id = Date.now() + Math.random();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4500);
   };
-
 
   // Unit lease agreement states
   const [editingUnitLease, setEditingUnitLease] = useState<UnitDetails | null>(
@@ -786,7 +788,10 @@ export default function Home() {
   const [showInvitesModal, setShowInvitesModal] = useState(false);
   const [showTenantDirectory, setShowTenantDirectory] = useState(false);
 
-  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  const handleScrollTo = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    id: string,
+  ) => {
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
@@ -846,31 +851,32 @@ export default function Home() {
   useEffect(() => {
     if (notice && user) {
       const lower = notice.toLowerCase();
-      const isError = lower.includes("fail") || 
-                      lower.includes("error") || 
-                      lower.includes("denied") || 
-                      lower.includes("invalid") ||
-                      lower.includes("unable");
-      const isSuccess = lower.includes("success") || 
-                        lower.includes("create") || 
-                        lower.includes("delete") || 
-                        lower.includes("update") || 
-                        lower.includes("save") || 
-                        lower.includes("register") ||
-                        lower.includes("login") ||
-                        lower.includes("sent") ||
-                        lower.includes("online") ||
-                        lower.includes("paid") ||
-                        lower.includes("cleared") ||
-                        lower.includes("accepted") ||
-                        lower.includes("declined") ||
-                        lower.includes("deleted");
-      
+      const isError =
+        lower.includes("fail") ||
+        lower.includes("error") ||
+        lower.includes("denied") ||
+        lower.includes("invalid") ||
+        lower.includes("unable");
+      const isSuccess =
+        lower.includes("success") ||
+        lower.includes("create") ||
+        lower.includes("delete") ||
+        lower.includes("update") ||
+        lower.includes("save") ||
+        lower.includes("register") ||
+        lower.includes("login") ||
+        lower.includes("sent") ||
+        lower.includes("online") ||
+        lower.includes("paid") ||
+        lower.includes("cleared") ||
+        lower.includes("accepted") ||
+        lower.includes("declined") ||
+        lower.includes("deleted");
+
       addToast(notice, isError ? "error" : isSuccess ? "success" : "info");
       setNotice("");
     }
   }, [notice, user]);
-
 
   // Morph animation lifecycle management using FLIP
   useLayoutEffect(() => {
@@ -1343,7 +1349,7 @@ export default function Home() {
           const uploadBody = await uploadRes.json();
           addToast(
             `Property created, but picture upload failed: ${uploadBody.error || "Unknown error"}`,
-            "error"
+            "error",
           );
         }
       }
@@ -1360,7 +1366,10 @@ export default function Home() {
         addToast(`Property "${body.name}" created!`, "success");
       }
     } catch (err) {
-      addToast(err instanceof Error ? err.message : "Failed to add property", "error");
+      addToast(
+        err instanceof Error ? err.message : "Failed to add property",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -1501,10 +1510,13 @@ export default function Home() {
       await loadDashboard();
       addToast(
         `Uploaded ${event.target.files.length} property picture(s) successfully!`,
-        "success"
+        "success",
       );
     } catch (err) {
-      addToast(err instanceof Error ? err.message : "Failed to upload images", "error");
+      addToast(
+        err instanceof Error ? err.message : "Failed to upload images",
+        "error",
+      );
     } finally {
       setLoading(false);
       if (imageInputRef.current) {
@@ -1529,7 +1541,10 @@ export default function Home() {
       await loadDashboard();
       addToast("Property picture deleted!", "success");
     } catch (err) {
-      addToast(err instanceof Error ? err.message : "Failed to delete image", "error");
+      addToast(
+        err instanceof Error ? err.message : "Failed to delete image",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -2797,155 +2812,70 @@ export default function Home() {
             style={{ animationDelay: "4s" }}
           />
 
-          <div className="mx-auto max-w-7xl w-full px-6 lg:px-8 relative z-10">
-            <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
-              {/* Hero Left: Text Content */}
-              <div className="lg:col-span-7 space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-brand-green-emerald/30 bg-brand-green-mid/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-green-glow backdrop-blur-sm">
-                  <span className="flex h-2 w-2 rounded-full bg-brand-gold animate-pulse" />
-                  Your Ultimate Rental Ledger
-                </div>
-
-                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl font-serif leading-[1.1] text-gradient">
-                  Rent, tenants, receipts, & dues in{" "}
-                  <span className="italic font-normal text-brand-gold-light">
-                    one calm workspace.
-                  </span>
-                </h1>
-
-                <p className="max-w-2xl text-base sm:text-lg leading-relaxed text-white/80 font-normal">
-                  A modern, clean workspace designed for owners and tenants.
-                  Manage properties, coordinate leases, log payments, and
-                  generate invoices with ease.
-                </p>
-
-                <div className="flex flex-wrap gap-4 pt-2">
-                  <a
-                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light px-6 py-3.5 text-sm font-bold text-brand-dark shadow-lg shadow-brand-gold/15 transition-all hover:scale-[1.03] hover:shadow-xl hover:shadow-brand-gold/25 active:scale-[0.98]"
-                    href="#access"
-                    onClick={(e) => {
-                      setAuthMode("register");
-                      setNotice("");
-                      handleScrollTo(e, "access");
-                    }}
-                  >
-                    Start Managing
-                  </a>
-                  <a
-                    className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/30 active:scale-[0.98]"
-                    href="#features"
-                    onClick={(e) => handleScrollTo(e, "features")}
-                  >
-                    Explore Features
-                  </a>
-                </div>
-
-                {/* Micro Stats */}
-                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 max-w-lg">
-                  <div>
-                    <p className="text-3xl font-extrabold text-brand-gold">
-                      100%
-                    </p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
-                      Ledger Accuracy
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-3xl font-extrabold text-brand-green-glow">
-                      Instant
-                    </p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
-                      PDF Receipts
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-3xl font-extrabold text-white">Zero</p>
-                    <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
-                      Clutter
-                    </p>
-                  </div>
-                </div>
+          <div className="mx-auto max-w-5xl w-full px-6 lg:px-8 relative z-10">
+            <div className="flex flex-col items-center text-center space-y-8">
+              <div className="inline-flex items-center gap-2 rounded-full border border-brand-green-emerald/30 bg-brand-green-mid/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-green-glow backdrop-blur-sm">
+                <span className="flex h-2 w-2 rounded-full bg-brand-gold animate-pulse" />
+                Your Ultimate Rental Ledger
               </div>
 
-              {/* Hero Right: Interactive Browser Mockup */}
-              <div className="lg:col-span-5 relative flex justify-center">
-                {/* Floating card background decoration */}
-                <div className="absolute -top-6 -left-6 w-32 h-32 bg-brand-green-emerald/20 blur-2xl rounded-full pointer-events-none" />
-                <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-brand-gold/10 blur-3xl rounded-full pointer-events-none" />
+              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.1] text-gradient max-w-4xl">
+                Rent, tenants, receipts, & dues in{" "}
+                <span className="italic font-normal text-brand-gold-light">
+                  one calm workspace.
+                </span>
+              </h1>
 
-                {/* Browser Mockup Window */}
-                <div className="w-full max-w-[480px] rounded-2xl glassmorphism border border-white/15 shadow-2xl overflow-hidden animate-float relative">
-                  {/* Browser top bar */}
-                  <div className="flex items-center gap-1.5 bg-brand-green-dark/80 px-4 py-3 border-b border-white/10">
-                    <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
-                    <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-                    <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
-                    <div className="mx-auto bg-brand-green-mid/80 rounded-md px-4 py-0.5 text-[10px] text-white/40 font-mono w-40 truncate text-center">
-                      rentkhata.in/dashboard
-                    </div>
-                  </div>
+              <p className="max-w-2xl text-base sm:text-lg leading-relaxed text-white/80 font-normal">
+                A modern, clean workspace designed for owners and tenants.
+                Manage properties, coordinate leases, log payments, and
+                generate invoices with ease.
+              </p>
 
-                  {/* Mockup Image */}
-                  <div className="relative bg-brand-green-dark/40 p-1">
-                    <img
-                      src="/dashboard-mockup.png"
-                      alt="Rent Khata Dashboard Mockup"
-                      className="w-full h-auto rounded-b-xl object-cover mix-blend-lighten opacity-95 transition-opacity hover:opacity-100 duration-300"
-                    />
-                  </div>
+              <div className="flex flex-wrap justify-center gap-4 pt-2">
+                <a
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light px-6 py-3.5 text-sm font-bold text-brand-dark shadow-lg shadow-brand-gold/15 transition-all hover:scale-[1.03] hover:shadow-xl hover:shadow-brand-gold/25 active:scale-[0.98]"
+                  href="#access"
+                  onClick={(e) => {
+                    setAuthMode("register");
+                    setNotice("");
+                    handleScrollTo(e, "access");
+                  }}
+                >
+                  Start Managing
+                </a>
+                <a
+                  className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/30 active:scale-[0.98]"
+                  href="#features"
+                  onClick={(e) => handleScrollTo(e, "features")}
+                >
+                  Explore Features
+                </a>
+              </div>
 
-                  {/* Floating Badges */}
-                  <div className="absolute bottom-4 -left-4 glassmorphism rounded-xl p-3 border border-white/10 shadow-lg animate-float-delayed flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-brand-green-emerald/20 flex items-center justify-center text-brand-green-glow">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2.5"
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider leading-none">
-                        Monthly Rent
-                      </p>
-                      <p className="text-xs font-extrabold text-white mt-1">
-                        Dues Sorted Automatically
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="absolute -top-4 -right-4 bg-gradient-to-r from-brand-gold to-brand-gold-light rounded-xl p-3 shadow-lg flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-black/10 flex items-center justify-center text-brand-dark">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2.5"
-                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-brand-dark/70 font-bold uppercase tracking-wider leading-none">
-                        Collected
-                      </p>
-                      <p className="text-xs font-extrabold text-brand-dark mt-0.5">
-                        ₹1,85,000
-                      </p>
-                    </div>
-                  </div>
+              {/* Micro Stats */}
+              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 max-w-lg w-full">
+                <div>
+                  <p className="text-3xl font-extrabold text-brand-gold">
+                    100%
+                  </p>
+                  <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
+                    Ledger Accuracy
+                  </p>
+                </div>
+                <div>
+                  <p className="text-3xl font-extrabold text-brand-green-glow">
+                    Instant
+                  </p>
+                  <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
+                    PDF Receipts
+                  </p>
+                </div>
+                <div>
+                  <p className="text-3xl font-extrabold text-white">Zero</p>
+                  <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
+                    Clutter
+                  </p>
                 </div>
               </div>
             </div>
@@ -3412,8 +3342,6 @@ export default function Home() {
       </header>
 
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-
-
         <section className="grid gap-4 lg:grid-cols-[1fr_1.5fr]">
           {!user && (
             <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
@@ -5235,30 +5163,64 @@ export default function Home() {
               t.type === "success"
                 ? "border-[#2f6f5e]/20 bg-[#f3f7f5] text-[#2f6f5e]"
                 : t.type === "error"
-                ? "border-red-500/20 bg-red-50/90 text-red-700"
-                : "border-[#e3e8df] bg-white text-[#435146]"
+                  ? "border-red-500/20 bg-red-50/90 text-red-700"
+                  : "border-[#e3e8df] bg-white text-[#435146]"
             }`}
           >
             {t.type === "success" && (
-              <svg className="w-5 h-5 text-[#2f6f5e] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-[#2f6f5e] flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             )}
             {t.type === "error" && (
-              <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
             )}
             {t.type === "info" && (
-              <svg className="w-5 h-5 text-[#435146] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-[#435146] flex-shrink-0 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             )}
-            <div className="flex-1 text-sm font-semibold leading-relaxed">{t.message}</div>
+            <div className="flex-1 text-sm font-semibold leading-relaxed">
+              {t.message}
+            </div>
             <button
               type="button"
               className="text-gray-400 hover:text-gray-600 transition-colors text-xs font-bold font-mono pl-1"
-              onClick={() => setToasts((prev) => prev.filter((toast) => toast.id !== t.id))}
+              onClick={() =>
+                setToasts((prev) => prev.filter((toast) => toast.id !== t.id))
+              }
             >
               ✕
             </button>
