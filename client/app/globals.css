@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -12,9 +12,9 @@
   --font-sans: "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif;
   --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: "Consolas", "Courier New", monospace;
-  
+
   --color-brand-dark: #071210;
-  --color-brand-green-dark: #0d231f;
+  --color-brand-green-dark: #000000;
   --color-brand-green-mid: #163630;
   --color-brand-green-emerald: #2e7d63;
   --color-brand-green-light: #44a587;
@@ -67,18 +67,35 @@ body {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes float-delayed {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(10px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(10px);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 0.15; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(1.15); }
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(1.15);
+  }
 }
 
 @utility animate-float {
@@ -93,3 +110,10 @@ body {
   animation: pulse-glow 8s ease-in-out infinite;
 }
 
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

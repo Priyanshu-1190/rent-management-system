@@ -176,7 +176,7 @@ export default function TenantDirectoryModal({
 
         {/* Tabs */}
         <div className="mb-6 border-b border-gray-200">
-          <div className="flex gap-8">
+          <div className="flex gap-4 sm:gap-8 overflow-x-auto whitespace-nowrap scrollbar-none">
             <button
               onClick={() => setActiveTab("all")}
               className={`px-4 py-3 font-medium border-b-2 transition-colors ${

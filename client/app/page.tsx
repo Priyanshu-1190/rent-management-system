@@ -616,6 +616,7 @@ export default function Home() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deletingProperty, setDeletingProperty] = useState<{
     id: number;
     name: string;
@@ -2759,6 +2760,7 @@ export default function Home() {
               onClick={(e) => {
                 e.preventDefault();
                 window.scrollTo({ top: 0, behavior: "smooth" });
+                setMobileMenuOpen(false);
               }}
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-brand-gold to-brand-gold-light text-[#1b1f1d] font-bold text-xl shadow-md shadow-brand-gold/10 group-hover:scale-105 transition-transform">
@@ -2768,7 +2770,12 @@ export default function Home() {
                 Rent Khata
               </span>
             </a>
-            <nav className="flex items-center gap-4" aria-label="Landing page">
+
+            {/* Desktop Navigation */}
+            <nav
+              className="hidden md:flex items-center gap-4"
+              aria-label="Landing page"
+            >
               <a
                 className="relative px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-brand-gold after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300"
                 href="#features"
@@ -2800,7 +2807,90 @@ export default function Home() {
                 Create Account
               </a>
             </nav>
+
+            {/* Hamburger Button for Mobile */}
+            <button
+              type="button"
+              className="md:hidden rounded-lg p-2 text-white/80 hover:text-white hover:bg-white/10 transition-all focus:outline-none"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              aria-label="Toggle Menu"
+            >
+              {mobileMenuOpen ? (
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              )}
+            </button>
           </div>
+
+          {/* Mobile menu dropdown overlay */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-white/10 bg-[#071210]/95 backdrop-blur-md">
+              <nav
+                className="flex flex-col space-y-3 px-6 py-5"
+                aria-label="Mobile navigation"
+              >
+                <a
+                  className="text-base font-semibold text-white/80 hover:text-white transition-colors py-2 border-b border-white/5"
+                  href="#features"
+                  onClick={(e) => {
+                    setMobileMenuOpen(false);
+                    handleScrollTo(e, "features");
+                  }}
+                >
+                  Features
+                </a>
+                <a
+                  className="text-base font-semibold text-white/80 hover:text-white transition-colors py-2 border-b border-white/5"
+                  href="#access"
+                  onClick={(e) => {
+                    setMobileMenuOpen(false);
+                    setAuthMode("login");
+                    setNotice("");
+                    handleScrollTo(e, "access");
+                  }}
+                >
+                  Login
+                </a>
+                <a
+                  className="rounded-lg bg-gradient-to-r from-brand-gold to-brand-gold-light px-4 py-2.5 text-center text-sm font-bold text-brand-dark shadow-md shadow-brand-gold/20 transition-all hover:scale-[1.01] active:scale-[0.99] mt-2"
+                  href="#access"
+                  onClick={(e) => {
+                    setMobileMenuOpen(false);
+                    setAuthMode("register");
+                    setNotice("");
+                    handleScrollTo(e, "access");
+                  }}
+                >
+                  Create Account
+                </a>
+              </nav>
+            </div>
+          )}
         </header>
 
         {/* Hero Section */}
@@ -2828,8 +2918,8 @@ export default function Home() {
 
               <p className="max-w-2xl text-base sm:text-lg leading-relaxed text-white/80 font-normal">
                 A modern, clean workspace designed for owners and tenants.
-                Manage properties, coordinate leases, log payments, and
-                generate invoices with ease.
+                Manage properties, coordinate leases, log payments, and generate
+                invoices with ease.
               </p>
 
               <div className="flex flex-wrap justify-center gap-4 pt-2">
@@ -2854,26 +2944,28 @@ export default function Home() {
               </div>
 
               {/* Micro Stats */}
-              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10 max-w-lg w-full">
+              <div className="grid grid-cols-3 gap-4 sm:gap-6 pt-8 border-t border-white/10 max-w-lg w-full text-center">
                 <div>
-                  <p className="text-3xl font-extrabold text-brand-gold">
+                  <p className="text-2xl sm:text-3xl font-extrabold text-brand-gold">
                     100%
                   </p>
-                  <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
+                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider mt-1 leading-tight">
                     Ledger Accuracy
                   </p>
                 </div>
                 <div>
-                  <p className="text-3xl font-extrabold text-brand-green-glow">
+                  <p className="text-2xl sm:text-3xl font-extrabold text-brand-green-glow">
                     Instant
                   </p>
-                  <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
+                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider mt-1 leading-tight">
                     PDF Receipts
                   </p>
                 </div>
                 <div>
-                  <p className="text-3xl font-extrabold text-white">Zero</p>
-                  <p className="text-xs text-white/60 uppercase tracking-wider mt-1">
+                  <p className="text-2xl sm:text-3xl font-extrabold text-white">
+                    Zero
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider mt-1 leading-tight">
                     Clutter
                   </p>
                 </div>
@@ -2894,7 +2986,7 @@ export default function Home() {
               <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-gold">
                 Platform Features
               </h2>
-              <p className="mt-3 text-3xl font-bold font-serif sm:text-4xl text-gradient">
+              <p className="mt-2 text-3xl font-bold font-serif sm:text-4xl text-gradient">
                 Everything you need to manage rental operations smoothly
               </p>
               <p className="mt-4 text-white/60">
@@ -5367,7 +5459,7 @@ export default function Home() {
           {/* Modal card */}
           <div
             ref={editPropModalRef}
-            className={`mx-4 w-full max-w-sm rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+            className={`mx-4 w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
               editPropMorphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -5454,7 +5546,7 @@ export default function Home() {
           />
 
           {/* Modal card */}
-          <div className="w-full max-w-2xl rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10">
             <div className="mb-4 pr-10">
               <h3 className="text-lg font-bold text-[#2f6f5e]">
                 Write Lease Agreement — {editingLeaseProp.name}
@@ -5520,7 +5612,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
           />
 
           {/* Modal card */}
-          <div className="w-full max-w-2xl rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10">
             <div className="mb-4 pr-10">
               <h3 className="text-lg font-bold text-[#2f6f5e]">
                 Write Lease Agreement — {editingUnitLease.unit_name}
@@ -5642,7 +5734,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
           {/* Modal card */}
           <div
             ref={editUnitModalRef}
-            className={`mx-4 w-full max-w-md rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+            className={`mx-4 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
               editUnitMorphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -6021,7 +6113,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
       {/* Log Rent Payment Modal */}
       {loggingPaymentRent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-bold text-[#2f6f5e]">
