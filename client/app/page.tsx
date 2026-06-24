@@ -2848,8 +2848,14 @@ export default function Home() {
           </div>
 
           {/* Mobile menu dropdown overlay */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-white/10 bg-[#071210]/95 backdrop-blur-md">
+          <div
+            className={`md:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-in-out bg-[#071210]/95 backdrop-blur-md ${
+              mobileMenuOpen
+                ? "grid-rows-[1fr] opacity-100 border-t border-white/10"
+                : "grid-rows-[0fr] opacity-0 border-t-0"
+            }`}
+          >
+            <div className="min-h-0 overflow-hidden">
               <nav
                 className="flex flex-col space-y-3 px-6 py-5"
                 aria-label="Mobile navigation"
@@ -2890,7 +2896,7 @@ export default function Home() {
                 </a>
               </nav>
             </div>
-          )}
+          </div>
         </header>
 
         {/* Hero Section */}
@@ -2902,7 +2908,7 @@ export default function Home() {
             style={{ animationDelay: "4s" }}
           />
 
-          <div className="mx-auto max-w-5xl w-full px-6 lg:px-8 relative z-10">
+          <div className="mx-auto max-w-5xl w-full px-6 lg:px-8 relative z-10 -mt-10 md:mt-0">
             <div className="flex flex-col items-center text-center space-y-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-brand-green-emerald/30 bg-brand-green-mid/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-green-glow backdrop-blur-sm">
                 <span className="flex h-2 w-2 rounded-full bg-brand-gold animate-pulse" />
