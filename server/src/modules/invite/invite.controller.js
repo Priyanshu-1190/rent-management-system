@@ -19,36 +19,15 @@ const sendInvite = async (req, res, next) => {
       return res.status(403).json({ error: "Only owners can send invites" });
     }
 
-    const { tenant_email, unit_id, deposit, move_in_date, message } = req.body;
-
-    if (!tenant_email || !String(tenant_email).trim()) {
-      return res.status(400).json({ error: "Tenant email is required" });
-    }
-
-    if (!unit_id || !Number.isInteger(Number(unit_id)) || Number(unit_id) <= 0) {
-      return res.status(400).json({ error: "Valid unit_id is required" });
-    }
-
-    if (!move_in_date || !String(move_in_date).trim()) {
-      return res.status(400).json({ error: "Move-in date is required" });
-    }
-
-    if (isNaN(Date.parse(move_in_date))) {
-      return res.status(400).json({ error: "Invalid move-in date format" });
-    }
-
     // Check unit isn't already occupied
-    if (await unitHasActiveTenancy(Number(unit_id))) {
+    if (await unitHasActiveTenancy(req.body.unit_id)) {
       return res.status(409).json({ error: "Unit already has an active tenant" });
     }
 
     const invite = await createInvite({
       owner_id: req.user.id,
-      tenant_email: String(tenant_email).trim().toLowerCase(),
-      unit_id: Number(unit_id),
-      deposit: deposit ? Number(deposit) : 0,
-      move_in_date: String(move_in_date).trim(),
-      message: message || null,
+      ...req.body,
+      tenant_email: req.body.tenant_email.toLowerCase(),
     });
 
     return res.status(201).json(invite);

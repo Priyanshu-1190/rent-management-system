@@ -2908,7 +2908,7 @@ export default function Home() {
             style={{ animationDelay: "4s" }}
           />
 
-          <div className="mx-auto max-w-5xl w-full px-6 lg:px-8 relative z-10 -mt-10 md:mt-0">
+          <div className="mx-auto max-w-5xl w-full px-6 lg:px-8 relative z-10 -mt-10 md:mt10">
             <div className="flex flex-col items-center text-center space-y-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-brand-green-emerald/30 bg-brand-green-mid/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-green-glow backdrop-blur-sm">
                 <span className="flex h-2 w-2 rounded-full bg-brand-gold animate-pulse" />
