@@ -328,17 +328,18 @@ const getTenantDashboard = async (tenantId) => {
      FROM tenancies
      INNER JOIN units ON units.id = tenancies.unit_id
      INNER JOIN properties ON properties.id = units.property_id
-     WHERE tenancies.tenant_id = $1 AND tenancies.is_active = TRUE
-     LIMIT 1`,
+     WHERE tenancies.tenant_id = $1 AND tenancies.is_active = TRUE`,
     [tenantId]
   );
 
-  const active_tenancy = activeTenancyResult.rows[0] ? {
-    ...activeTenancyResult.rows[0],
-    deposit: toNumber(activeTenancyResult.rows[0].deposit)
-  } : null;
+  const active_tenancies = activeTenancyResult.rows.map(row => ({
+    ...row,
+    deposit: toNumber(row.deposit)
+  }));
 
-  return { summary, rent_history, active_tenancy };
+  const active_tenancy = active_tenancies[0] || null;
+
+  return { summary, rent_history, active_tenancy, active_tenancies };
 };
 
 module.exports = { getOwnerDashboard, getTenantDashboard };

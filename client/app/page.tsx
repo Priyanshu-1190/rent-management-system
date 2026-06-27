@@ -98,6 +98,15 @@ type TenantDashboard = {
     move_in_date: string | null;
     deposit: number;
   } | null;
+  active_tenancies?: Array<{
+    property_id: number;
+    property_name: string;
+    property_address: string | null;
+    lease_agreement: string | null;
+    unit_name: string;
+    move_in_date: string | null;
+    deposit: number;
+  }>;
 };
 
 type Property = {
@@ -425,66 +434,75 @@ function TenantDashboardView({
         />
       </div>
 
-      {dashboard.active_tenancy && (
-        <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Active Lease Agreement
-            </h3>
-            <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
-              Active Tenancy
-            </span>
-          </div>
-          <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-60 overflow-y-auto font-mono">
-            {dashboard.active_tenancy.lease_agreement || (
-              <span className="text-[#8a9a88] italic">
-                No lease agreement uploaded yet.
-              </span>
-            )}
-          </div>
-          <div className="mt-4 border-t border-[#e3e8df] pt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs text-[#60715f]">
-            <div>
-              <span className="block font-medium text-[#435146]">Property</span>
-              <span className="text-sm font-semibold text-[#1b1f1d]">
-                {dashboard.active_tenancy.property_name}
-              </span>
+      {((dashboard.active_tenancies && dashboard.active_tenancies.length > 0) || dashboard.active_tenancy) && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {(dashboard.active_tenancies || (dashboard.active_tenancy ? [dashboard.active_tenancy] : [])).map((tenancy, index, arr) => (
+            <div key={tenancy.property_id + "-" + tenancy.unit_name} className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  Active Lease {arr.length > 1 ? `#${index + 1}` : ""}
+                </h3>
+                <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
+                  Active Tenancy
+                </span>
+              </div>
+              <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-60 overflow-y-auto font-mono">
+                {tenancy.lease_agreement || (
+                  <span className="text-[#8a9a88] italic">
+                    No lease agreement uploaded yet.
+                  </span>
+                )}
+              </div>
+              <div className="mt-4 border-t border-[#e3e8df] pt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs text-[#60715f]">
+                <div>
+                  <span className="block font-medium text-[#435146]">Property</span>
+                  <span className="text-sm font-semibold text-[#1b1f1d]">
+                    {tenancy.property_name}
+                  </span>
+                  {tenancy.property_address && (
+                    <span className="block text-[10px] text-[#8a9a88] mt-0.5">
+                      {tenancy.property_address}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <span className="block font-medium text-[#435146]">Unit</span>
+                  <span className="text-sm font-semibold text-[#1b1f1d]">
+                    {tenancy.unit_name}
+                  </span>
+                </div>
+                <div>
+                  <span className="block font-medium text-[#435146]">
+                    Move-in Date
+                  </span>
+                  <span className="text-sm font-semibold text-[#1b1f1d]">
+                    {formatDate(tenancy.move_in_date)}
+                  </span>
+                </div>
+                <div>
+                  <span className="block font-medium text-[#435146]">
+                    Security Deposit
+                  </span>
+                  <span className="text-sm font-semibold text-[#23633d]">
+                    {formatMoney(tenancy.deposit)}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <span className="block font-medium text-[#435146]">Unit</span>
-              <span className="text-sm font-semibold text-[#1b1f1d]">
-                {dashboard.active_tenancy.unit_name}
-              </span>
-            </div>
-            <div>
-              <span className="block font-medium text-[#435146]">
-                Move-in Date
-              </span>
-              <span className="text-sm font-semibold text-[#1b1f1d]">
-                {formatDate(dashboard.active_tenancy.move_in_date)}
-              </span>
-            </div>
-            <div>
-              <span className="block font-medium text-[#435146]">
-                Security Deposit
-              </span>
-              <span className="text-sm font-semibold text-[#23633d]">
-                {formatMoney(dashboard.active_tenancy.deposit)}
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
       )}
 
@@ -4491,80 +4509,84 @@ export default function Home() {
               />
             </div>
 
-            {tenantDashboard.active_tenancy ? (
-              <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Active Lease Agreement
-                  </h3>
-                  <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
-                    Active Tenancy
-                  </span>
-                </div>
-
-                <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-60 overflow-y-auto font-mono">
-                  {tenantDashboard.active_tenancy.lease_agreement ? (
-                    tenantDashboard.active_tenancy.lease_agreement
-                  ) : (
-                    <span className="text-[#8a9a88] italic">
-                      Your property owner has not uploaded a lease agreement for
-                      this property yet.
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-4 border-t border-[#e3e8df] pt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs text-[#60715f]">
-                  <div>
-                    <span className="block font-medium text-[#435146]">
-                      Property
-                    </span>
-                    <span className="text-sm font-semibold text-[#1b1f1d]">
-                      {tenantDashboard.active_tenancy.property_name}
-                    </span>
-                    {tenantDashboard.active_tenancy.property_address && (
-                      <span className="block text-[10px] text-[#8a9a88] mt-0.5">
-                        {tenantDashboard.active_tenancy.property_address}
+            {((tenantDashboard.active_tenancies && tenantDashboard.active_tenancies.length > 0) || tenantDashboard.active_tenancy) ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {(tenantDashboard.active_tenancies || (tenantDashboard.active_tenancy ? [tenantDashboard.active_tenancy] : [])).map((tenancy, index, arr) => (
+                  <div key={tenancy.property_id + "-" + tenancy.unit_name} className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        Active Lease {arr.length > 1 ? `#${index + 1}` : ""}
+                      </h3>
+                      <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
+                        Active Tenancy
                       </span>
-                    )}
+                    </div>
+
+                    <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-60 overflow-y-auto font-mono">
+                      {tenancy.lease_agreement ? (
+                        tenancy.lease_agreement
+                      ) : (
+                        <span className="text-[#8a9a88] italic">
+                          Your property owner has not uploaded a lease agreement for
+                          this property yet.
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-4 border-t border-[#e3e8df] pt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs text-[#60715f]">
+                      <div>
+                        <span className="block font-medium text-[#435146]">
+                          Property
+                        </span>
+                        <span className="text-sm font-semibold text-[#1b1f1d]">
+                          {tenancy.property_name}
+                        </span>
+                        {tenancy.property_address && (
+                          <span className="block text-[10px] text-[#8a9a88] mt-0.5">
+                            {tenancy.property_address}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <span className="block font-medium text-[#435146]">
+                          Unit
+                        </span>
+                        <span className="text-sm font-semibold text-[#1b1f1d]">
+                          {tenancy.unit_name}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block font-medium text-[#435146]">
+                          Move-in Date
+                        </span>
+                        <span className="text-sm font-semibold text-[#1b1f1d]">
+                          {formatDate(tenancy.move_in_date)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block font-medium text-[#435146]">
+                          Security Deposit
+                        </span>
+                        <span className="text-sm font-semibold text-[#23633d]">
+                          {formatMoney(tenancy.deposit)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="block font-medium text-[#435146]">
-                      Unit
-                    </span>
-                    <span className="text-sm font-semibold text-[#1b1f1d]">
-                      {tenantDashboard.active_tenancy.unit_name}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block font-medium text-[#435146]">
-                      Move-in Date
-                    </span>
-                    <span className="text-sm font-semibold text-[#1b1f1d]">
-                      {formatDate(tenantDashboard.active_tenancy.move_in_date)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block font-medium text-[#435146]">
-                      Security Deposit
-                    </span>
-                    <span className="text-sm font-semibold text-[#23633d]">
-                      {formatMoney(tenantDashboard.active_tenancy.deposit)}
-                    </span>
-                  </div>
-                </div>
+                ))}
               </div>
             ) : null}
 
