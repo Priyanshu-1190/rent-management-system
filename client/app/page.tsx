@@ -417,6 +417,25 @@ function TenantDashboardView({
   >;
 }) {
   const activeTenancies = dashboard.active_tenancies || (dashboard.active_tenancy ? [dashboard.active_tenancy] : []);
+  const groupedProperties = activeTenancies.reduce((acc, tenancy) => {
+    const existing = acc.find(p => p.property_id === tenancy.property_id);
+    if (existing) {
+      existing.leases.push(tenancy);
+    } else {
+      acc.push({
+        property_id: tenancy.property_id,
+        property_name: tenancy.property_name,
+        property_address: tenancy.property_address,
+        leases: [tenancy]
+      });
+    }
+    return acc;
+  }, [] as Array<{
+    property_id: number;
+    property_name: string;
+    property_address: string | null;
+    leases: typeof activeTenancies;
+  }>);
   return (
     <section className="grid gap-4">
       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
@@ -435,72 +454,62 @@ function TenantDashboardView({
         />
       </div>
 
-      {activeTenancies.length > 0 && (
-        <div className={`grid gap-4 ${activeTenancies.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
-          {activeTenancies.map((tenancy, index) => (
-            <div key={tenancy.property_id + "-" + tenancy.unit_name} className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  Active Lease {activeTenancies.length > 1 ? `#${index + 1}` : ""}
-                </h3>
-                <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
-                  Active Tenancy
-                </span>
-              </div>
-              <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-60 overflow-y-auto font-mono">
-                {tenancy.lease_agreement || (
-                  <span className="text-[#8a9a88] italic">
-                    No lease agreement uploaded yet.
-                  </span>
-                )}
-              </div>
-              <div className="mt-4 border-t border-[#e3e8df] pt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs text-[#60715f]">
+      {groupedProperties.length > 0 && (
+        <div className={`grid gap-4 ${groupedProperties.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+          {groupedProperties.map((property) => (
+            <div key={property.property_id} className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm flex flex-col gap-4">
+              <div className="flex justify-between items-start border-b border-[#e3e8df] pb-3">
                 <div>
-                  <span className="block font-medium text-[#435146]">Property</span>
-                  <span className="text-sm font-semibold text-[#1b1f1d]">
-                    {tenancy.property_name}
-                  </span>
-                  {tenancy.property_address && (
-                    <span className="block text-[10px] text-[#8a9a88] mt-0.5">
-                      {tenancy.property_address}
+                  <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    {property.property_name}
+                  </h3>
+                  {property.property_address && (
+                    <span className="block text-xs text-[#8a9a88] mt-0.5">
+                      {property.property_address}
                     </span>
                   )}
                 </div>
-                <div>
-                  <span className="block font-medium text-[#435146]">Unit</span>
-                  <span className="text-sm font-semibold text-[#1b1f1d]">
-                    {tenancy.unit_name}
-                  </span>
-                </div>
-                <div>
-                  <span className="block font-medium text-[#435146]">
-                    Move-in Date
-                  </span>
-                  <span className="text-sm font-semibold text-[#1b1f1d]">
-                    {formatDate(tenancy.move_in_date)}
-                  </span>
-                </div>
-                <div>
-                  <span className="block font-medium text-[#435146]">
-                    Security Deposit
-                  </span>
-                  <span className="text-sm font-semibold text-[#23633d]">
-                    {formatMoney(tenancy.deposit)}
-                  </span>
-                </div>
+                <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
+                  {property.leases.length > 1 ? `${property.leases.length} Active Leases` : "Active Tenancy"}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-5">
+                {property.leases.map((lease, index) => (
+                  <div key={lease.unit_name} className={index > 0 ? "border-t border-[#e3e8df] pt-4" : ""}>
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-sm font-bold text-[#435146]">
+                        Unit {lease.unit_name}
+                      </h4>
+                    </div>
+
+                    <div className="mt-1 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
+                      {lease.lease_agreement || (
+                        <span className="text-[#8a9a88] italic">
+                          No lease agreement uploaded yet.
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-3 grid gap-3 grid-cols-2 text-xs text-[#60715f]">
+                      <div>
+                        <span className="block font-medium text-[#435146]">Move-in Date</span>
+                        <span className="text-sm font-semibold text-[#1b1f1d]">
+                          {formatDate(lease.move_in_date)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block font-medium text-[#435146]">Security Deposit</span>
+                        <span className="text-sm font-semibold text-[#23633d]">
+                          {formatMoney(lease.deposit)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
@@ -4513,81 +4522,89 @@ export default function Home() {
             {(() => {
               const activeTenancies = tenantDashboard.active_tenancies || (tenantDashboard.active_tenancy ? [tenantDashboard.active_tenancy] : []);
               if (activeTenancies.length === 0) return null;
+              const groupedProperties = activeTenancies.reduce((acc, tenancy) => {
+                const existing = acc.find(p => p.property_id === tenancy.property_id);
+                if (existing) {
+                  existing.leases.push(tenancy);
+                } else {
+                  acc.push({
+                    property_id: tenancy.property_id,
+                    property_name: tenancy.property_name,
+                    property_address: tenancy.property_address,
+                    leases: [tenancy]
+                  });
+                }
+                return acc;
+              }, [] as Array<{
+                property_id: number;
+                property_name: string;
+                property_address: string | null;
+                leases: typeof activeTenancies;
+              }>);
+
               return (
-                <div className={`grid gap-4 ${activeTenancies.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
-                  {activeTenancies.map((tenancy, index) => (
-                    <div key={tenancy.property_id + "-" + tenancy.unit_name} className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                          </svg>
-                          Active Lease {activeTenancies.length > 1 ? `#${index + 1}` : ""}
-                        </h3>
-                        <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
-                          Active Tenancy
-                        </span>
-                      </div>
-
-                      <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-60 overflow-y-auto font-mono">
-                        {tenancy.lease_agreement ? (
-                          tenancy.lease_agreement
-                        ) : (
-                          <span className="text-[#8a9a88] italic">
-                            Your property owner has not uploaded a lease agreement for
-                            this property yet.
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-4 border-t border-[#e3e8df] pt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-xs text-[#60715f]">
+                <div className={`grid gap-4 ${groupedProperties.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                  {groupedProperties.map((property) => (
+                    <div key={property.property_id} className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm flex flex-col gap-4">
+                      <div className="flex justify-between items-start border-b border-[#e3e8df] pb-3">
                         <div>
-                          <span className="block font-medium text-[#435146]">
-                            Property
-                          </span>
-                          <span className="text-sm font-semibold text-[#1b1f1d]">
-                            {tenancy.property_name}
-                          </span>
-                          {tenancy.property_address && (
-                            <span className="block text-[10px] text-[#8a9a88] mt-0.5">
-                              {tenancy.property_address}
+                          <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            {property.property_name}
+                          </h3>
+                          {property.property_address && (
+                            <span className="block text-xs text-[#8a9a88] mt-0.5">
+                              {property.property_address}
                             </span>
                           )}
                         </div>
-                        <div>
-                          <span className="block font-medium text-[#435146]">
-                            Unit
-                          </span>
-                          <span className="text-sm font-semibold text-[#1b1f1d]">
-                            {tenancy.unit_name}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-medium text-[#435146]">
-                            Move-in Date
-                          </span>
-                          <span className="text-sm font-semibold text-[#1b1f1d]">
-                            {formatDate(tenancy.move_in_date)}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="block font-medium text-[#435146]">
-                            Security Deposit
-                          </span>
-                          <span className="text-sm font-semibold text-[#23633d]">
-                            {formatMoney(tenancy.deposit)}
-                          </span>
-                        </div>
+                        <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
+                          {property.leases.length > 1 ? `${property.leases.length} Active Leases` : "Active Tenancy"}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-5">
+                        {property.leases.map((lease, index) => (
+                          <div key={lease.unit_name} className={index > 0 ? "border-t border-[#e3e8df] pt-4" : ""}>
+                            <div className="flex justify-between items-center mb-2">
+                              <h4 className="text-sm font-bold text-[#435146]">
+                                Unit {lease.unit_name}
+                              </h4>
+                            </div>
+
+                            <div className="mt-1 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
+                              {lease.lease_agreement ? (
+                                lease.lease_agreement
+                              ) : (
+                                <span className="text-[#8a9a88] italic">
+                                  Your property owner has not uploaded a lease agreement for
+                                  this property yet.
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="mt-3 grid gap-3 grid-cols-2 text-xs text-[#60715f]">
+                              <div>
+                                <span className="block font-medium text-[#435146]">
+                                  Move-in Date
+                                </span>
+                                <span className="text-sm font-semibold text-[#1b1f1d]">
+                                  {formatDate(lease.move_in_date)}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="block font-medium text-[#435146]">
+                                  Security Deposit
+                                </span>
+                                <span className="text-sm font-semibold text-[#23633d]">
+                                  {formatMoney(lease.deposit)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
