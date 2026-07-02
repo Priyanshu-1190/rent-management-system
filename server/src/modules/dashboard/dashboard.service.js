@@ -321,6 +321,8 @@ const getTenantDashboard = async (tenantId) => {
        properties.id AS property_id,
        properties.name AS property_name,
        properties.address AS property_address,
+       properties.lease_agreement AS property_lease_agreement,
+       units.lease_agreement AS unit_lease_agreement,
        COALESCE(units.lease_agreement, properties.lease_agreement) AS lease_agreement,
        units.name AS unit_name,
        tenancies.move_in_date,
