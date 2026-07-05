@@ -8,13 +8,13 @@ export const BACKEND_URL = process.env.BACKEND_URL;
 
 export const COOKIE_OPTIONS: {
   httpOnly: boolean;
-  secure: false;
+  secure: boolean;
   sameSite: "lax";
   path: string;
   maxAge: number;
 } = {
   httpOnly: true,
-  secure: false,
+  secure: process.env.NODE_ENV === "production",
   sameSite: "lax",
   path: "/",
   maxAge: 7 * 24 * 60 * 60, // 7 days — matches backend JWT expiry
@@ -29,7 +29,9 @@ export async function getAuthToken(): Promise<string | undefined> {
  * Decode a JWT payload without verification.
  * This runs server-side only — the backend still verifies on every request.
  */
-export function decodeJwtPayload(token: string): Record<string, unknown> | null {
+export function decodeJwtPayload(
+  token: string,
+): Record<string, unknown> | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
