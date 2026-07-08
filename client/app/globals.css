@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Public+Sans:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -21,6 +21,54 @@
   --color-brand-green-glow: #6ee7b7;
   --color-brand-gold: #f5b84b;
   --color-brand-gold-light: #ffd074;
+
+  /* Rucoria Style Foundations */
+  --font-ru-sans:
+    "Public Sans", "Publicsans Variablefont Wght", Arial, sans-serif;
+
+  --color-rucoria-bg-base: #fffafa;
+  --color-rucoria-text-sec: #000000;
+  --color-rucoria-text-tert: #624a56;
+  --color-rucoria-text-inv: #ff4843;
+  --color-rucoria-bg-raised: #ffffff;
+  --color-rucoria-bg-strong: #380c23;
+
+  /* Radii scale */
+  --radius-ru-xs: 4.4px;
+  --radius-ru-sm: 5.3px;
+  --radius-ru-md: 8.8px;
+  --radius-ru-lg: 13.2px;
+  --radius-ru-xl: 1742.4px;
+
+  /* Spacing scale */
+  --spacing-ru-1: 2.2px;
+  --spacing-ru-2: 4.4px;
+  --spacing-ru-3: 5.3px;
+  --spacing-ru-4: 7px;
+  --spacing-ru-5: 8.8px;
+  --spacing-ru-6: 9.2px;
+  --spacing-ru-7: 10.6px;
+  --spacing-ru-8: 13.2px;
+
+  /* Shadow tokens */
+  --shadow-ru-1:
+    rgba(0, 0, 0, 0.02) 0px 8px 11.2px 0px,
+    rgba(0, 0, 0, 0.06) 0px 1.6px 6.4px 0px;
+  --shadow-ru-2:
+    rgba(56, 12, 35, 0.1) 0px 2px 3px 0px,
+    rgba(56, 12, 35, 0.09) 0px 6px 6px 0px,
+    rgba(56, 12, 35, 0.05) 0px 14px 8px 0px,
+    rgba(56, 12, 35, 0.01) 0px 25px 10px 0px;
+
+  /* Typography scale */
+  --text-ru-xs: 13.2px;
+  --text-ru-sm: 15.4px;
+  --text-ru-md: 15.8px;
+  --text-ru-lg: 17.6px;
+  --text-ru-xl: 19.8px;
+  --text-ru-2xl: 22px;
+  --text-ru-3xl: 30.8px;
+  --text-ru-4xl: 59.4px;
 }
 
 @media (prefers-color-scheme: dark) {

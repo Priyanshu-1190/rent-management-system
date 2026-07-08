@@ -2681,15 +2681,15 @@ export default function Home() {
   const authPanel = (
     <div
       id="access"
-      className="scroll-mt-24 rounded-2xl border border-white/10 bg-brand-green-dark/85 p-6 shadow-2xl backdrop-blur-md relative z-10"
+      className="scroll-mt-24 rounded-ru-lg border border-rucoria-text-tert bg-rucoria-bg-raised p-ru-8 shadow-ru-2 backdrop-blur-md relative z-10 font-ru-sans"
     >
-      <div className="flex gap-1.5 rounded-xl bg-brand-green-mid/70 p-1.5 border border-white/5">
+      <div className="flex gap-ru-3 rounded-ru-md bg-rucoria-bg-base/50 p-ru-2 border border-rucoria-text-tert/30">
         <button
           type="button"
-          className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+          className={`flex-1 rounded-ru-sm py-ru-5 text-ru-sm font-semibold transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 ${
             authMode === "login"
-              ? "bg-brand-green-emerald text-white shadow-md shadow-brand-green-emerald/10"
-              : "text-white/60 hover:text-white hover:bg-white/5"
+              ? "bg-rucoria-text-inv text-white shadow-ru-1"
+              : "text-rucoria-text-sec/60 hover:text-rucoria-text-sec hover:bg-rucoria-text-tert/10"
           }`}
           onClick={() => {
             setAuthMode("login");
@@ -2700,10 +2700,10 @@ export default function Home() {
         </button>
         <button
           type="button"
-          className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+          className={`flex-1 rounded-ru-sm py-ru-5 text-ru-sm font-semibold transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 ${
             authMode === "register"
-              ? "bg-brand-green-emerald text-white shadow-md shadow-brand-green-emerald/10"
-              : "text-white/60 hover:text-white hover:bg-white/5"
+              ? "bg-rucoria-text-inv text-white shadow-ru-1"
+              : "text-rucoria-text-sec/60 hover:text-rucoria-text-sec hover:bg-rucoria-text-tert/10"
           }`}
           onClick={() => {
             setAuthMode("register");
@@ -2715,9 +2715,9 @@ export default function Home() {
       </div>
 
       {notice && (
-        <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300 flex items-start gap-2">
+        <div className="mt-ru-5 rounded-ru-md border border-rucoria-text-inv/30 bg-rucoria-text-inv/10 px-ru-5 py-ru-4 text-ru-sm text-rucoria-text-sec flex items-start gap-ru-3">
           <svg
-            className="w-5 h-5 flex-shrink-0 mt-0.5"
+            className="w-5 h-5 flex-shrink-0 mt-ru-1 text-rucoria-text-inv"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -2734,11 +2734,11 @@ export default function Home() {
       )}
 
       {authMode === "login" ? (
-        <form onSubmit={handleLogin} className="mt-5 grid gap-4">
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
+        <form onSubmit={handleLogin} className="mt-ru-6 grid gap-ru-5">
+          <label className="grid gap-ru-2 text-ru-xs font-bold uppercase tracking-wider text-rucoria-text-sec/60">
             Email Address
             <input
-              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
+              className="rounded-ru-sm border border-rucoria-text-tert bg-rucoria-bg-base px-ru-5 py-ru-4 text-ru-sm text-rucoria-text-sec outline-none focus:border-rucoria-text-inv focus:ring-1 focus:ring-rucoria-text-inv/20 hover:border-rucoria-text-inv/50 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -2746,10 +2746,10 @@ export default function Home() {
               required
             />
           </label>
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
+          <label className="grid gap-ru-2 text-ru-xs font-bold uppercase tracking-wider text-rucoria-text-sec/60">
             Password
             <input
-              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
+              className="rounded-ru-sm border border-rucoria-text-tert bg-rucoria-bg-base px-ru-5 py-ru-4 text-ru-sm text-rucoria-text-sec outline-none focus:border-rucoria-text-inv focus:ring-1 focus:ring-rucoria-text-inv/20 hover:border-rucoria-text-inv/50 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -2758,7 +2758,7 @@ export default function Home() {
             />
           </label>
           <button
-            className="mt-2 rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light py-3 font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.01] hover:shadow-lg hover:shadow-brand-gold/25 active:scale-[0.98] disabled:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-ru-3 rounded-ru-lg bg-rucoria-text-inv hover:bg-rucoria-text-inv/90 active:bg-rucoria-text-inv/80 py-ru-5 font-bold text-white shadow-ru-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:scale-100 disabled:opacity-50 disabled:cursor-not-allowed text-ru-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
             type="submit"
             disabled={loading}
           >
@@ -2766,11 +2766,11 @@ export default function Home() {
           </button>
         </form>
       ) : (
-        <form onSubmit={handleRegister} className="mt-5 grid gap-4">
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
+        <form onSubmit={handleRegister} className="mt-ru-6 grid gap-ru-5">
+          <label className="grid gap-ru-2 text-ru-xs font-bold uppercase tracking-wider text-rucoria-text-sec/60">
             Name
             <input
-              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
+              className="rounded-ru-sm border border-rucoria-text-tert bg-rucoria-bg-base px-ru-5 py-ru-4 text-ru-sm text-rucoria-text-sec outline-none focus:border-rucoria-text-inv focus:ring-1 focus:ring-rucoria-text-inv/20 hover:border-rucoria-text-inv/50 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
               type="text"
               value={regName}
               onChange={(event) => setRegName(event.target.value)}
@@ -2779,10 +2779,10 @@ export default function Home() {
               minLength={2}
             />
           </label>
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
+          <label className="grid gap-ru-2 text-ru-xs font-bold uppercase tracking-wider text-rucoria-text-sec/60">
             Email Address
             <input
-              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
+              className="rounded-ru-sm border border-rucoria-text-tert bg-rucoria-bg-base px-ru-5 py-ru-4 text-ru-sm text-rucoria-text-sec outline-none focus:border-rucoria-text-inv focus:ring-1 focus:ring-rucoria-text-inv/20 hover:border-rucoria-text-inv/50 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
               type="email"
               value={regEmail}
               onChange={(event) => setRegEmail(event.target.value)}
@@ -2790,10 +2790,10 @@ export default function Home() {
               required
             />
           </label>
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
+          <label className="grid gap-ru-2 text-ru-xs font-bold uppercase tracking-wider text-rucoria-text-sec/60">
             Password
             <input
-              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all"
+              className="rounded-ru-sm border border-rucoria-text-tert bg-rucoria-bg-base px-ru-5 py-ru-4 text-ru-sm text-rucoria-text-sec outline-none focus:border-rucoria-text-inv focus:ring-1 focus:ring-rucoria-text-inv/20 hover:border-rucoria-text-inv/50 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
               type="password"
               value={regPassword}
               onChange={(event) => setRegPassword(event.target.value)}
@@ -2802,23 +2802,23 @@ export default function Home() {
               minLength={6}
             />
           </label>
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-white/60">
+          <label className="grid gap-ru-2 text-ru-xs font-bold uppercase tracking-wider text-rucoria-text-sec/60">
             Account Role
             <select
-              className="rounded-xl border border-white/10 bg-brand-green-mid/40 px-3.5 py-2.5 text-sm text-white outline-none focus:border-brand-gold/60 focus:bg-brand-green-mid/70 focus:ring-1 focus:ring-brand-gold/20 transition-all cursor-pointer"
+              className="rounded-ru-sm border border-rucoria-text-tert bg-rucoria-bg-base px-ru-5 py-ru-4 text-ru-sm text-rucoria-text-sec outline-none focus:border-rucoria-text-inv focus:ring-1 focus:ring-rucoria-text-inv/20 hover:border-rucoria-text-inv/50 transition-all duration-300 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
               value={regRole}
               onChange={(event) => setRegRole(event.target.value as Role)}
             >
-              <option value="tenant" className="bg-brand-green-dark text-white">
+              <option value="tenant" className="bg-rucoria-bg-raised text-white">
                 Tenant
               </option>
-              <option value="owner" className="bg-brand-green-dark text-white">
+              <option value="owner" className="bg-rucoria-bg-raised text-white">
                 Owner
               </option>
             </select>
           </label>
           <button
-            className="mt-2 rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light py-3 font-bold text-brand-dark shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.01] hover:shadow-lg hover:shadow-brand-gold/25 active:scale-[0.98] disabled:scale-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-ru-3 rounded-ru-lg bg-rucoria-text-inv hover:bg-rucoria-text-inv/90 active:bg-rucoria-text-inv/80 py-ru-5 font-bold text-white shadow-ru-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:scale-100 disabled:opacity-50 disabled:cursor-not-allowed text-ru-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
             type="submit"
             disabled={loading}
           >
@@ -2831,41 +2831,41 @@ export default function Home() {
 
   if (!user) {
     return (
-      <main className="min-h-screen w-full bg-[#071210] text-[#f3f4f6] selection:bg-brand-gold selection:text-brand-dark">
+      <main className="min-h-screen w-full bg-rucoria-bg-base text-rucoria-text-sec font-ru-sans text-ru-lg leading-[26.4px] selection:bg-rucoria-text-inv selection:text-white">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-brand-green-dark/75 backdrop-blur-md text-white shadow-lg transition-all duration-300">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <header className="sticky top-0 z-40 w-full border-b border-rucoria-text-tert/25 bg-rucoria-bg-base/75 backdrop-blur-md text-rucoria-text-sec shadow-ru-1 transition-all duration-300">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-ru-8 py-ru-5">
             <a
               href="#"
-              className="flex items-center gap-2 group"
+              className="flex items-center gap-ru-2 group rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
               onClick={(e) => {
                 e.preventDefault();
                 window.scrollTo({ top: 0, behavior: "smooth" });
                 setMobileMenuOpen(false);
               }}
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-brand-gold to-brand-gold-light text-[#1b1f1d] font-bold text-xl shadow-md shadow-brand-gold/10 group-hover:scale-105 transition-transform">
+              <div className="flex h-10 w-10 items-center justify-center rounded-ru-md bg-rucoria-text-inv text-white font-bold text-ru-2xl shadow-ru-1 group-hover:scale-105 transition-transform duration-300">
                 ₹
               </div>
-              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-[#cbd5e1] bg-clip-text text-transparent">
+              <span className="text-ru-2xl font-bold tracking-tight text-rucoria-text-sec group-hover:text-rucoria-text-inv transition-colors duration-300">
                 Rent Khata
               </span>
             </a>
 
             {/* Desktop Navigation */}
             <nav
-              className="hidden md:flex items-center gap-4"
+              className="hidden md:flex items-center gap-ru-5"
               aria-label="Landing page"
             >
               <a
-                className="relative px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-brand-gold after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300"
+                className="relative px-ru-4 py-ru-3 text-ru-sm font-semibold text-rucoria-text-sec/80 transition-all duration-300 hover:text-rucoria-text-inv focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
                 href="#features"
                 onClick={(e) => handleScrollTo(e, "features")}
               >
                 Features
               </a>
               <a
-                className="relative px-3 py-2 text-sm font-semibold text-white/80 transition-colors hover:text-white after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-brand-gold after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300"
+                className="relative px-ru-4 py-ru-3 text-ru-sm font-semibold text-rucoria-text-sec/80 transition-all duration-300 hover:text-rucoria-text-inv focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
                 href="#access"
                 onClick={(e) => {
                   setAuthMode("login");
@@ -2875,9 +2875,9 @@ export default function Home() {
               >
                 Login
               </a>
-              <div className="hidden h-5 w-px bg-white/20 sm:block" />
+              <div className="hidden h-5 w-px bg-rucoria-text-tert/30 sm:block" />
               <a
-                className="rounded-lg bg-gradient-to-r from-brand-gold to-brand-gold-light px-4 py-2 text-sm font-bold text-brand-dark shadow-md shadow-brand-gold/20 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-brand-gold/30 active:scale-[0.98]"
+                className="rounded-ru-lg bg-rucoria-text-inv hover:bg-rucoria-text-inv/90 active:bg-rucoria-text-inv/80 px-ru-5 py-ru-3 text-ru-sm font-bold text-white shadow-ru-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
                 href="#access"
                 onClick={(e) => {
                   setAuthMode("register");
@@ -2892,7 +2892,7 @@ export default function Home() {
             {/* Hamburger Button for Mobile */}
             <button
               type="button"
-              className="md:hidden rounded-lg p-2 text-white/80 hover:text-white hover:bg-white/10 transition-all focus:outline-none"
+              className="md:hidden rounded-ru-md p-ru-2 text-rucoria-text-sec/80 hover:text-rucoria-text-inv hover:bg-rucoria-text-tert/10 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
               onClick={() => setMobileMenuOpen((open) => !open)}
               aria-label="Toggle Menu"
             >
@@ -2930,19 +2930,19 @@ export default function Home() {
 
           {/* Mobile menu dropdown overlay */}
           <div
-            className={`md:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-in-out bg-[#071210]/95 backdrop-blur-md ${
+            className={`md:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-in-out bg-rucoria-bg-base/95 backdrop-blur-md ${
               mobileMenuOpen
-                ? "grid-rows-[1fr] opacity-100 border-t border-white/10"
+                ? "grid-rows-[1fr] opacity-100 border-t border-rucoria-text-tert/25"
                 : "grid-rows-[0fr] opacity-0 border-t-0"
             }`}
           >
             <div className="min-h-0 overflow-hidden">
               <nav
-                className="flex flex-col space-y-3 px-6 py-5"
+                className="flex flex-col space-y-3 px-ru-8 py-ru-5"
                 aria-label="Mobile navigation"
               >
                 <a
-                  className="text-base font-semibold text-white/80 hover:text-white transition-colors py-2 border-b border-white/5"
+                  className="text-ru-md font-semibold text-rucoria-text-sec/80 hover:text-rucoria-text-inv transition-colors py-ru-3 border-b border-rucoria-text-tert/10 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
                   href="#features"
                   onClick={(e) => {
                     setMobileMenuOpen(false);
@@ -2952,7 +2952,7 @@ export default function Home() {
                   Features
                 </a>
                 <a
-                  className="text-base font-semibold text-white/80 hover:text-white transition-colors py-2 border-b border-white/5"
+                  className="text-ru-md font-semibold text-rucoria-text-sec/80 hover:text-rucoria-text-inv transition-colors py-ru-3 border-b border-rucoria-text-tert/10 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
                   href="#access"
                   onClick={(e) => {
                     setMobileMenuOpen(false);
@@ -2964,7 +2964,7 @@ export default function Home() {
                   Login
                 </a>
                 <a
-                  className="rounded-lg bg-gradient-to-r from-brand-gold to-brand-gold-light px-4 py-2.5 text-center text-sm font-bold text-brand-dark shadow-md shadow-brand-gold/20 transition-all hover:scale-[1.01] active:scale-[0.99] mt-2"
+                  className="rounded-ru-lg bg-rucoria-text-inv hover:bg-rucoria-text-inv/90 active:bg-rucoria-text-inv/80 px-ru-5 py-ru-4 text-center text-ru-sm font-bold text-white shadow-ru-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] mt-ru-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
                   href="#access"
                   onClick={(e) => {
                     setMobileMenuOpen(false);
@@ -2981,37 +2981,37 @@ export default function Home() {
         </header>
 
         {/* Hero Section */}
-        <section className="relative min-h-[90vh] overflow-hidden bg-brand-green-dark text-white flex items-center py-16 lg:py-24">
+        <section className="relative min-h-[90vh] overflow-hidden bg-rucoria-bg-base text-rucoria-text-sec flex items-center py-ru-8 lg:py-ru-8">
           {/* Ambient Glows */}
-          <div className="absolute top-1/4 left-1/10 w-96 h-96 rounded-full bg-brand-green-emerald/10 blur-3xl animate-pulse-glow" />
+          <div className="absolute top-1/4 left-1/10 w-96 h-96 rounded-ru-xl bg-rucoria-bg-strong/5 blur-3xl animate-pulse-glow pointer-events-none" />
           <div
-            className="absolute bottom-1/4 right-1/10 w-[450px] h-[450px] rounded-full bg-brand-gold/5 blur-3xl animate-pulse-glow"
+            className="absolute bottom-1/4 right-1/10 w-[450px] h-[450px] rounded-ru-xl bg-rucoria-text-inv/5 blur-3xl animate-pulse-glow pointer-events-none"
             style={{ animationDelay: "4s" }}
           />
 
-          <div className="mx-auto max-w-5xl w-full px-6 lg:px-8 relative z-10 -mt-10 md:mt10">
+          <div className="mx-auto max-w-5xl w-full px-ru-8 relative z-10 -mt-10 md:mt-10">
             <div className="flex flex-col items-center text-center space-y-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-brand-green-emerald/30 bg-brand-green-mid/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-green-glow backdrop-blur-sm">
-                <span className="flex h-2 w-2 rounded-full bg-brand-gold animate-pulse" />
+              <div className="inline-flex items-center gap-ru-2 rounded-ru-xl border border-rucoria-text-inv/30 bg-rucoria-bg-raised/80 px-ru-5 py-ru-3 text-ru-xs font-semibold uppercase tracking-wider text-rucoria-text-inv backdrop-blur-sm shadow-ru-1">
+                <span className="flex h-2 w-2 rounded-ru-xl bg-rucoria-text-inv animate-pulse" />
                 Your Ultimate Rental Ledger
               </div>
 
-              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl font-serif leading-[1.1] text-gradient max-w-4xl">
+              <h1 className="text-ru-4xl font-extrabold tracking-tight font-ru-sans leading-[1.1] text-rucoria-text-sec max-w-4xl">
                 Rent, tenants, receipts, & dues in{" "}
-                <span className="italic font-normal text-brand-gold-light">
+                <span className="italic font-normal text-rucoria-text-inv">
                   one calm workspace.
                 </span>
               </h1>
 
-              <p className="max-w-2xl text-base sm:text-lg leading-relaxed text-white/80 font-normal">
+              <p className="max-w-2xl text-ru-lg leading-relaxed text-rucoria-text-sec/80 font-normal">
                 A modern, clean workspace designed for owners and tenants.
                 Manage properties, coordinate leases, log payments, and generate
                 invoices with ease.
               </p>
 
-              <div className="flex flex-wrap justify-center gap-4 pt-2">
+              <div className="flex flex-wrap justify-center gap-ru-5 pt-2">
                 <a
-                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-gold to-brand-gold-light px-6 py-3.5 text-sm font-bold text-brand-dark shadow-lg shadow-brand-gold/15 transition-all hover:scale-[1.03] hover:shadow-xl hover:shadow-brand-gold/25 active:scale-[0.98]"
+                  className="inline-flex items-center justify-center rounded-ru-lg bg-rucoria-text-inv hover:bg-rucoria-text-inv/90 active:bg-rucoria-text-inv/80 px-ru-6 py-ru-5 text-ru-sm font-bold text-white shadow-ru-2 transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
                   href="#access"
                   onClick={(e) => {
                     setAuthMode("register");
@@ -3022,7 +3022,7 @@ export default function Home() {
                   Start Managing
                 </a>
                 <a
-                  className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/30 active:scale-[0.98]"
+                  className="inline-flex items-center justify-center rounded-ru-lg border border-rucoria-text-tert bg-rucoria-bg-raised px-ru-6 py-ru-5 text-ru-sm font-bold text-rucoria-text-sec shadow-ru-1 transition-all duration-300 hover:bg-rucoria-bg-raised/90 hover:border-rucoria-text-inv/50 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
                   href="#features"
                   onClick={(e) => handleScrollTo(e, "features")}
                 >
@@ -3031,28 +3031,28 @@ export default function Home() {
               </div>
 
               {/* Micro Stats */}
-              <div className="grid grid-cols-3 gap-4 sm:gap-6 pt-8 border-t border-white/10 max-w-lg w-full text-center">
+              <div className="grid grid-cols-3 gap-ru-5 pt-ru-8 border-t border-rucoria-text-tert/20 max-w-lg w-full text-center">
                 <div>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-brand-gold">
+                  <p className="text-ru-3xl font-extrabold text-rucoria-text-inv">
                     100%
                   </p>
-                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider mt-1 leading-tight">
+                  <p className="text-ru-xs text-rucoria-text-sec/60 uppercase tracking-wider mt-1 leading-tight font-semibold">
                     Ledger Accuracy
                   </p>
                 </div>
                 <div>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-brand-green-glow">
+                  <p className="text-ru-3xl font-extrabold text-rucoria-text-sec">
                     Instant
                   </p>
-                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider mt-1 leading-tight">
+                  <p className="text-ru-xs text-rucoria-text-sec/60 uppercase tracking-wider mt-1 leading-tight font-semibold">
                     PDF Receipts
                   </p>
                 </div>
                 <div>
-                  <p className="text-2xl sm:text-3xl font-extrabold text-white">
+                  <p className="text-ru-3xl font-extrabold text-rucoria-text-sec/60">
                     Zero
                   </p>
-                  <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wider mt-1 leading-tight">
+                  <p className="text-ru-xs text-rucoria-text-sec/60 uppercase tracking-wider mt-1 leading-tight font-semibold">
                     Clutter
                   </p>
                 </div>
@@ -3064,25 +3064,25 @@ export default function Home() {
         {/* Features Grid Section */}
         <section
           id="features"
-          className="scroll-mt-2 py-20 bg-brand-green-dark border-t border-white/5 relative"
+          className="scroll-mt-2 py-20 bg-rucoria-bg-base border-t border-rucoria-text-tert/15 relative"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(46,125,99,0.05),transparent_60%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,12,35,0.05),transparent_60%)] pointer-events-none" />
 
-          <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+          <div className="mx-auto max-w-7xl px-ru-8 relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-gold">
+              <h2 className="text-ru-sm font-semibold uppercase tracking-wider text-rucoria-text-inv">
                 Platform Features
               </h2>
-              <p className="mt-2 text-3xl font-bold font-serif sm:text-4xl text-gradient">
+              <p className="mt-2 text-ru-3xl font-bold font-ru-sans text-rucoria-text-sec leading-tight">
                 Everything you need to manage rental operations smoothly
               </p>
-              <p className="mt-4 text-white/60">
+              <p className="mt-4 text-rucoria-text-sec/70">
                 Forget messy spreadsheets and chaotic WhatsApp chats. Rent Khata
                 organizes everything into clean, auditable records.
               </p>
             </div>
 
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-ru-8 sm:grid-cols-2 lg:grid-cols-3">
               {[
                 {
                   title: "Owner Dashboard",
@@ -3102,8 +3102,7 @@ export default function Home() {
                       />
                     </svg>
                   ),
-                  color:
-                    "from-emerald-500/20 to-teal-500/20 text-brand-green-glow",
+                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
                 },
                 {
                   title: "Tenant Portal",
@@ -3123,7 +3122,7 @@ export default function Home() {
                       />
                     </svg>
                   ),
-                  color: "from-brand-gold/20 to-amber-500/20 text-brand-gold",
+                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
                 },
                 {
                   title: "Property & Unit Operations",
@@ -3143,7 +3142,7 @@ export default function Home() {
                       />
                     </svg>
                   ),
-                  color: "from-blue-500/20 to-indigo-500/20 text-blue-400",
+                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
                 },
                 {
                   title: "Financial Ledger Clarity",
@@ -3163,7 +3162,7 @@ export default function Home() {
                       />
                     </svg>
                   ),
-                  color: "from-purple-500/20 to-pink-500/20 text-purple-400",
+                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
                 },
                 {
                   title: "PDF Rent Receipts",
@@ -3183,7 +3182,7 @@ export default function Home() {
                       />
                     </svg>
                   ),
-                  color: "from-rose-500/20 to-orange-500/20 text-rose-400",
+                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
                 },
                 {
                   title: "Leasing & Invitations",
@@ -3203,23 +3202,22 @@ export default function Home() {
                       />
                     </svg>
                   ),
-                  color:
-                    "from-brand-green-emerald/30 to-brand-green-glow/20 text-brand-green-glow",
+                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
                 },
               ].map((f, i) => (
                 <div
                   key={i}
-                  className="group rounded-2xl glassmorphism p-6 hover:bg-brand-green-mid/70 hover:-translate-y-1 hover:border-brand-green-emerald/40 transition-all duration-300 relative overflow-hidden"
+                  className="group rounded-ru-lg bg-rucoria-bg-raised p-ru-8 border border-rucoria-text-tert/20 hover:border-rucoria-text-inv/40 hover:-translate-y-1 shadow-ru-2 transition-all duration-300 relative overflow-hidden"
                 >
                   <div
-                    className={`h-12 w-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}
+                    className={`h-12 w-12 rounded-ru-md ${f.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}
                   >
                     {f.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-white group-hover:text-brand-gold transition-colors duration-300">
+                  <h3 className="text-ru-xl font-bold text-rucoria-text-sec group-hover:text-rucoria-text-inv transition-colors duration-300">
                     {f.title}
                   </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-white/70">
+                  <p className="mt-3 text-ru-sm leading-relaxed text-rucoria-text-sec/70">
                     {f.body}
                   </p>
                 </div>
@@ -3229,42 +3227,42 @@ export default function Home() {
         </section>
 
         {/* Access Section (Authentication) */}
-        <section className="bg-brand-green-dark border-t border-white/5 relative overflow-hidden py-20">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-green-emerald/5 blur-3xl rounded-full pointer-events-none" />
+        <section className="bg-rucoria-bg-base border-t border-rucoria-text-tert/15 relative overflow-hidden py-20">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rucoria-bg-strong/5 blur-3xl rounded-ru-xl pointer-events-none" />
 
-          <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+          <div className="mx-auto max-w-7xl px-ru-8 relative z-10">
             <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
               {/* Text content left */}
               <div className="lg:col-span-7 space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-brand-gold/20 bg-brand-gold/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-gold backdrop-blur-sm">
+                <div className="inline-flex items-center gap-ru-2 rounded-ru-xl border border-rucoria-text-inv/30 bg-rucoria-bg-raised/80 px-ru-5 py-ru-3 text-ru-xs font-semibold uppercase tracking-wider text-rucoria-text-inv backdrop-blur-sm shadow-ru-1">
                   Access Portal
                 </div>
-                <h2 className="text-3xl font-bold font-serif sm:text-4xl text-gradient">
+                <h2 className="text-ru-3xl font-bold font-ru-sans text-rucoria-text-sec leading-tight">
                   Ready to experience absolute ledger peace?
                 </h2>
-                <p className="max-w-2xl text-white/70 leading-relaxed">
+                <p className="max-w-2xl text-rucoria-text-sec/70 leading-relaxed">
                   Join hundreds of landlords and tenants already using Rent
                   Khata to eliminate spreadsheet errors, centralize invoices,
                   and keep accounts clear.
                 </p>
 
                 <div className="space-y-4 pt-4">
-                  <div className="flex gap-3">
-                    <div className="h-6 w-6 rounded-full bg-brand-green-emerald/30 flex items-center justify-center text-brand-green-glow flex-shrink-0 mt-0.5 text-xs font-bold">
+                  <div className="flex gap-ru-3">
+                    <div className="h-6 w-6 rounded-ru-xl bg-rucoria-text-inv/20 flex items-center justify-center text-rucoria-text-inv flex-shrink-0 mt-0.5 text-ru-xs font-bold">
                       ✓
                     </div>
-                    <p className="text-sm text-white/80">
-                      <strong>For Owners:</strong> Comprehensive property
+                    <p className="text-ru-sm text-rucoria-text-sec/80 leading-relaxed">
+                      <strong className="text-rucoria-text-sec font-bold">For Owners:</strong> Comprehensive property
                       dashboard, automatic late fee calculations, security
                       deposit status tracker, and simple inviting mechanism.
                     </p>
                   </div>
-                  <div className="flex gap-3">
-                    <div className="h-6 w-6 rounded-full bg-brand-green-emerald/30 flex items-center justify-center text-brand-green-glow flex-shrink-0 mt-0.5 text-xs font-bold">
+                  <div className="flex gap-ru-3">
+                    <div className="h-6 w-6 rounded-ru-xl bg-rucoria-text-inv/20 flex items-center justify-center text-rucoria-text-inv flex-shrink-0 mt-0.5 text-ru-xs font-bold">
                       ✓
                     </div>
-                    <p className="text-sm text-white/80">
-                      <strong>For Tenants:</strong> Instant receipt generation,
+                    <p className="text-ru-sm text-rucoria-text-sec/80 leading-relaxed">
+                      <strong className="text-rucoria-text-sec font-bold">For Tenants:</strong> Instant receipt generation,
                       real-time dashboard of pending dues, and email-based
                       contract accepts.
                     </p>
@@ -3273,8 +3271,8 @@ export default function Home() {
 
                 <div className="pt-4">
                   {apiStatus && (
-                    <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-xs font-mono text-white/60">
-                      <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <div className="inline-flex items-center gap-ru-3 rounded-ru-md bg-rucoria-bg-raised border border-rucoria-text-tert px-ru-5 py-ru-4 text-ru-xs font-mono text-rucoria-text-sec/70 shadow-ru-1">
+                      <span className="h-2 w-2 rounded-ru-xl bg-rucoria-text-inv animate-pulse" />
                       {apiStatus}
                     </div>
                   )}
@@ -3283,7 +3281,7 @@ export default function Home() {
 
               {/* Auth Panel right */}
               <div className="lg:col-span-5 relative">
-                <div className="absolute inset-0 bg-brand-gold/5 blur-3xl rounded-full pointer-events-none" />
+                <div className="absolute inset-0 bg-rucoria-bg-strong/5 blur-3xl rounded-ru-xl pointer-events-none" />
                 {authPanel}
               </div>
             </div>
@@ -3291,19 +3289,19 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="bg-brand-dark text-white border-t border-white/5 py-12">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <footer className="bg-rucoria-bg-base text-rucoria-text-sec border-t border-rucoria-text-tert/15 py-12 font-ru-sans">
+          <div className="mx-auto max-w-7xl px-ru-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold text-brand-dark font-bold text-base">
+                <div className="flex items-center gap-ru-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-ru-sm bg-rucoria-text-inv text-white font-bold text-ru-lg shadow-ru-1">
                     ₹
                   </div>
-                  <span className="text-lg font-bold tracking-tight text-white">
+                  <span className="text-ru-xl font-bold tracking-tight text-rucoria-text-sec">
                     Rent Khata
                   </span>
                 </div>
-                <p className="max-w-md text-sm leading-relaxed text-white/60">
+                <p className="max-w-md text-ru-sm leading-relaxed text-rucoria-text-sec/60">
                   A focused rental operations workspace for properties, tenants,
                   rent schedules, payments, and receipts. Built for simplicity
                   and ledger peace.
@@ -3314,7 +3312,7 @@ export default function Home() {
                 aria-label="Footer"
               >
                 <a
-                  className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors"
+                  className="text-ru-sm font-semibold text-rucoria-text-sec/60 hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
@@ -3324,14 +3322,14 @@ export default function Home() {
                   Home
                 </a>
                 <a
-                  className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors"
+                  className="text-ru-sm font-semibold text-rucoria-text-sec/60 hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
                   href="#features"
                   onClick={(e) => handleScrollTo(e, "features")}
                 >
                   Features
                 </a>
                 <a
-                  className="text-sm font-semibold text-white/60 hover:text-brand-gold transition-colors"
+                  className="text-ru-sm font-semibold text-rucoria-text-sec/60 hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
                   href="#access"
                   onClick={(e) => {
                     setAuthMode("login");
@@ -3343,7 +3341,7 @@ export default function Home() {
                 </a>
               </nav>
             </div>
-            <div className="mt-8 pt-8 border-t border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-xs text-white/40">
+            <div className="mt-8 pt-8 border-t border-rucoria-text-tert/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-ru-xs text-rucoria-text-sec/40">
               <p>
                 &copy; {new Date().getFullYear()} Rent Khata. All rights
                 reserved.
@@ -3351,14 +3349,14 @@ export default function Home() {
               <p className="flex gap-4">
                 <a
                   href="#"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
                   onClick={(e) => e.preventDefault()}
                 >
                   Privacy Policy
                 </a>
                 <a
                   href="#"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
                   onClick={(e) => e.preventDefault()}
                 >
                   Terms of Service
