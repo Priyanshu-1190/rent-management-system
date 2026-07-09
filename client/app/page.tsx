@@ -420,28 +420,33 @@ function TenantDashboardView({
     React.SetStateAction<Record<number, boolean>>
   >;
 }) {
-  const activeTenancies = dashboard.active_tenancies || (dashboard.active_tenancy ? [dashboard.active_tenancy] : []);
-  const groupedProperties = activeTenancies.reduce((acc, tenancy) => {
-    const existing = acc.find(p => p.property_id === tenancy.property_id);
-    if (existing) {
-      existing.leases.push(tenancy);
-    } else {
-      acc.push({
-        property_id: tenancy.property_id,
-        property_name: tenancy.property_name,
-        property_address: tenancy.property_address,
-        property_lease_agreement: tenancy.property_lease_agreement,
-        leases: [tenancy]
-      });
-    }
-    return acc;
-  }, [] as Array<{
-    property_id: number;
-    property_name: string;
-    property_address: string | null;
-    property_lease_agreement?: string | null;
-    leases: typeof activeTenancies;
-  }>);
+  const activeTenancies =
+    dashboard.active_tenancies ||
+    (dashboard.active_tenancy ? [dashboard.active_tenancy] : []);
+  const groupedProperties = activeTenancies.reduce(
+    (acc, tenancy) => {
+      const existing = acc.find((p) => p.property_id === tenancy.property_id);
+      if (existing) {
+        existing.leases.push(tenancy);
+      } else {
+        acc.push({
+          property_id: tenancy.property_id,
+          property_name: tenancy.property_name,
+          property_address: tenancy.property_address,
+          property_lease_agreement: tenancy.property_lease_agreement,
+          leases: [tenancy],
+        });
+      }
+      return acc;
+    },
+    [] as Array<{
+      property_id: number;
+      property_name: string;
+      property_address: string | null;
+      property_lease_agreement?: string | null;
+      leases: typeof activeTenancies;
+    }>,
+  );
   return (
     <section className="grid gap-4">
       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
@@ -461,22 +466,37 @@ function TenantDashboardView({
       </div>
 
       {groupedProperties.length > 0 && (
-        <div className={`grid gap-4 ${groupedProperties.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+        <div
+          className={`grid gap-4 ${groupedProperties.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}
+        >
           {groupedProperties.map((property) => {
             const hasAnyUnitSpecificAgreement = property.leases.some(
               (lease) =>
                 lease.unit_lease_agreement !== null &&
                 lease.unit_lease_agreement !== undefined &&
-                lease.unit_lease_agreement.trim() !== ""
+                lease.unit_lease_agreement.trim() !== "",
             );
 
             return (
-              <div key={property.property_id} className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm flex flex-col gap-4">
+              <div
+                key={property.property_id}
+                className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm flex flex-col gap-4"
+              >
                 <div className="flex justify-between items-start border-b border-[#e3e8df] pb-3">
                   <div>
                     <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
                       </svg>
                       {property.property_name}
                     </h3>
@@ -487,13 +507,17 @@ function TenantDashboardView({
                     )}
                   </div>
                   <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
-                    {property.leases.length > 1 ? `${property.leases.length} Active Leases` : "Active Tenancy"}
+                    {property.leases.length > 1
+                      ? `${property.leases.length} Active Leases`
+                      : "Active Tenancy"}
                   </span>
                 </div>
 
                 {property.property_lease_agreement ? (
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-bold text-[#435146]">Property Lease Agreement</span>
+                    <span className="text-xs font-bold text-[#435146]">
+                      Property Lease Agreement
+                    </span>
                     <div className="text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
                       {property.property_lease_agreement}
                     </div>
@@ -521,7 +545,12 @@ function TenantDashboardView({
                       hasAnyUnitSpecificAgreement;
 
                     return (
-                      <div key={lease.unit_name} className={index > 0 ? "border-t border-[#e3e8df] pt-4" : ""}>
+                      <div
+                        key={lease.unit_name}
+                        className={
+                          index > 0 ? "border-t border-[#e3e8df] pt-4" : ""
+                        }
+                      >
                         <div className="flex justify-between items-center mb-2">
                           <h4 className="text-sm font-bold text-[#435146]">
                             Unit {lease.unit_name}
@@ -530,7 +559,9 @@ function TenantDashboardView({
 
                         {showUnitAgreement && (
                           <div className="flex flex-col gap-1 mb-2">
-                            <span className="text-xs font-semibold text-[#60715f]">Unit Specific Lease Agreement</span>
+                            <span className="text-xs font-semibold text-[#60715f]">
+                              Unit Specific Lease Agreement
+                            </span>
                             <div className="mt-1 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
                               {lease.unit_lease_agreement}
                             </div>
@@ -547,13 +578,17 @@ function TenantDashboardView({
 
                         <div className="mt-3 grid gap-3 grid-cols-2 text-xs text-[#60715f]">
                           <div>
-                            <span className="block font-medium text-[#435146]">Move-in Date</span>
+                            <span className="block font-medium text-[#435146]">
+                              Move-in Date
+                            </span>
                             <span className="text-sm font-semibold text-[#1b1f1d]">
                               {formatDate(lease.move_in_date)}
                             </span>
                           </div>
                           <div>
-                            <span className="block font-medium text-[#435146]">Security Deposit</span>
+                            <span className="block font-medium text-[#435146]">
+                              Security Deposit
+                            </span>
                             <span className="text-sm font-semibold text-[#23633d]">
                               {formatMoney(lease.deposit)}
                             </span>
@@ -2809,7 +2844,10 @@ export default function Home() {
               value={regRole}
               onChange={(event) => setRegRole(event.target.value as Role)}
             >
-              <option value="tenant" className="bg-rucoria-bg-raised text-white">
+              <option
+                value="tenant"
+                className="bg-rucoria-bg-raised text-white"
+              >
                 Tenant
               </option>
               <option value="owner" className="bg-rucoria-bg-raised text-white">
@@ -2831,7 +2869,7 @@ export default function Home() {
 
   if (!user) {
     return (
-      <main className="min-h-screen w-full bg-rucoria-bg-base text-rucoria-text-sec font-ru-sans text-ru-lg leading-[26.4px] selection:bg-rucoria-text-inv selection:text-white">
+      <main className="min-h-screen w-full bg-rucoria-bg-base text-rucoria-text-sec font-ru-sans text-ru-lg leading-[24px] selection:bg-rucoria-text-inv selection:text-white">
         {/* Sticky Header */}
         <header className="sticky top-0 z-40 w-full border-b border-rucoria-text-tert/25 bg-rucoria-bg-base/75 backdrop-blur-md text-rucoria-text-sec shadow-ru-1 transition-all duration-300">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-ru-8 py-ru-5">
@@ -3252,9 +3290,12 @@ export default function Home() {
                       ✓
                     </div>
                     <p className="text-ru-sm text-rucoria-text-sec/80 leading-relaxed">
-                      <strong className="text-rucoria-text-sec font-bold">For Owners:</strong> Comprehensive property
-                      dashboard, automatic late fee calculations, security
-                      deposit status tracker, and simple inviting mechanism.
+                      <strong className="text-rucoria-text-sec font-bold">
+                        For Owners:
+                      </strong>{" "}
+                      Comprehensive property dashboard, automatic late fee
+                      calculations, security deposit status tracker, and simple
+                      inviting mechanism.
                     </p>
                   </div>
                   <div className="flex gap-ru-3">
@@ -3262,9 +3303,11 @@ export default function Home() {
                       ✓
                     </div>
                     <p className="text-ru-sm text-rucoria-text-sec/80 leading-relaxed">
-                      <strong className="text-rucoria-text-sec font-bold">For Tenants:</strong> Instant receipt generation,
-                      real-time dashboard of pending dues, and email-based
-                      contract accepts.
+                      <strong className="text-rucoria-text-sec font-bold">
+                        For Tenants:
+                      </strong>{" "}
+                      Instant receipt generation, real-time dashboard of pending
+                      dues, and email-based contract accepts.
                     </p>
                   </div>
                 </div>
@@ -4571,47 +4614,72 @@ export default function Home() {
             </div>
 
             {(() => {
-              const activeTenancies = tenantDashboard.active_tenancies || (tenantDashboard.active_tenancy ? [tenantDashboard.active_tenancy] : []);
+              const activeTenancies =
+                tenantDashboard.active_tenancies ||
+                (tenantDashboard.active_tenancy
+                  ? [tenantDashboard.active_tenancy]
+                  : []);
               if (activeTenancies.length === 0) return null;
-              const groupedProperties = activeTenancies.reduce((acc, tenancy) => {
-                const existing = acc.find(p => p.property_id === tenancy.property_id);
-                if (existing) {
-                  existing.leases.push(tenancy);
-                } else {
-                  acc.push({
-                    property_id: tenancy.property_id,
-                    property_name: tenancy.property_name,
-                    property_address: tenancy.property_address,
-                    property_lease_agreement: tenancy.property_lease_agreement,
-                    leases: [tenancy]
-                  });
-                }
-                return acc;
-              }, [] as Array<{
-                property_id: number;
-                property_name: string;
-                property_address: string | null;
-                property_lease_agreement?: string | null;
-                leases: typeof activeTenancies;
-              }>);
+              const groupedProperties = activeTenancies.reduce(
+                (acc, tenancy) => {
+                  const existing = acc.find(
+                    (p) => p.property_id === tenancy.property_id,
+                  );
+                  if (existing) {
+                    existing.leases.push(tenancy);
+                  } else {
+                    acc.push({
+                      property_id: tenancy.property_id,
+                      property_name: tenancy.property_name,
+                      property_address: tenancy.property_address,
+                      property_lease_agreement:
+                        tenancy.property_lease_agreement,
+                      leases: [tenancy],
+                    });
+                  }
+                  return acc;
+                },
+                [] as Array<{
+                  property_id: number;
+                  property_name: string;
+                  property_address: string | null;
+                  property_lease_agreement?: string | null;
+                  leases: typeof activeTenancies;
+                }>,
+              );
 
               return (
-                <div className={`grid gap-4 ${groupedProperties.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                <div
+                  className={`grid gap-4 ${groupedProperties.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}
+                >
                   {groupedProperties.map((property) => {
                     const hasAnyUnitSpecificAgreement = property.leases.some(
                       (lease) =>
                         lease.unit_lease_agreement !== null &&
                         lease.unit_lease_agreement !== undefined &&
-                        lease.unit_lease_agreement.trim() !== ""
+                        lease.unit_lease_agreement.trim() !== "",
                     );
 
                     return (
-                      <div key={property.property_id} className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm flex flex-col gap-4">
+                      <div
+                        key={property.property_id}
+                        className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm flex flex-col gap-4"
+                      >
                         <div className="flex justify-between items-start border-b border-[#e3e8df] pb-3">
                           <div>
                             <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                />
                               </svg>
                               {property.property_name}
                             </h3>
@@ -4622,13 +4690,17 @@ export default function Home() {
                             )}
                           </div>
                           <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
-                            {property.leases.length > 1 ? `${property.leases.length} Active Leases` : "Active Tenancy"}
+                            {property.leases.length > 1
+                              ? `${property.leases.length} Active Leases`
+                              : "Active Tenancy"}
                           </span>
                         </div>
 
                         {property.property_lease_agreement ? (
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs font-bold text-[#435146]">Property Lease Agreement</span>
+                            <span className="text-xs font-bold text-[#435146]">
+                              Property Lease Agreement
+                            </span>
                             <div className="text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
                               {property.property_lease_agreement}
                             </div>
@@ -4656,7 +4728,14 @@ export default function Home() {
                               hasAnyUnitSpecificAgreement;
 
                             return (
-                              <div key={lease.unit_name} className={index > 0 ? "border-t border-[#e3e8df] pt-4" : ""}>
+                              <div
+                                key={lease.unit_name}
+                                className={
+                                  index > 0
+                                    ? "border-t border-[#e3e8df] pt-4"
+                                    : ""
+                                }
+                              >
                                 <div className="flex justify-between items-center mb-2">
                                   <h4 className="text-sm font-bold text-[#435146]">
                                     Unit {lease.unit_name}
@@ -4665,7 +4744,9 @@ export default function Home() {
 
                                 {showUnitAgreement && (
                                   <div className="flex flex-col gap-1 mb-2">
-                                    <span className="text-xs font-semibold text-[#60715f]">Unit Specific Lease Agreement</span>
+                                    <span className="text-xs font-semibold text-[#60715f]">
+                                      Unit Specific Lease Agreement
+                                    </span>
                                     <div className="mt-1 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
                                       {lease.unit_lease_agreement}
                                     </div>
