@@ -240,7 +240,7 @@ export default function TenantDirectory() {
         {/* Empty State */}
         {!loading && filteredTenants.length === 0 ? (
           <div className="text-center py-16 px-4 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4 text-[#2f6f5e]">
+            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4 text-[#2563eb]">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -265,7 +265,7 @@ export default function TenantDirectory() {
             </p>
             <Link
               href="/?invite=true"
-              className="inline-flex items-center gap-2 rounded-md bg-[#2f6f5e] hover:bg-[#235346] px-4 py-2 text-sm font-semibold text-white transition-all shadow-sm"
+              className="inline-flex items-center gap-2 rounded-md bg-[#2563eb] hover:bg-[#1e40af] px-4 py-2 text-sm font-semibold text-white transition-all shadow-sm"
             >
               <svg
                 className="w-4 h-4"

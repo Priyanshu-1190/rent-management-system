@@ -274,10 +274,10 @@ function OwnerDashboardView({
               <tr
                 key={property.property_id}
                 data-property-row={property.property_id}
-                className="border-t border-[#e3e8df] hover:bg-[#eef0eb]/50 cursor-pointer transition-colors"
+                className="border-t border-[#e2e8f0] hover:bg-[#f1f5f9]/50 cursor-pointer transition-colors"
                 onClick={(e) => onViewProperty(property, e)}
               >
-                <Td className="font-semibold text-[#2f6f5e] hover:underline">
+                <Td className="font-semibold text-[#2563eb] hover:underline">
                   <span className="property-name-text inline-block">
                     {property.property_name}
                   </span>
@@ -290,10 +290,10 @@ function OwnerDashboardView({
               </tr>
             ))
           ) : (
-            <tr className="border-t border-[#e3e8df]">
+            <tr className="border-t border-[#e2e8f0]">
               <td
                 colSpan={6}
-                className="py-4 text-center text-sm text-[#60715f]"
+                className="py-4 text-center text-sm text-[#475569]"
               >
                 No properties available.
               </td>
@@ -320,7 +320,7 @@ function OwnerDashboardView({
         <tbody>
           {dashboard.rent_status.length > 0 ? (
             dashboard.rent_status.map((rent) => (
-              <tr key={rent.rent_id} className="border-t border-[#e3e8df]">
+              <tr key={rent.rent_id} className="border-t border-[#e2e8f0]">
                 <Td>{rent.tenant_name}</Td>
                 <Td>{rent.property_name}</Td>
                 <Td>{rent.unit_name}</Td>
@@ -341,7 +341,7 @@ function OwnerDashboardView({
                       <div className="relative flex flex-col gap-1.5">
                         <button
                           type="button"
-                          className="w-fit flex items-center gap-1.5 rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                          className="w-fit flex items-center gap-1.5 rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
                           onClick={() =>
                             setExpandedReceipts((prev) => ({
                               ...prev,
@@ -357,11 +357,11 @@ function OwnerDashboardView({
                           </span>
                         </button>
                         {expandedReceipts[rent.rent_id] && (
-                          <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2f6f5e]/30">
+                          <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2563eb]/30">
                             {rent.payments.map((p) => (
                               <button
                                 key={p.payment_id}
-                                className="text-left text-xs font-semibold text-[#2f6f5e] hover:underline"
+                                className="text-left text-xs font-semibold text-[#2563eb] hover:underline"
                                 onClick={() => downloadReceipt(p.payment_id)}
                               >
                                 Receipt #{p.payment_id}
@@ -371,7 +371,7 @@ function OwnerDashboardView({
                         )}
                       </div>
                     ) : (
-                      <span className="text-sm text-[#60715f]">No payment</span>
+                      <span className="text-sm text-[#475569]">No payment</span>
                     )}
                   </div>
                 </Td>
@@ -379,7 +379,7 @@ function OwnerDashboardView({
                   {rent.payment_status !== "paid" && (
                     <button
                       type="button"
-                      className="rounded-md bg-[#2f6f5e] hover:bg-[#235346] px-3 py-1.5 text-xs font-semibold text-white transition-all"
+                      className="rounded-md bg-[#2563eb] hover:bg-[#1e40af] px-3 py-1.5 text-xs font-semibold text-white transition-all"
                       onClick={() => onLogPayment(rent)}
                     >
                       Log Payment
@@ -389,10 +389,10 @@ function OwnerDashboardView({
               </tr>
             ))
           ) : (
-            <tr className="border-t border-[#e3e8df]">
+            <tr className="border-t border-[#e2e8f0]">
               <td
                 colSpan={10}
-                className="py-4 text-center text-sm text-[#60715f]"
+                className="py-4 text-center text-sm text-[#475569]"
               >
                 No payment status information available.
               </td>
@@ -480,11 +480,11 @@ function TenantDashboardView({
             return (
               <div
                 key={property.property_id}
-                className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm flex flex-col gap-4"
+                className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm flex flex-col gap-4"
               >
-                <div className="flex justify-between items-start border-b border-[#e3e8df] pb-3">
+                <div className="flex justify-between items-start border-b border-[#e2e8f0] pb-3">
                   <div>
-                    <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2563eb]">
                       <svg
                         className="w-5 h-5"
                         fill="none"
@@ -501,12 +501,12 @@ function TenantDashboardView({
                       {property.property_name}
                     </h3>
                     {property.property_address && (
-                      <span className="block text-xs text-[#8a9a88] mt-0.5">
+                      <span className="block text-xs text-[#64748b] mt-0.5">
                         {property.property_address}
                       </span>
                     )}
                   </div>
-                  <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
+                  <span className="inline-flex rounded-full bg-[#f1f5f9] text-[#2563eb] px-2.5 py-0.5 text-xs font-semibold">
                     {property.leases.length > 1
                       ? `${property.leases.length} Active Leases`
                       : "Active Tenancy"}
@@ -515,17 +515,17 @@ function TenantDashboardView({
 
                 {property.property_lease_agreement ? (
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-bold text-[#435146]">
+                    <span className="text-xs font-bold text-[#334155]">
                       Property Lease Agreement
                     </span>
-                    <div className="text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
+                    <div className="text-sm text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-4 rounded-md border border-[#e2e8f0] max-h-40 overflow-y-auto font-mono">
                       {property.property_lease_agreement}
                     </div>
                   </div>
                 ) : (
                   !hasAnyUnitSpecificAgreement && (
-                    <div className="text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
-                      <span className="text-[#8a9a88] italic">
+                    <div className="text-sm text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-4 rounded-md border border-[#e2e8f0] max-h-40 overflow-y-auto font-mono">
+                      <span className="text-[#64748b] italic">
                         No lease agreement uploaded yet.
                       </span>
                     </div>
@@ -548,45 +548,45 @@ function TenantDashboardView({
                       <div
                         key={lease.unit_name}
                         className={
-                          index > 0 ? "border-t border-[#e3e8df] pt-4" : ""
+                          index > 0 ? "border-t border-[#e2e8f0] pt-4" : ""
                         }
                       >
                         <div className="flex justify-between items-center mb-2">
-                          <h4 className="text-sm font-bold text-[#435146]">
+                          <h4 className="text-sm font-bold text-[#334155]">
                             Unit {lease.unit_name}
                           </h4>
                         </div>
 
                         {showUnitAgreement && (
                           <div className="flex flex-col gap-1 mb-2">
-                            <span className="text-xs font-semibold text-[#60715f]">
+                            <span className="text-xs font-semibold text-[#475569]">
                               Unit Specific Lease Agreement
                             </span>
-                            <div className="mt-1 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
+                            <div className="mt-1 text-sm text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-4 rounded-md border border-[#e2e8f0] max-h-40 overflow-y-auto font-mono">
                               {lease.unit_lease_agreement}
                             </div>
                           </div>
                         )}
 
                         {showUnitPlaceholder && (
-                          <div className="mt-1 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
-                            <span className="text-[#8a9a88] italic">
+                          <div className="mt-1 text-sm text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-4 rounded-md border border-[#e2e8f0] max-h-40 overflow-y-auto font-mono">
+                            <span className="text-[#64748b] italic">
                               No lease agreement uploaded yet.
                             </span>
                           </div>
                         )}
 
-                        <div className="mt-3 grid gap-3 grid-cols-2 text-xs text-[#60715f]">
+                        <div className="mt-3 grid gap-3 grid-cols-2 text-xs text-[#475569]">
                           <div>
-                            <span className="block font-medium text-[#435146]">
+                            <span className="block font-medium text-[#334155]">
                               Move-in Date
                             </span>
-                            <span className="text-sm font-semibold text-[#1b1f1d]">
+                            <span className="text-sm font-semibold text-[#0f172a]">
                               {formatDate(lease.move_in_date)}
                             </span>
                           </div>
                           <div>
-                            <span className="block font-medium text-[#435146]">
+                            <span className="block font-medium text-[#334155]">
                               Security Deposit
                             </span>
                             <span className="text-sm font-semibold text-[#23633d]">
@@ -623,7 +623,7 @@ function TenantDashboardView({
             dashboard.rent_history.map((rent) => (
               <tr
                 key={rent.rent_id}
-                className="border-t border-[#e3e8df] align-top"
+                className="border-t border-[#e2e8f0] align-top"
               >
                 <Td>{rent.property_name}</Td>
                 <Td>{rent.unit_name}</Td>
@@ -645,7 +645,7 @@ function TenantDashboardView({
                       <div className="relative flex flex-col gap-1.5">
                         <button
                           type="button"
-                          className="w-fit flex items-center gap-1.5 rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                          className="w-fit flex items-center gap-1.5 rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
                           onClick={() =>
                             setExpandedReceipts((prev) => ({
                               ...prev,
@@ -661,11 +661,11 @@ function TenantDashboardView({
                           </span>
                         </button>
                         {expandedReceipts[rent.rent_id] && (
-                          <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2f6f5e]/30 mt-1">
+                          <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2563eb]/30 mt-1">
                             {rent.payments.map((p) => (
                               <button
                                 key={p.payment_id}
-                                className="w-fit text-left text-xs font-semibold text-[#2f6f5e] hover:underline"
+                                className="w-fit text-left text-xs font-semibold text-[#2563eb] hover:underline"
                                 onClick={() => downloadReceipt(p.payment_id)}
                               >
                                 Receipt #{p.payment_id}
@@ -675,17 +675,17 @@ function TenantDashboardView({
                         )}
                       </div>
                     ) : (
-                      <span className="text-sm text-[#60715f]">No payment</span>
+                      <span className="text-sm text-[#475569]">No payment</span>
                     )}
                   </div>
                 </Td>
               </tr>
             ))
           ) : (
-            <tr className="border-t border-[#e3e8df]">
+            <tr className="border-t border-[#e2e8f0]">
               <td
                 colSpan={9}
-                className="py-4 text-center text-sm text-[#60715f]"
+                className="py-4 text-center text-sm text-[#475569]"
               >
                 No rent history available.
               </td>
@@ -1033,7 +1033,7 @@ export default function Home() {
         title.style.transition = "none";
         title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
         title.style.transformOrigin = "top left";
-        title.style.color = "#2f6f5e";
+        title.style.color = "#2563eb";
       }
 
       modal.offsetHeight;
@@ -1047,7 +1047,7 @@ export default function Home() {
         title.style.transition =
           "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
         title.style.transform = "translate3d(0, 0, 0) scale(1)";
-        title.style.color = "#1b1f1d";
+        title.style.color = "#0f172a";
       }
 
       const timer = setTimeout(() => {
@@ -1096,7 +1096,7 @@ export default function Home() {
         title.style.transition = "none";
         title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
         title.style.transformOrigin = "top left";
-        title.style.color = "#2f6f5e";
+        title.style.color = "#2563eb";
       }
 
       modal.offsetHeight;
@@ -1110,7 +1110,7 @@ export default function Home() {
         title.style.transition =
           "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
         title.style.transform = "translate3d(0, 0, 0) scale(1)";
-        title.style.color = "#1b1f1d";
+        title.style.color = "#0f172a";
       }
 
       const timer = setTimeout(() => {
@@ -1164,7 +1164,7 @@ export default function Home() {
         title.style.transition = "none";
         title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
         title.style.transformOrigin = "top left";
-        title.style.color = "#2f6f5e";
+        title.style.color = "#2563eb";
       }
 
       modal.offsetHeight;
@@ -1178,7 +1178,7 @@ export default function Home() {
         title.style.transition =
           "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
         title.style.transform = "translate3d(0, 0, 0) scale(1)";
-        title.style.color = "#2f6f5e";
+        title.style.color = "#2563eb";
       }
 
       const timer = setTimeout(() => {
@@ -1232,7 +1232,7 @@ export default function Home() {
         title.style.transition = "none";
         title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
         title.style.transformOrigin = "top left";
-        title.style.color = "#2f6f5e";
+        title.style.color = "#2563eb";
       }
 
       modal.offsetHeight;
@@ -1246,7 +1246,7 @@ export default function Home() {
         title.style.transition =
           "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
         title.style.transform = "translate3d(0, 0, 0) scale(1)";
-        title.style.color = "#2f6f5e";
+        title.style.color = "#2563eb";
       }
 
       const timer = setTimeout(() => {
@@ -1971,7 +1971,7 @@ export default function Home() {
         "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
       title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
       title.style.transformOrigin = "top left";
-      title.style.color = "#2f6f5e";
+      title.style.color = "#2563eb";
     }
 
     setTimeout(() => {
@@ -2039,7 +2039,7 @@ export default function Home() {
         "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
       title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
       title.style.transformOrigin = "top left";
-      title.style.color = "#2f6f5e";
+      title.style.color = "#2563eb";
     }
 
     setTimeout(() => {
@@ -2146,7 +2146,7 @@ export default function Home() {
         "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
       title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
       title.style.transformOrigin = "top left";
-      title.style.color = "#2f6f5e";
+      title.style.color = "#2563eb";
     }
 
     setTimeout(() => {
@@ -2257,7 +2257,7 @@ export default function Home() {
         "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
       title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
       title.style.transformOrigin = "top left";
-      title.style.color = "#2f6f5e";
+      title.style.color = "#2563eb";
     }
 
     setTimeout(() => {
@@ -2714,10 +2714,7 @@ export default function Home() {
   };
 
   const authPanel = (
-    <div
-      id="access"
-      className="scroll-mt-24 rounded-ru-lg border border-rucoria-text-tert bg-rucoria-bg-raised p-ru-8 shadow-ru-2 backdrop-blur-md relative z-10 font-ru-sans"
-    >
+    <div className="rounded-ru-lg border border-rucoria-text-tert bg-rucoria-bg-raised p-ru-8 shadow-ru-2 backdrop-blur-md relative z-10 font-ru-sans">
       <div className="flex gap-ru-3 rounded-ru-md bg-rucoria-bg-base/50 p-ru-2 border border-rucoria-text-tert/30">
         <button
           type="button"
@@ -3102,7 +3099,7 @@ export default function Home() {
         {/* Features Grid Section */}
         <section
           id="features"
-          className="scroll-mt-2 py-20 bg-rucoria-bg-base border-t border-rucoria-text-tert/15 relative"
+          className="scroll-mt-16 pt-20 pb-10 bg-rucoria-bg-base border-t border-rucoria-text-tert/15 relative"
         >
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,12,35,0.05),transparent_60%)] pointer-events-none" />
 
@@ -3265,13 +3262,16 @@ export default function Home() {
         </section>
 
         {/* Access Section (Authentication) */}
-        <section className="bg-rucoria-bg-base border-t border-rucoria-text-tert/15 relative overflow-hidden py-20">
+        <section
+          id="access"
+          className="scroll-mt-16 bg-rucoria-bg-base border-t border-rucoria-text-tert/15 relative overflow-hidden py-20"
+        >
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rucoria-bg-strong/5 blur-3xl rounded-ru-xl pointer-events-none" />
 
           <div className="mx-auto max-w-7xl px-ru-8 relative z-10">
             <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
               {/* Text content left */}
-              <div className="lg:col-span-7 space-y-6">
+              <div className="lg:col-span-7 space-y-4">
                 <div className="inline-flex items-center gap-ru-2 rounded-ru-xl border border-rucoria-text-inv/30 bg-rucoria-bg-raised/80 px-ru-5 py-ru-3 text-ru-xs font-semibold uppercase tracking-wider text-rucoria-text-inv backdrop-blur-sm shadow-ru-1">
                   Access Portal
                 </div>
@@ -3279,12 +3279,11 @@ export default function Home() {
                   Ready to experience absolute ledger peace?
                 </h2>
                 <p className="max-w-2xl text-rucoria-text-sec/70 leading-relaxed">
-                  Join hundreds of landlords and tenants already using Rent
-                  Khata to eliminate spreadsheet errors, centralize invoices,
-                  and keep accounts clear.
+                  Join Rent Khata now to eliminate spreadsheet errors,
+                  centralize invoices, and keep accounts clear.
                 </p>
 
-                <div className="space-y-4 pt-4">
+                <div className="space-y-3 pt-2">
                   <div className="flex gap-ru-3">
                     <div className="h-6 w-6 rounded-ru-xl bg-rucoria-text-inv/20 flex items-center justify-center text-rucoria-text-inv flex-shrink-0 mt-0.5 text-ru-xs font-bold">
                       ✓
@@ -3312,7 +3311,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-2">
                   {apiStatus && (
                     <div className="inline-flex items-center gap-ru-3 rounded-ru-md bg-rucoria-bg-raised border border-rucoria-text-tert px-ru-5 py-ru-4 text-ru-xs font-mono text-rucoria-text-sec/70 shadow-ru-1">
                       <span className="h-2 w-2 rounded-ru-xl bg-rucoria-text-inv animate-pulse" />
@@ -3413,19 +3412,19 @@ export default function Home() {
   }
   //Header Section
   return (
-    <main className="min-h-screen w-full bg-[#f7f8f3] text-[#1b1f1d]">
-      <header className="border-b border-[#d8ded2] bg-[#f7f8f3]/25 backdrop-blur(16)">
+    <main className="min-h-screen w-full bg-[#f8fafc] text-[#0f172a]">
+      <header className="border-b border-[#e2e8f0] bg-[#f8fafc]/25 backdrop-blur(16)">
         <div className="mx-auto flex w-full max-w-7xl items-start justify-between px-4 py-5 sm:px-6 lg:px-8">
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#60715f]">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#475569]">
               Rent Management
             </p>
             <h1 className="mt-2 text-3xl font-semibold">Dashboard</h1>
             {apiStatus ? (
-              <p className="mt-1 text-sm text-[#60715f]">{apiStatus}</p>
+              <p className="mt-1 text-sm text-[#475569]">{apiStatus}</p>
             ) : null}
             {user ? (
-              <p className="text-sm text-[#60715f]">
+              <p className="text-sm text-[#475569]">
                 Signed in as {user.role} #{user.id}
               </p>
             ) : null}
@@ -3434,7 +3433,7 @@ export default function Home() {
             <div className="relative">
               <button
                 type="button"
-                className="rounded-md p-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
+                className="rounded-md p-2 text-[#475569] transition-colors hover:bg-[#f1f5f9] hover:text-[#0f172a]"
                 onClick={() => setShowMenu((v) => !v)}
                 aria-label="Menu"
               >
@@ -3458,16 +3457,16 @@ export default function Home() {
                       setShowAccountDetails(false);
                     }}
                   />
-                  <div className="absolute right-0 z-50 mt-1 w-56 rounded-lg border border-[#d8ded2] bg-white py-1 shadow-lg">
-                    <div className="border-b border-[#e3e8df] px-4 py-2">
+                  <div className="absolute right-0 z-50 mt-1 w-56 rounded-lg border border-[#e2e8f0] bg-white py-1 shadow-lg">
+                    <div className="border-b border-[#e2e8f0] px-4 py-2">
                       <button
                         type="button"
-                        className="flex w-full items-center justify-between rounded-md px-0 py-1 text-left transition-colors hover:text-[#1b1f1d]"
+                        className="flex w-full items-center justify-between rounded-md px-0 py-1 text-left transition-colors hover:text-[#0f172a]"
                         onClick={() => setShowAccountDetails((value) => !value)}
                         aria-expanded={showAccountDetails}
                         aria-controls="account-details"
                       >
-                        <span className="text-sm font-semibold text-[#1b1f1d]">
+                        <span className="text-sm font-semibold text-[#0f172a]">
                           Account
                         </span>
                         <svg
@@ -3479,7 +3478,7 @@ export default function Home() {
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          className={`text-[#60715f] transition-transform ${
+                          className={`text-[#475569] transition-transform ${
                             showAccountDetails ? "rotate-180" : ""
                           }`}
                         >
@@ -3496,12 +3495,12 @@ export default function Home() {
                         <div className="min-h-0 overflow-hidden">
                           <div
                             id="account-details"
-                            className="space-y-2 rounded-md bg-[#f7f8f3] p-2.5"
+                            className="space-y-2 rounded-md bg-[#f8fafc] p-2.5"
                           >
-                            <p className="truncate text-sm font-semibold text-[#1b1f1d]">
+                            <p className="truncate text-sm font-semibold text-[#0f172a]">
                               {user.name || "User"}
                             </p>
-                            <p className="truncate text-xs text-[#60715f]">
+                            <p className="truncate text-xs text-[#475569]">
                               {user.email || "No email"}
                             </p>
                             <button
@@ -3522,7 +3521,7 @@ export default function Home() {
                     {user?.role === "owner" && (
                       <button
                         type="button"
-                        className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] text-left transition-colors hover:bg-[#eef0eb]"
+                        className="flex w-full px-4 py-2 text-sm font-medium text-[#334155] text-left transition-colors hover:bg-[#f1f5f9]"
                         onClick={() => {
                           setShowTenantDirectory(true);
                           setShowMenu(false);
@@ -3534,7 +3533,7 @@ export default function Home() {
                     {user?.role && (
                       <button
                         type="button"
-                        className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] text-left transition-colors hover:bg-[#eef0eb]"
+                        className="flex w-full px-4 py-2 text-sm font-medium text-[#334155] text-left transition-colors hover:bg-[#f1f5f9]"
                         onClick={() => {
                           setShowInvitesModal(true);
                           setShowMenu(false);
@@ -3545,7 +3544,7 @@ export default function Home() {
                     )}
                     <button
                       type="button"
-                      className="flex w-full px-4 py-2 text-sm font-medium text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                      className="flex w-full px-4 py-2 text-sm font-medium text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                       onClick={() => {
                         setShowLogoutConfirm(true);
                         setShowMenu(false);
@@ -3564,14 +3563,14 @@ export default function Home() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
         <section className="grid gap-4 lg:grid-cols-[1fr_1.5fr]">
           {!user && (
-            <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-              <div className="flex gap-1 rounded-md bg-[#eef0eb] p-1">
+            <div className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm">
+              <div className="flex gap-1 rounded-md bg-[#f1f5f9] p-1">
                 <button
                   type="button"
                   className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
                     authMode === "login"
-                      ? "bg-white text-[#1b1f1d] shadow-sm"
-                      : "text-[#60715f] hover:text-[#435146]"
+                      ? "bg-white text-[#0f172a] shadow-sm"
+                      : "text-[#475569] hover:text-[#334155]"
                   }`}
                   onClick={() => {
                     setAuthMode("login");
@@ -3584,8 +3583,8 @@ export default function Home() {
                   type="button"
                   className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
                     authMode === "register"
-                      ? "bg-white text-[#1b1f1d] shadow-sm"
-                      : "text-[#60715f] hover:text-[#435146]"
+                      ? "bg-white text-[#0f172a] shadow-sm"
+                      : "text-[#475569] hover:text-[#334155]"
                   }`}
                   onClick={() => {
                     setAuthMode("register");
@@ -3598,26 +3597,26 @@ export default function Home() {
 
               {authMode === "login" ? (
                 <form onSubmit={handleLogin} className="mt-4 grid gap-3">
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Email
                     <input
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       type="email"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                     />
                   </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Password
                     <input
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       type="password"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                     />
                   </label>
                   <button
-                    className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
                     type="submit"
                     disabled={loading}
                   >
@@ -3626,10 +3625,10 @@ export default function Home() {
                 </form>
               ) : (
                 <form onSubmit={handleRegister} className="mt-4 grid gap-3">
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Name
                     <input
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       type="text"
                       value={regName}
                       onChange={(event) => setRegName(event.target.value)}
@@ -3637,20 +3636,20 @@ export default function Home() {
                       minLength={2}
                     />
                   </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Email
                     <input
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       type="email"
                       value={regEmail}
                       onChange={(event) => setRegEmail(event.target.value)}
                       required
                     />
                   </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Password
                     <input
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       type="password"
                       value={regPassword}
                       onChange={(event) => setRegPassword(event.target.value)}
@@ -3658,10 +3657,10 @@ export default function Home() {
                       minLength={6}
                     />
                   </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Role
                     <select
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       value={regRole}
                       onChange={(event) =>
                         setRegRole(event.target.value as Role)
@@ -3672,7 +3671,7 @@ export default function Home() {
                     </select>
                   </label>
                   <button
-                    className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
                     type="submit"
                     disabled={loading}
                   >
@@ -3687,13 +3686,13 @@ export default function Home() {
         {user?.role === "owner" ? (
           <section className="grid gap-4 lg:grid-cols-2">
             {/* Add Property Card */}
-            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+            <div className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">Add Property</h2>
               <form onSubmit={handleAddProperty} className="mt-3 grid gap-3">
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                <label className="grid gap-1 text-sm font-medium text-[#334155]">
                   Property Name
                   <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                     type="text"
                     value={propName}
                     onChange={(e) => setPropName(e.target.value)}
@@ -3702,32 +3701,32 @@ export default function Home() {
                     placeholder="e.g. Sunrise Apartments"
                   />
                 </label>
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                <label className="grid gap-1 text-sm font-medium text-[#334155]">
                   Address{" "}
-                  <span className="font-normal text-[#8a9a88]">(optional)</span>
+                  <span className="font-normal text-[#64748b]">(optional)</span>
                   <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                     type="text"
                     value={propAddress}
                     onChange={(e) => setPropAddress(e.target.value)}
                     placeholder="e.g. 42 MG Road, Kolkata"
                   />
                 </label>
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                <label className="grid gap-1 text-sm font-medium text-[#334155]">
                   Lease Agreement{" "}
-                  <span className="font-normal text-[#8a9a88]">(optional)</span>
+                  <span className="font-normal text-[#64748b]">(optional)</span>
                   <textarea
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65] h-24 text-xs font-mono"
+                    className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6] h-24 text-xs font-mono"
                     value={propLeaseAgreement}
                     onChange={(e) => setPropLeaseAgreement(e.target.value)}
                     placeholder="Standard terms and conditions for this property..."
                   />
                 </label>
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                <label className="grid gap-1 text-sm font-medium text-[#334155]">
                   Property Pictures{" "}
-                  <span className="font-normal text-[#8a9a88]">(optional)</span>
+                  <span className="font-normal text-[#64748b]">(optional)</span>
                   <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65] text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#eef0eb] file:text-[#2f6f5e] hover:file:bg-[#e3e8df] file:cursor-pointer"
+                    className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6] text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#f1f5f9] file:text-[#2563eb] hover:file:bg-[#e2e8f0] file:cursor-pointer"
                     type="file"
                     multiple
                     accept="image/*"
@@ -3744,7 +3743,7 @@ export default function Home() {
                     {selectedAddFiles.map((file, idx) => (
                       <div
                         key={idx}
-                        className="group relative w-12 h-12 rounded-md border border-[#e3e8df] overflow-hidden"
+                        className="group relative w-12 h-12 rounded-md border border-[#e2e8f0] overflow-hidden"
                       >
                         <img
                           src={URL.createObjectURL(file)}
@@ -3768,7 +3767,7 @@ export default function Home() {
                   </div>
                 )}
                 <button
-                  className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                  className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
                   type="submit"
                   disabled={loading}
                 >
@@ -3777,8 +3776,8 @@ export default function Home() {
               </form>
 
               {properties.length > 0 && (
-                <div className="mt-4 border-t border-[#e3e8df] pt-3">
-                  <p className="text-sm font-semibold text-[#435146]">
+                <div className="mt-4 border-t border-[#e2e8f0] pt-3">
+                  <p className="text-sm font-semibold text-[#334155]">
                     Your Properties
                   </p>
                   <ul className="mt-2 grid gap-1">
@@ -3786,14 +3785,14 @@ export default function Home() {
                       <li
                         key={p.id}
                         data-edit-property-row={p.id}
-                        className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm"
+                        className="flex items-center justify-between rounded-md border border-[#e2e8f0] px-3 py-2 text-sm"
                       >
                         <div className="min-w-0 flex-1">
                           <span className="property-name-text font-medium">
                             {p.name}
                           </span>
                           {p.address && (
-                            <span className="ml-2 text-[#60715f]">
+                            <span className="ml-2 text-[#475569]">
                               {p.address}
                             </span>
                           )}
@@ -3801,7 +3800,7 @@ export default function Home() {
                         <div className="ml-2 flex items-center gap-1">
                           <button
                             type="button"
-                            className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                            className="flex-shrink-0 rounded p-1 text-[#2563eb] transition-colors hover:bg-[#f1f5f9]"
                             onClick={(e) => handleOpenEditProperty(p, e)}
                             title={`Edit ${p.name}`}
                             disabled={loading}
@@ -3851,18 +3850,18 @@ export default function Home() {
             </div>
 
             {/* Add Unit Card */}
-            <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+            <div className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">Add Unit</h2>
               {properties.length === 0 ? (
-                <p className="mt-3 text-sm text-[#60715f]">
+                <p className="mt-3 text-sm text-[#475569]">
                   Add a property first to create units.
                 </p>
               ) : (
                 <form onSubmit={handleAddUnit} className="mt-3 grid gap-3">
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Property
                     <select
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       value={selectedPropertyId ?? ""}
                       onChange={(e) => {
                         const id = Number(e.target.value) || null;
@@ -3880,10 +3879,10 @@ export default function Home() {
                       ))}
                     </select>
                   </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Unit Name
                     <input
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       type="text"
                       value={unitName}
                       onChange={(e) => setUnitName(e.target.value)}
@@ -3891,10 +3890,10 @@ export default function Home() {
                       placeholder="e.g. Flat 101"
                     />
                   </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Monthly Rent (₹)
                     <input
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       type="number"
                       min="1"
                       step="1"
@@ -3905,10 +3904,10 @@ export default function Home() {
                     />
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    <label className="grid gap-1 text-sm font-medium text-[#334155]">
                       Late Fee (%)
                       <input
-                        className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                        className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                         type="number"
                         min="0"
                         max="100"
@@ -3917,10 +3916,10 @@ export default function Home() {
                         onChange={(e) => setUnitLateFee(e.target.value)}
                       />
                     </label>
-                    <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                    <label className="grid gap-1 text-sm font-medium text-[#334155]">
                       Grace Period (Days)
                       <input
-                        className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                        className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                         type="number"
                         min="0"
                         max="31"
@@ -3931,11 +3930,11 @@ export default function Home() {
                     </label>
                   </div>
                   {/* Creation-time Unit Lease Selection */}
-                  <div className="grid gap-2 p-3 rounded-lg border border-[#d8ded2] bg-[#f7f8f3]">
-                    <span className="text-xs font-semibold text-[#435146]">
+                  <div className="grid gap-2 p-3 rounded-lg border border-[#e2e8f0] bg-[#f8fafc]">
+                    <span className="text-xs font-semibold text-[#334155]">
                       Lease Agreement Option
                     </span>
-                    <div className="flex gap-4 text-xs font-medium text-[#435146]">
+                    <div className="flex gap-4 text-xs font-medium text-[#334155]">
                       <label className="flex items-center gap-1.5 cursor-pointer">
                         <input
                           type="radio"
@@ -3943,7 +3942,7 @@ export default function Home() {
                           value="inherit"
                           checked={addUnitLeaseMode === "inherit"}
                           onChange={() => setAddUnitLeaseMode("inherit")}
-                          className="accent-[#2f6f5e]"
+                          className="accent-[#2563eb]"
                         />
                         Inherit from Property
                       </label>
@@ -3954,7 +3953,7 @@ export default function Home() {
                           value="custom"
                           checked={addUnitLeaseMode === "custom"}
                           onChange={() => setAddUnitLeaseMode("custom")}
-                          className="accent-[#2f6f5e]"
+                          className="accent-[#2563eb]"
                         />
                         Write Custom Lease
                       </label>
@@ -3962,7 +3961,7 @@ export default function Home() {
 
                     {addUnitLeaseMode === "custom" && (
                       <textarea
-                        className="rounded-md border border-[#c9d0c5] px-3 py-2 text-xs font-mono text-[#1b1f1d] outline-none focus:border-[#3d7b65] h-24 bg-white mt-1"
+                        className="rounded-md border border-[#cbd5e1] px-3 py-2 text-xs font-mono text-[#0f172a] outline-none focus:border-[#3b82f6] h-24 bg-white mt-1"
                         placeholder="Custom lease agreement terms for this unit..."
                         value={addUnitLeaseText}
                         onChange={(e) => setAddUnitLeaseText(e.target.value)}
@@ -3970,7 +3969,7 @@ export default function Home() {
                     )}
                   </div>
                   <button
-                    className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
                     type="submit"
                     disabled={loading || !selectedPropertyId}
                   >
@@ -3980,27 +3979,27 @@ export default function Home() {
               )}
 
               {propertyUnits.length > 0 && (
-                <div className="mt-4 border-t border-[#e3e8df] pt-3">
-                  <p className="text-sm font-semibold text-[#435146]">Units</p>
+                <div className="mt-4 border-t border-[#e2e8f0] pt-3">
+                  <p className="text-sm font-semibold text-[#334155]">Units</p>
                   <ul className="mt-2 grid gap-1">
                     {propertyUnits.map((u) => (
                       <li
                         key={u.id}
                         data-unit-row={u.id}
-                        className="flex items-center justify-between rounded-md border border-[#e3e8df] px-3 py-2 text-sm"
+                        className="flex items-center justify-between rounded-md border border-[#e2e8f0] px-3 py-2 text-sm"
                       >
                         <div className="min-w-0 flex-1">
                           <span className="unit-name-text font-medium">
                             {u.name}
                           </span>
-                          <span className="ml-2 text-[#2f6f5e] font-semibold">
+                          <span className="ml-2 text-[#2563eb] font-semibold">
                             {formatMoney(u.rent_amount)}/mo
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
-                            className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                            className="flex-shrink-0 rounded p-1 text-[#2563eb] transition-colors hover:bg-[#f1f5f9]"
                             onClick={(e) => handleViewUnitDetails(u.id, e)}
                             title={`View details of ${u.name}`}
                             disabled={loading}
@@ -4021,7 +4020,7 @@ export default function Home() {
                           </button>
                           <button
                             type="button"
-                            className="flex-shrink-0 rounded p-1 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                            className="flex-shrink-0 rounded p-1 text-[#2563eb] transition-colors hover:bg-[#f1f5f9]"
                             onClick={(e) => handleOpenEditUnit(u, e)}
                             title={`Edit ${u.name}`}
                             disabled={loading}
@@ -4075,11 +4074,11 @@ export default function Home() {
         {/* ── Owner: Send Invite ── */}
         {user?.role === "owner" && showInvitesModal ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f7f8f3] p-6 shadow-xl border border-[#d8ded2]">
+            <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f8fafc] p-6 shadow-xl border border-[#e2e8f0]">
               <div className="flex justify-end mb-4">
                 <button
                   type="button"
-                  className="rounded-md p-2 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
+                  className="rounded-md p-2 -mr-2 -mt-2 text-[#475569] transition-colors hover:bg-[#f1f5f9] hover:text-[#0f172a]"
                   onClick={() => setShowInvitesModal(false)}
                 >
                   <svg
@@ -4098,12 +4097,12 @@ export default function Home() {
                 </button>
               </div>
               <section id="invites" className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                <div className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
                   <h2 className="text-lg font-semibold">
                     Send Invite to Tenant
                   </h2>
                   {availableUnits.length === 0 ? (
-                    <p className="mt-3 text-sm text-[#60715f]">
+                    <p className="mt-3 text-sm text-[#475569]">
                       No available units. Add units first or wait for existing
                       invites to be resolved.
                     </p>
@@ -4112,10 +4111,10 @@ export default function Home() {
                       onSubmit={handleSendInvite}
                       className="mt-3 grid gap-3"
                     >
-                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
                         Tenant Email
                         <input
-                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                           type="email"
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
@@ -4123,10 +4122,10 @@ export default function Home() {
                           placeholder="tenant@example.com"
                         />
                       </label>
-                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
                         Unit
                         <select
-                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                           value={inviteUnitId ?? ""}
                           onChange={(e) =>
                             setInviteUnitId(Number(e.target.value) || null)
@@ -4142,13 +4141,13 @@ export default function Home() {
                           ))}
                         </select>
                       </label>
-                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
                         Deposit (₹){" "}
-                        <span className="font-normal text-[#8a9a88]">
+                        <span className="font-normal text-[#64748b]">
                           (optional)
                         </span>
                         <input
-                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                           type="number"
                           min="0"
                           step="1"
@@ -4157,23 +4156,23 @@ export default function Home() {
                           placeholder="e.g. 25000"
                         />
                       </label>
-                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
                         Move-in Date{" "}
                         <input
-                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                           type="date"
                           value={inviteMoveIn}
                           onChange={(e) => setInviteMoveIn(e.target.value)}
                           required
                         />
                       </label>
-                      <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
                         Message{" "}
-                        <span className="font-normal text-[#8a9a88]">
+                        <span className="font-normal text-[#64748b]">
                           (optional)
                         </span>
                         <textarea
-                          className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65] resize-none"
+                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6] resize-none"
                           rows={2}
                           value={inviteMessage}
                           onChange={(e) => setInviteMessage(e.target.value)}
@@ -4181,7 +4180,7 @@ export default function Home() {
                         />
                       </label>
                       <button
-                        className="rounded-md bg-[#2f6f5e] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                        className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
                         type="submit"
                         disabled={loading || !inviteUnitId || !inviteMoveIn}
                       >
@@ -4192,10 +4191,10 @@ export default function Home() {
                 </div>
 
                 {/* Sent Invites List */}
-                <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                <div className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
                   <h2 className="text-lg font-semibold">Sent Invites</h2>
                   {sentInvites.length === 0 ? (
-                    <p className="mt-3 text-sm text-[#60715f]">
+                    <p className="mt-3 text-sm text-[#475569]">
                       No invites sent yet.
                     </p>
                   ) : (
@@ -4203,23 +4202,23 @@ export default function Home() {
                       {sentInvites.map((inv) => (
                         <li
                           key={inv.id}
-                          className="rounded-md border border-[#e3e8df] p-3"
+                          className="rounded-md border border-[#e2e8f0] p-3"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium">
                                 {inv.tenant_email}
                               </p>
-                              <p className="text-xs text-[#60715f]">
+                              <p className="text-xs text-[#475569]">
                                 {inv.property_name} — {inv.unit_name}
                               </p>
                               {inv.move_in_date && (
-                                <p className="text-xs text-[#60715f]">
+                                <p className="text-xs text-[#475569]">
                                   Move-in: {formatDate(inv.move_in_date)}
                                 </p>
                               )}
                               {inv.deposit > 0 && (
-                                <p className="text-xs text-[#60715f]">
+                                <p className="text-xs text-[#475569]">
                                   Deposit: {formatMoney(inv.deposit)}
                                 </p>
                               )}
@@ -4299,10 +4298,10 @@ export default function Home() {
                     <tr
                       key={property.property_id}
                       data-property-row={property.property_id}
-                      className="border-t border-[#e3e8df] hover:bg-[#eef0eb]/50 cursor-pointer transition-colors"
+                      className="border-t border-[#e2e8f0] hover:bg-[#f1f5f9]/50 cursor-pointer transition-colors"
                       onClick={(e) => handleViewPropertyDetails(property, e)}
                     >
-                      <Td className="font-semibold text-[#2f6f5e] hover:underline">
+                      <Td className="font-semibold text-[#2563eb] hover:underline">
                         <span className="property-name-text inline-block">
                           {property.property_name}
                         </span>
@@ -4315,10 +4314,10 @@ export default function Home() {
                     </tr>
                   ))
                 ) : (
-                  <tr className="border-t border-[#e3e8df]">
+                  <tr className="border-t border-[#e2e8f0]">
                     <td
                       colSpan={6}
-                      className="py-4 text-center text-sm text-[#60715f]"
+                      className="py-4 text-center text-sm text-[#475569]"
                     >
                       No properties overview information available.
                     </td>
@@ -4347,7 +4346,7 @@ export default function Home() {
                   ownerDashboard.rent_status.map((rent) => (
                     <tr
                       key={rent.rent_id}
-                      className="border-t border-[#e3e8df]"
+                      className="border-t border-[#e2e8f0]"
                     >
                       <Td>{rent.tenant_name}</Td>
                       <Td>{rent.property_name}</Td>
@@ -4369,7 +4368,7 @@ export default function Home() {
                             rent.payments.length === 1 ? (
                               <button
                                 key={rent.payments[0].payment_id}
-                                className="w-fit rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                                className="w-fit rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
                                 type="button"
                                 onClick={() =>
                                   downloadReceipt(rent.payments[0].payment_id)
@@ -4381,7 +4380,7 @@ export default function Home() {
                               <div className="relative flex flex-col gap-1.5">
                                 <button
                                   type="button"
-                                  className="w-fit flex items-center gap-1.5 rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                                  className="w-fit flex items-center gap-1.5 rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
                                   onClick={() =>
                                     setExpandedReceipts((prev) => ({
                                       ...prev,
@@ -4401,11 +4400,11 @@ export default function Home() {
                                   </span>
                                 </button>
                                 {expandedReceipts[rent.rent_id] && (
-                                  <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2f6f5e]/30 mt-1">
+                                  <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2563eb]/30 mt-1">
                                     {rent.payments.map((payment) => (
                                       <button
                                         key={payment.payment_id}
-                                        className="w-fit text-left rounded-md px-2 py-0.5 text-xs font-semibold text-[#2f6f5e] hover:bg-[#f3f7f5] transition-colors"
+                                        className="w-fit text-left rounded-md px-2 py-0.5 text-xs font-semibold text-[#2563eb] hover:bg-[#eff6ff] transition-colors"
                                         type="button"
                                         onClick={() =>
                                           downloadReceipt(payment.payment_id)
@@ -4419,7 +4418,7 @@ export default function Home() {
                               </div>
                             )
                           ) : (
-                            <span className="text-sm text-[#60715f]">
+                            <span className="text-sm text-[#475569]">
                               No payment
                             </span>
                           )}
@@ -4429,7 +4428,7 @@ export default function Home() {
                         {rent.payment_status !== "paid" && (
                           <button
                             type="button"
-                            className="rounded-md bg-[#2f6f5e] hover:bg-[#235346] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                            className="rounded-md bg-[#2563eb] hover:bg-[#1e40af] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                             onClick={() => handleOpenLogPayment(rent)}
                           >
                             Log Payment
@@ -4439,10 +4438,10 @@ export default function Home() {
                     </tr>
                   ))
                 ) : (
-                  <tr className="border-t border-[#e3e8df]">
+                  <tr className="border-t border-[#e2e8f0]">
                     <td
                       colSpan={10}
-                      className="py-4 text-center text-sm text-[#60715f]"
+                      className="py-4 text-center text-sm text-[#475569]"
                     >
                       No payment status information available.
                     </td>
@@ -4456,11 +4455,11 @@ export default function Home() {
         {/* ── Tenant: Invites Section ── */}
         {user?.role === "tenant" && showInvitesModal ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f7f8f3] p-6 shadow-xl border border-[#d8ded2]">
+            <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f8fafc] p-6 shadow-xl border border-[#e2e8f0]">
               <div className="flex justify-end mb-4">
                 <button
                   type="button"
-                  className="rounded-md p-2 -mr-2 -mt-2 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
+                  className="rounded-md p-2 -mr-2 -mt-2 text-[#475569] transition-colors hover:bg-[#f1f5f9] hover:text-[#0f172a]"
                   onClick={() => setShowInvitesModal(false)}
                 >
                   <svg
@@ -4479,14 +4478,14 @@ export default function Home() {
                 </button>
               </div>
               <section id="invites" className="grid gap-4">
-                <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+                <div className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
                     <svg
                       width="20"
                       height="20"
                       viewBox="0 0 20 20"
                       fill="none"
-                      stroke="#2f6f5e"
+                      stroke="#2563eb"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -4497,7 +4496,7 @@ export default function Home() {
                     Property Invites
                     {receivedInvites.filter((i) => i.status === "pending")
                       .length > 0 && (
-                      <span className="inline-flex items-center justify-center rounded-full bg-[#2f6f5e] px-2 py-0.5 text-xs font-bold text-white">
+                      <span className="inline-flex items-center justify-center rounded-full bg-[#2563eb] px-2 py-0.5 text-xs font-bold text-white">
                         {
                           receivedInvites.filter((i) => i.status === "pending")
                             .length
@@ -4506,7 +4505,7 @@ export default function Home() {
                     )}
                   </h2>
                   {receivedInvites.length === 0 ? (
-                    <p className="mt-3 text-sm text-[#60715f]">
+                    <p className="mt-3 text-sm text-[#475569]">
                       No invites received yet. Property owners can invite you to
                       their units.
                     </p>
@@ -4517,47 +4516,47 @@ export default function Home() {
                           key={inv.id}
                           className={`rounded-lg border p-4 transition-all ${
                             inv.status === "pending"
-                              ? "border-[#2f6f5e]/30 bg-[#f0faf6] shadow-sm"
-                              : "border-[#e3e8df] bg-white"
+                              ? "border-[#2563eb]/30 bg-[#eff6ff] shadow-sm"
+                              : "border-[#e2e8f0] bg-white"
                           }`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <p className="font-semibold text-[#1b1f1d]">
+                              <p className="font-semibold text-[#0f172a]">
                                 {inv.property_name} — {inv.unit_name}
                               </p>
                               {inv.property_address && (
-                                <p className="text-xs text-[#60715f]">
+                                <p className="text-xs text-[#475569]">
                                   {inv.property_address}
                                 </p>
                               )}
-                              <p className="mt-1 text-sm text-[#435146]">
+                              <p className="mt-1 text-sm text-[#334155]">
                                 From: {inv.owner_name || inv.owner_email}
                               </p>
                               {inv.rent_amount != null && (
-                                <p className="text-sm text-[#435146]">
+                                <p className="text-sm text-[#334155]">
                                   Rent:{" "}
-                                  <span className="font-semibold text-[#2f6f5e]">
+                                  <span className="font-semibold text-[#2563eb]">
                                     {formatMoney(inv.rent_amount)}/mo
                                   </span>
                                 </p>
                               )}
                               {inv.deposit > 0 && (
-                                <p className="text-sm text-[#435146]">
+                                <p className="text-sm text-[#334155]">
                                   Deposit: {formatMoney(inv.deposit)}
                                 </p>
                               )}
                               {inv.move_in_date && (
-                                <p className="text-sm text-[#435146]">
+                                <p className="text-sm text-[#334155]">
                                   Move-in: {formatDate(inv.move_in_date)}
                                 </p>
                               )}
                               {inv.message && (
-                                <p className="mt-1 rounded-md bg-[#eef0eb] px-3 py-2 text-sm italic text-[#435146]">
+                                <p className="mt-1 rounded-md bg-[#f1f5f9] px-3 py-2 text-sm italic text-[#334155]">
                                   &ldquo;{inv.message}&rdquo;
                                 </p>
                               )}
-                              <p className="mt-1 text-xs text-[#8a9a88]">
+                              <p className="mt-1 text-xs text-[#64748b]">
                                 Received {formatDate(inv.created_at)}
                               </p>
                             </div>
@@ -4567,7 +4566,7 @@ export default function Home() {
                                 <div className="flex gap-2">
                                   <button
                                     type="button"
-                                    className="rounded-md bg-[#2f6f5e] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                                    className="rounded-md bg-[#2563eb] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#1d4ed8] disabled:opacity-50"
                                     onClick={() => handleAcceptInvite(inv.id)}
                                     disabled={loading}
                                   >
@@ -4575,7 +4574,7 @@ export default function Home() {
                                   </button>
                                   <button
                                     type="button"
-                                    className="rounded-md border border-[#c9d0c5] px-3 py-1.5 text-xs font-semibold text-[#c44d4d] transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
+                                    className="rounded-md border border-[#cbd5e1] px-3 py-1.5 text-xs font-semibold text-[#c44d4d] transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
                                     onClick={() => handleDeclineInvite(inv.id)}
                                     disabled={loading}
                                   >
@@ -4663,11 +4662,11 @@ export default function Home() {
                     return (
                       <div
                         key={property.property_id}
-                        className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm flex flex-col gap-4"
+                        className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm flex flex-col gap-4"
                       >
-                        <div className="flex justify-between items-start border-b border-[#e3e8df] pb-3">
+                        <div className="flex justify-between items-start border-b border-[#e2e8f0] pb-3">
                           <div>
-                            <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2f6f5e]">
+                            <h3 className="text-lg font-semibold flex items-center gap-2 text-[#2563eb]">
                               <svg
                                 className="w-5 h-5"
                                 fill="none"
@@ -4684,12 +4683,12 @@ export default function Home() {
                               {property.property_name}
                             </h3>
                             {property.property_address && (
-                              <span className="block text-xs text-[#8a9a88] mt-0.5">
+                              <span className="block text-xs text-[#64748b] mt-0.5">
                                 {property.property_address}
                               </span>
                             )}
                           </div>
-                          <span className="inline-flex rounded-full bg-[#eef0eb] text-[#2f6f5e] px-2.5 py-0.5 text-xs font-semibold">
+                          <span className="inline-flex rounded-full bg-[#f1f5f9] text-[#2563eb] px-2.5 py-0.5 text-xs font-semibold">
                             {property.leases.length > 1
                               ? `${property.leases.length} Active Leases`
                               : "Active Tenancy"}
@@ -4698,17 +4697,17 @@ export default function Home() {
 
                         {property.property_lease_agreement ? (
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs font-bold text-[#435146]">
+                            <span className="text-xs font-bold text-[#334155]">
                               Property Lease Agreement
                             </span>
-                            <div className="text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
+                            <div className="text-sm text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-4 rounded-md border border-[#e2e8f0] max-h-40 overflow-y-auto font-mono">
                               {property.property_lease_agreement}
                             </div>
                           </div>
                         ) : (
                           !hasAnyUnitSpecificAgreement && (
-                            <div className="text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
-                              <span className="text-[#8a9a88] italic">
+                            <div className="text-sm text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-4 rounded-md border border-[#e2e8f0] max-h-40 overflow-y-auto font-mono">
+                              <span className="text-[#64748b] italic">
                                 No lease agreement uploaded yet.
                               </span>
                             </div>
@@ -4732,46 +4731,46 @@ export default function Home() {
                                 key={lease.unit_name}
                                 className={
                                   index > 0
-                                    ? "border-t border-[#e3e8df] pt-4"
+                                    ? "border-t border-[#e2e8f0] pt-4"
                                     : ""
                                 }
                               >
                                 <div className="flex justify-between items-center mb-2">
-                                  <h4 className="text-sm font-bold text-[#435146]">
+                                  <h4 className="text-sm font-bold text-[#334155]">
                                     Unit {lease.unit_name}
                                   </h4>
                                 </div>
 
                                 {showUnitAgreement && (
                                   <div className="flex flex-col gap-1 mb-2">
-                                    <span className="text-xs font-semibold text-[#60715f]">
+                                    <span className="text-xs font-semibold text-[#475569]">
                                       Unit Specific Lease Agreement
                                     </span>
-                                    <div className="mt-1 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
+                                    <div className="mt-1 text-sm text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-4 rounded-md border border-[#e2e8f0] max-h-40 overflow-y-auto font-mono">
                                       {lease.unit_lease_agreement}
                                     </div>
                                   </div>
                                 )}
 
                                 {showUnitPlaceholder && (
-                                  <div className="mt-1 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
-                                    <span className="text-[#8a9a88] italic">
+                                  <div className="mt-1 text-sm text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-4 rounded-md border border-[#e2e8f0] max-h-40 overflow-y-auto font-mono">
+                                    <span className="text-[#64748b] italic">
                                       No lease agreement uploaded yet.
                                     </span>
                                   </div>
                                 )}
 
-                                <div className="mt-3 grid gap-3 grid-cols-2 text-xs text-[#60715f]">
+                                <div className="mt-3 grid gap-3 grid-cols-2 text-xs text-[#475569]">
                                   <div>
-                                    <span className="block font-medium text-[#435146]">
+                                    <span className="block font-medium text-[#334155]">
                                       Move-in Date
                                     </span>
-                                    <span className="text-sm font-semibold text-[#1b1f1d]">
+                                    <span className="text-sm font-semibold text-[#0f172a]">
                                       {formatDate(lease.move_in_date)}
                                     </span>
                                   </div>
                                   <div>
-                                    <span className="block font-medium text-[#435146]">
+                                    <span className="block font-medium text-[#334155]">
                                       Security Deposit
                                     </span>
                                     <span className="text-sm font-semibold text-[#23633d]">
@@ -4809,7 +4808,7 @@ export default function Home() {
                   tenantDashboard.rent_history.map((rent) => (
                     <tr
                       key={rent.rent_id}
-                      className="border-t border-[#e3e8df] align-top"
+                      className="border-t border-[#e2e8f0] align-top"
                     >
                       <Td>{rent.property_name}</Td>
                       <Td>{rent.unit_name}</Td>
@@ -4831,7 +4830,7 @@ export default function Home() {
                             rent.payments.length === 1 ? (
                               <button
                                 key={rent.payments[0].payment_id}
-                                className="w-fit rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                                className="w-fit rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
                                 type="button"
                                 onClick={() =>
                                   downloadReceipt(rent.payments[0].payment_id)
@@ -4843,7 +4842,7 @@ export default function Home() {
                               <div className="relative flex flex-col gap-1.5">
                                 <button
                                   type="button"
-                                  className="w-fit flex items-center gap-1.5 rounded-md border border-[#2f6f5e] hover:bg-[#f3f7f5] px-3 py-1 text-sm font-semibold text-[#2f6f5e] transition-colors"
+                                  className="w-fit flex items-center gap-1.5 rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
                                   onClick={() =>
                                     setExpandedReceipts((prev) => ({
                                       ...prev,
@@ -4863,11 +4862,11 @@ export default function Home() {
                                   </span>
                                 </button>
                                 {expandedReceipts[rent.rent_id] && (
-                                  <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2f6f5e]/30 mt-1">
+                                  <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2563eb]/30 mt-1">
                                     {rent.payments.map((payment) => (
                                       <button
                                         key={payment.payment_id}
-                                        className="w-fit text-left rounded-md px-2 py-0.5 text-xs font-semibold text-[#2f6f5e] hover:bg-[#f3f7f5] transition-colors"
+                                        className="w-fit text-left rounded-md px-2 py-0.5 text-xs font-semibold text-[#2563eb] hover:bg-[#eff6ff] transition-colors"
                                         type="button"
                                         onClick={() =>
                                           downloadReceipt(payment.payment_id)
@@ -4881,7 +4880,7 @@ export default function Home() {
                               </div>
                             )
                           ) : (
-                            <span className="text-sm text-[#60715f]">
+                            <span className="text-sm text-[#475569]">
                               No payment
                             </span>
                           )}
@@ -4890,10 +4889,10 @@ export default function Home() {
                     </tr>
                   ))
                 ) : (
-                  <tr className="border-t border-[#e3e8df]">
+                  <tr className="border-t border-[#e2e8f0]">
                     <td
                       colSpan={9}
-                      className="py-4 text-center text-sm text-[#60715f]"
+                      className="py-4 text-center text-sm text-[#475569]"
                     >
                       No rent history available.
                     </td>
@@ -4918,7 +4917,7 @@ export default function Home() {
           {/* Modal card */}
           <div
             ref={modalRef}
-            className={`w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+            className={`w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 ${
               morphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -4930,7 +4929,7 @@ export default function Home() {
             {/* Close Button - elevated z-index to sit on top of the z-20 header */}
             <button
               type="button"
-              className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95 ${
+              className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#475569] transition-all hover:bg-[#f1f5f9] hover:text-[#0f172a] hover:scale-105 active:scale-95 ${
                 morphPhase === "expanded"
                   ? "opacity-100 pointer-events-auto"
                   : "opacity-0 pointer-events-none"
@@ -4961,14 +4960,14 @@ export default function Home() {
             {/* Header: Always visible during transition */}
             <div className="mb-6 pr-10 relative z-20">
               <p
-                className="text-xs font-semibold uppercase tracking-[0.18em] text-[#60715f] transition-opacity duration-[250ms]"
+                className="text-xs font-semibold uppercase tracking-[0.18em] text-[#475569] transition-opacity duration-[250ms]"
                 style={{ opacity: morphPhase === "expanded" ? 1 : 0 }}
               >
                 Property Details
               </p>
-              <h3 className="mt-1 text-2xl font-bold text-[#1b1f1d] flex items-center gap-2">
+              <h3 className="mt-1 text-2xl font-bold text-[#0f172a] flex items-center gap-2">
                 <svg
-                  className="w-6 h-6 text-[#2f6f5e] transition-opacity duration-[250ms]"
+                  className="w-6 h-6 text-[#2563eb] transition-opacity duration-[250ms]"
                   style={{ opacity: morphPhase === "expanded" ? 1 : 0 }}
                   fill="none"
                   stroke="currentColor"
@@ -5003,7 +5002,7 @@ export default function Home() {
               {properties.find(
                 (p) => p.id === viewingPropertyDetails.property_id,
               )?.address && (
-                <p className="mt-1.5 text-sm text-[#60715f] flex items-center gap-1.5 mb-6">
+                <p className="mt-1.5 text-sm text-[#475569] flex items-center gap-1.5 mb-6">
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -5032,47 +5031,47 @@ export default function Home() {
               )}
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-                <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">
+                <div className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#475569]">
                     Total Rent
                   </p>
-                  <p className="mt-1 text-xl font-bold text-[#1b1f1d]">
+                  <p className="mt-1 text-xl font-bold text-[#0f172a]">
                     {formatMoney(viewingPropertyDetails.total_rent)}
-                    <span className="text-xs font-normal text-[#60715f] block mt-0.5">
+                    <span className="text-xs font-normal text-[#475569] block mt-0.5">
                       Estimated monthly
                     </span>
                   </p>
                 </div>
-                <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">
+                <div className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#475569]">
                     Collected
                   </p>
                   <p className="mt-1 text-xl font-bold text-[#23633d]">
                     {formatMoney(viewingPropertyDetails.total_collected)}
-                    <span className="text-xs font-normal text-[#60715f] block mt-0.5">
+                    <span className="text-xs font-normal text-[#475569] block mt-0.5">
                       This period
                     </span>
                   </p>
                 </div>
-                <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">
+                <div className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#475569]">
                     Pending
                   </p>
                   <p className="mt-1 text-xl font-bold text-[#9a4d21]">
                     {formatMoney(viewingPropertyDetails.total_pending)}
-                    <span className="text-xs font-normal text-[#60715f] block mt-0.5">
+                    <span className="text-xs font-normal text-[#475569] block mt-0.5">
                       Outstanding
                     </span>
                   </p>
                 </div>
-                <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#60715f]">
+                <div className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#475569]">
                     Occupancy
                   </p>
-                  <p className="mt-1 text-xl font-bold text-[#1b1f1d]">
+                  <p className="mt-1 text-xl font-bold text-[#0f172a]">
                     {viewingPropertyDetails.occupied_units} /{" "}
                     {viewingPropertyDetails.total_units}
-                    <span className="text-xs font-normal text-[#60715f] block mt-0.5">
+                    <span className="text-xs font-normal text-[#475569] block mt-0.5">
                       {viewingPropertyDetails.total_units > 0
                         ? Math.round(
                             (viewingPropertyDetails.occupied_units /
@@ -5086,14 +5085,14 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <div className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
                 <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-lg font-bold text-[#1b1f1d]">
+                  <h4 className="text-lg font-bold text-[#0f172a]">
                     Units in Property
                   </h4>
                   <button
                     type="button"
-                    className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
+                    className="rounded-lg bg-[#2563eb] hover:bg-[#1e40af] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
                     onClick={() => {
                       setSelectedPropertyId(viewingPropertyDetails.property_id);
                       loadUnits(viewingPropertyDetails.property_id);
@@ -5111,32 +5110,32 @@ export default function Home() {
                 </div>
 
                 {viewingPropertyUnits.length === 0 ? (
-                  <div className="text-center py-8 text-sm text-[#60715f]">
+                  <div className="text-center py-8 text-sm text-[#475569]">
                     No units added to this property yet.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-left text-sm">
                       <thead>
-                        <tr className="border-b border-[#e3e8df]">
-                          <th className="pb-3 pr-4 font-semibold text-[#435146]">
+                        <tr className="border-b border-[#e2e8f0]">
+                          <th className="pb-3 pr-4 font-semibold text-[#334155]">
                             Unit
                           </th>
-                          <th className="pb-3 pr-4 font-semibold text-[#435146]">
+                          <th className="pb-3 pr-4 font-semibold text-[#334155]">
                             Monthly Rent
                           </th>
-                          <th className="pb-3 pr-4 font-semibold text-[#435146]">
+                          <th className="pb-3 pr-4 font-semibold text-[#334155]">
                             Tenant
                           </th>
-                          <th className="pb-3 pr-4 font-semibold text-[#435146]">
+                          <th className="pb-3 pr-4 font-semibold text-[#334155]">
                             Status
                           </th>
-                          <th className="pb-3 pr-4 font-semibold text-[#435146] text-right">
+                          <th className="pb-3 pr-4 font-semibold text-[#334155] text-right">
                             Actions
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#e3e8df]">
+                      <tbody className="divide-y divide-[#e2e8f0]">
                         {viewingPropertyUnits.map((unit) => {
                           const activeRent = ownerDashboard?.rent_status?.find(
                             (r) => r.unit_id === unit.id,
@@ -5146,9 +5145,9 @@ export default function Home() {
                             <tr
                               key={unit.id}
                               data-property-unit-row={unit.id}
-                              className="hover:bg-[#f7f8f3]/50"
+                              className="hover:bg-[#f8fafc]/50"
                             >
-                              <td className="unit-name-text py-3.5 pr-4 font-medium text-[#1b1f1d]">
+                              <td className="unit-name-text py-3.5 pr-4 font-medium text-[#0f172a]">
                                 {unit.name}
                               </td>
                               <td className="py-3.5 pr-4">
@@ -5165,7 +5164,7 @@ export default function Home() {
                                     </p>
                                   </div>
                                 ) : (
-                                  <span className="text-xs text-[#8a9a88] italic">
+                                  <span className="text-xs text-[#64748b] italic">
                                     Vacant
                                   </span>
                                 )}
@@ -5187,7 +5186,7 @@ export default function Home() {
                                 <div className="flex items-center justify-end gap-1.5">
                                   <button
                                     type="button"
-                                    className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                                    className="rounded p-1.5 text-[#2563eb] transition-colors hover:bg-[#f1f5f9]"
                                     onClick={(e) =>
                                       handleViewUnitDetails(unit.id, e)
                                     }
@@ -5210,7 +5209,7 @@ export default function Home() {
                                   </button>
                                   <button
                                     type="button"
-                                    className="rounded p-1.5 text-[#2f6f5e] transition-colors hover:bg-[#eef0eb]"
+                                    className="rounded p-1.5 text-[#2563eb] transition-colors hover:bg-[#f1f5f9]"
                                     onClick={(e) => handleOpenEditUnit(unit, e)}
                                     title={`Edit ${unit.name}`}
                                     disabled={loading}
@@ -5266,11 +5265,11 @@ export default function Home() {
               </div>
 
               {/* Lease Agreement Section */}
-              <div className="mt-6 rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <div className="mt-6 rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
                 <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-lg font-bold text-[#1b1f1d] flex items-center gap-2">
+                  <h4 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
                     <svg
-                      className="w-5 h-5 text-[#2f6f5e]"
+                      className="w-5 h-5 text-[#2563eb]"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -5286,7 +5285,7 @@ export default function Home() {
                   </h4>
                   <button
                     type="button"
-                    className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
+                    className="rounded-lg bg-[#2563eb] hover:bg-[#1e40af] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
                     onClick={() => {
                       const fullProp = properties.find(
                         (p) => p.id === viewingPropertyDetails.property_id,
@@ -5317,11 +5316,11 @@ export default function Home() {
                   </button>
                 </div>
 
-                <div className="mt-3 text-sm text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-4 rounded-md border border-[#e3e8df] max-h-80 overflow-y-auto">
+                <div className="mt-3 text-sm text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-4 rounded-md border border-[#e2e8f0] max-h-80 overflow-y-auto">
                   {viewingPropertyDetails.lease_agreement ? (
                     viewingPropertyDetails.lease_agreement
                   ) : (
-                    <span className="text-[#8a9a88] italic">
+                    <span className="text-[#64748b] italic">
                       No lease agreement has been written for this property yet.
                       Click "Write Lease Agreement" to set up terms and
                       conditions.
@@ -5331,11 +5330,11 @@ export default function Home() {
               </div>
 
               {/* Property Pictures Gallery */}
-              <div className="mt-6 rounded-lg border border-[#d8ded2] bg-white p-5 shadow-sm">
+              <div className="mt-6 rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-                  <h4 className="text-lg font-bold text-[#1b1f1d] flex items-center gap-2">
+                  <h4 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
                     <svg
-                      className="w-5 h-5 text-[#2f6f5e]"
+                      className="w-5 h-5 text-[#2563eb]"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -5360,7 +5359,7 @@ export default function Home() {
                     />
                     <button
                       type="button"
-                      className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
+                      className="rounded-lg bg-[#2563eb] hover:bg-[#1e40af] px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02]"
                       onClick={() => imageInputRef.current?.click()}
                       disabled={loading}
                     >
@@ -5378,7 +5377,7 @@ export default function Home() {
 
                   if (propertyImages.length === 0) {
                     return (
-                      <div className="text-center py-6 text-sm text-[#8a9a88] bg-[#f7f8f3] rounded-md border border-dashed border-[#c9d0c5]">
+                      <div className="text-center py-6 text-sm text-[#64748b] bg-[#f8fafc] rounded-md border border-dashed border-[#cbd5e1]">
                         No pictures uploaded for this property yet. Upload some
                         pictures to show the property details!
                       </div>
@@ -5390,7 +5389,7 @@ export default function Home() {
                       {propertyImages.map((img: any) => (
                         <div
                           key={img.id}
-                          className="group relative aspect-video overflow-hidden rounded-lg border border-[#e3e8df] bg-[#f7f8f3] shadow-sm hover:shadow-md transition-all duration-200"
+                          className="group relative aspect-video overflow-hidden rounded-lg border border-[#e2e8f0] bg-[#f8fafc] shadow-sm hover:shadow-md transition-all duration-200"
                         >
                           <img
                             src={`/api/proxy/properties/images/${img.image_path}`}
@@ -5481,15 +5480,15 @@ export default function Home() {
             key={t.id}
             className={`pointer-events-auto flex items-start gap-3 rounded-lg border p-4 shadow-lg transition-all duration-300 transform translate-y-0 ${
               t.type === "success"
-                ? "border-[#2f6f5e]/20 bg-[#f3f7f5] text-[#2f6f5e]"
+                ? "border-[#2563eb]/20 bg-[#eff6ff] text-[#2563eb]"
                 : t.type === "error"
                   ? "border-red-500/20 bg-red-50/90 text-red-700"
-                  : "border-[#e3e8df] bg-white text-[#435146]"
+                  : "border-[#e2e8f0] bg-white text-[#334155]"
             }`}
           >
             {t.type === "success" && (
               <svg
-                className="w-5 h-5 text-[#2f6f5e] flex-shrink-0 mt-0.5"
+                className="w-5 h-5 text-[#2563eb] flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2.5"
@@ -5519,7 +5518,7 @@ export default function Home() {
             )}
             {t.type === "info" && (
               <svg
-                className="w-5 h-5 text-[#435146] flex-shrink-0 mt-0.5"
+                className="w-5 h-5 text-[#334155] flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2.5"
@@ -5551,22 +5550,22 @@ export default function Home() {
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#1b1f1d]">Log Out</h3>
-            <p className="mt-2 text-sm text-[#60715f]">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#0f172a]">Log Out</h3>
+            <p className="mt-2 text-sm text-[#475569]">
               Are you sure you want to log out?
             </p>
             <div className="mt-5 flex gap-3 justify-end">
               <button
                 type="button"
-                className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                 onClick={() => setShowLogoutConfirm(false)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#235346] disabled:opacity-50"
+                className="rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1e40af] disabled:opacity-50"
                 onClick={handleLogout}
                 disabled={loading}
               >
@@ -5580,18 +5579,18 @@ export default function Home() {
       {/* Delete Account Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-[#933232]">
               Delete Account
             </h3>
-            <p className="mt-2 text-sm text-[#435146]">
+            <p className="mt-2 text-sm text-[#334155]">
               Are you sure? This will permanently delete your account and all
               associated data. This action cannot be undone.
             </p>
             <div className="mt-5 flex gap-3 justify-end">
               <button
                 type="button"
-                className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                 onClick={() => setShowDeleteConfirm(false)}
               >
                 Cancel
@@ -5612,18 +5611,18 @@ export default function Home() {
       {/* Delete Property Confirmation Modal */}
       {deletingProperty && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-[#933232]">
               Delete Property
             </h3>
-            <p className="mt-2 text-sm text-[#435146]">
+            <p className="mt-2 text-sm text-[#334155]">
               Delete <strong>&ldquo;{deletingProperty.name}&rdquo;</strong> and
               all its units? This action cannot be undone.
             </p>
             <div className="mt-5 flex gap-3 justify-end">
               <button
                 type="button"
-                className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                 onClick={() => setDeletingProperty(null)}
               >
                 Cancel
@@ -5644,18 +5643,18 @@ export default function Home() {
       {/* Delete Unit Confirmation Modal */}
       {deletingUnit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#d8ded2] bg-white p-6 shadow-xl">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-[#933232]">
               Delete Unit
             </h3>
-            <p className="mt-2 text-sm text-[#435146]">
+            <p className="mt-2 text-sm text-[#334155]">
               Delete <strong>&ldquo;{deletingUnit.name}&rdquo;</strong> and all
               its associated data? This action cannot be undone.
             </p>
             <div className="mt-5 flex gap-3 justify-end">
               <button
                 type="button"
-                className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                 onClick={() => setDeletingUnit(null)}
               >
                 Cancel
@@ -5687,7 +5686,7 @@ export default function Home() {
           {/* Modal card */}
           <div
             ref={editPropModalRef}
-            className={`mx-4 w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+            className={`mx-4 w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 ${
               editPropMorphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -5700,7 +5699,7 @@ export default function Home() {
             <div className="mb-4 pr-10 relative z-20">
               <h3
                 ref={editPropTitleRef}
-                className="text-lg font-bold text-[#2f6f5e]"
+                className="text-lg font-bold text-[#2563eb]"
                 style={{ display: "inline-block", willChange: "transform" }}
               >
                 Edit Property
@@ -5718,10 +5717,10 @@ export default function Home() {
               }}
             >
               <form onSubmit={handleEditProperty} className="grid gap-3">
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                <label className="grid gap-1 text-sm font-medium text-[#334155]">
                   Property Name
                   <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                     type="text"
                     value={editPropName}
                     onChange={(e) => setEditPropName(e.target.value)}
@@ -5729,11 +5728,11 @@ export default function Home() {
                     minLength={2}
                   />
                 </label>
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                <label className="grid gap-1 text-sm font-medium text-[#334155]">
                   Address{" "}
-                  <span className="font-normal text-[#8a9a88]">(optional)</span>
+                  <span className="font-normal text-[#64748b]">(optional)</span>
                   <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                     type="text"
                     value={editPropAddress}
                     onChange={(e) => setEditPropAddress(e.target.value)}
@@ -5742,14 +5741,14 @@ export default function Home() {
                 <div className="mt-2 flex gap-3 justify-end">
                   <button
                     type="button"
-                    className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                    className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                     onClick={handleCloseEditProperty}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                    className="rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8] disabled:opacity-50"
                     disabled={loading}
                   >
                     {loading ? "Updating…" : "Save Changes"}
@@ -5774,12 +5773,12 @@ export default function Home() {
           />
 
           {/* Modal card */}
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10">
             <div className="mb-4 pr-10">
-              <h3 className="text-lg font-bold text-[#2f6f5e]">
+              <h3 className="text-lg font-bold text-[#2563eb]">
                 Write Lease Agreement — {editingLeaseProp.name}
               </h3>
-              <p className="text-xs text-[#60715f] mt-1">
+              <p className="text-xs text-[#475569] mt-1">
                 Draft terms, rules, and payment policies for all tenants of this
                 property.
               </p>
@@ -5787,7 +5786,7 @@ export default function Home() {
 
             <form onSubmit={handleSaveLeaseAgreement} className="grid gap-4">
               <textarea
-                className="w-full h-80 rounded-md border border-[#c9d0c5] px-3 py-2 text-sm text-[#1b1f1d] outline-none focus:border-[#3d7b65] bg-white font-mono leading-relaxed"
+                className="w-full h-80 rounded-md border border-[#cbd5e1] px-3 py-2 text-sm text-[#0f172a] outline-none focus:border-[#3b82f6] bg-white font-mono leading-relaxed"
                 placeholder={`LEASE AGREEMENT
 This agreement is made on [Date] between the Owner and the Tenant...
 1. Rent: Due on the specified day of each month.
@@ -5796,7 +5795,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 onChange={(e) => setEditLeaseText(e.target.value)}
               />
 
-              <div className="flex justify-between items-center text-xs text-[#60715f]">
+              <div className="flex justify-between items-center text-xs text-[#475569]">
                 <span>Line breaks and spaces will be preserved.</span>
                 <span className="font-semibold">
                   {editLeaseText.length} characters
@@ -5806,7 +5805,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
               <div className="flex gap-3 justify-end">
                 <button
                   type="button"
-                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                  className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                   onClick={() => {
                     setShowLeaseEditModal(false);
                     setEditingLeaseProp(null);
@@ -5816,7 +5815,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 </button>
                 <button
                   type="submit"
-                  className="rounded-md bg-[#2f6f5e] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                  className="rounded-md bg-[#2563eb] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8] disabled:opacity-50"
                   disabled={loading}
                 >
                   {loading ? "Saving…" : "Save Lease Agreement"}
@@ -5840,12 +5839,12 @@ This agreement is made on [Date] between the Owner and the Tenant...
           />
 
           {/* Modal card */}
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10">
             <div className="mb-4 pr-10">
-              <h3 className="text-lg font-bold text-[#2f6f5e]">
+              <h3 className="text-lg font-bold text-[#2563eb]">
                 Write Lease Agreement — {editingUnitLease.unit_name}
               </h3>
-              <p className="text-xs text-[#60715f] mt-1">
+              <p className="text-xs text-[#475569] mt-1">
                 Configure whether this unit inherits property terms or uses its
                 own custom terms.
               </p>
@@ -5855,11 +5854,11 @@ This agreement is made on [Date] between the Owner and the Tenant...
               onSubmit={handleSaveUnitLeaseAgreement}
               className="grid gap-4"
             >
-              <div className="grid gap-2 p-3 rounded-lg border border-[#d8ded2] bg-white">
-                <span className="text-xs font-semibold text-[#435146]">
+              <div className="grid gap-2 p-3 rounded-lg border border-[#e2e8f0] bg-white">
+                <span className="text-xs font-semibold text-[#334155]">
                   Option
                 </span>
-                <div className="flex gap-6 text-sm font-medium text-[#435146]">
+                <div className="flex gap-6 text-sm font-medium text-[#334155]">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input
                       type="radio"
@@ -5872,7 +5871,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
                           editingUnitLease.property_lease_agreement || "",
                         );
                       }}
-                      className="accent-[#2f6f5e]"
+                      className="accent-[#2563eb]"
                     />
                     Keep the same agreement as the property (Inherit)
                   </label>
@@ -5890,7 +5889,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
                             "",
                         );
                       }}
-                      className="accent-[#2f6f5e]"
+                      className="accent-[#2563eb]"
                     />
                     Set a unit-specific agreement (Custom)
                   </label>
@@ -5898,7 +5897,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
               </div>
 
               <textarea
-                className={`w-full h-80 rounded-md border border-[#c9d0c5] px-3 py-2 text-sm text-[#1b1f1d] outline-none focus:border-[#3d7b65] bg-white font-mono leading-relaxed ${
+                className={`w-full h-80 rounded-md border border-[#cbd5e1] px-3 py-2 text-sm text-[#0f172a] outline-none focus:border-[#3b82f6] bg-white font-mono leading-relaxed ${
                   unitLeaseMode === "inherit"
                     ? "opacity-60 bg-gray-50 cursor-not-allowed"
                     : ""
@@ -5913,7 +5912,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 disabled={unitLeaseMode === "inherit"}
               />
 
-              <div className="flex justify-between items-center text-xs text-[#60715f]">
+              <div className="flex justify-between items-center text-xs text-[#475569]">
                 <span>
                   {unitLeaseMode === "inherit"
                     ? "Currently inheriting property terms. Switch to Custom to edit."
@@ -5927,7 +5926,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
               <div className="flex gap-3 justify-end">
                 <button
                   type="button"
-                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                  className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                   onClick={() => {
                     setShowUnitLeaseModal(false);
                     setEditingUnitLease(null);
@@ -5937,7 +5936,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 </button>
                 <button
                   type="submit"
-                  className="rounded-md bg-[#2f6f5e] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                  className="rounded-md bg-[#2563eb] px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8] disabled:opacity-50"
                   disabled={loading}
                 >
                   {loading ? "Saving…" : "Save Lease Agreement"}
@@ -5962,7 +5961,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
           {/* Modal card */}
           <div
             ref={editUnitModalRef}
-            className={`mx-4 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+            className={`mx-4 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 ${
               editUnitMorphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -5975,7 +5974,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
             <div className="mb-4 pr-10 relative z-20">
               <h3
                 ref={editUnitTitleRef}
-                className="text-lg font-bold text-[#2f6f5e]"
+                className="text-lg font-bold text-[#2563eb]"
                 style={{ display: "inline-block", willChange: "transform" }}
               >
                 Edit Unit
@@ -5993,20 +5992,20 @@ This agreement is made on [Date] between the Owner and the Tenant...
               }}
             >
               <form onSubmit={handleEditUnit} className="grid gap-3">
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                <label className="grid gap-1 text-sm font-medium text-[#334155]">
                   Unit Name
                   <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                     type="text"
                     value={editUnitName}
                     onChange={(e) => setEditUnitName(e.target.value)}
                     required
                   />
                 </label>
-                <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                <label className="grid gap-1 text-sm font-medium text-[#334155]">
                   Monthly Rent (₹)
                   <input
-                    className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                    className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                     type="number"
                     min="1"
                     step="1"
@@ -6016,10 +6015,10 @@ This agreement is made on [Date] between the Owner and the Tenant...
                   />
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Late Fee (%)
                     <input
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       type="number"
                       min="0"
                       max="100"
@@ -6028,10 +6027,10 @@ This agreement is made on [Date] between the Owner and the Tenant...
                       onChange={(e) => setEditUnitLateFee(e.target.value)}
                     />
                   </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#435146]">
+                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
                     Grace Period (Days)
                     <input
-                      className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                       type="number"
                       min="0"
                       max="31"
@@ -6044,14 +6043,14 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 <div className="mt-2 flex gap-3 justify-end">
                   <button
                     type="button"
-                    className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                    className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                     onClick={handleCloseEditUnit}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#256652] disabled:opacity-50"
+                    className="rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8] disabled:opacity-50"
                     disabled={loading}
                   >
                     {loading ? "Updating…" : "Save Changes"}
@@ -6077,7 +6076,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
           {/* Modal card */}
           <div
             ref={unitModalRef}
-            className={`w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative z-10 ${
+            className={`w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 ${
               unitMorphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -6089,7 +6088,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
             {/* Close Button - elevated z-index */}
             <button
               type="button"
-              className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#60715f] transition-all hover:bg-[#eef0eb] hover:text-[#1b1f1d] hover:scale-105 active:scale-95 ${
+              className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#475569] transition-all hover:bg-[#f1f5f9] hover:text-[#0f172a] hover:scale-105 active:scale-95 ${
                 unitMorphPhase === "expanded"
                   ? "opacity-100 pointer-events-auto"
                   : "opacity-0 pointer-events-none"
@@ -6121,13 +6120,13 @@ This agreement is made on [Date] between the Owner and the Tenant...
             <div className="mb-5 pr-10 relative z-20">
               <h3
                 ref={unitTitleRef}
-                className="text-xl font-semibold text-[#1b1f1d]"
+                className="text-xl font-semibold text-[#0f172a]"
                 style={{ display: "inline-block", willChange: "transform" }}
               >
                 {viewingUnitDetails.unit_name}
               </h3>
               <p
-                className="text-sm text-[#60715f] transition-opacity duration-[250ms]"
+                className="text-sm text-[#475569] transition-opacity duration-[250ms]"
                 style={{ opacity: unitMorphPhase === "expanded" ? 1 : 0 }}
               >
                 {viewingUnitDetails.property_name}
@@ -6145,30 +6144,30 @@ This agreement is made on [Date] between the Owner and the Tenant...
               }}
             >
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">
+                <div className="rounded-md bg-[#f8fafc] p-4 border border-[#e2e8f0]">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#475569]">
                     Rent Amount
                   </p>
-                  <p className="mt-1 text-xl font-semibold text-[#2f6f5e]">
+                  <p className="mt-1 text-xl font-semibold text-[#2563eb]">
                     {formatMoney(viewingUnitDetails.rent_amount)}
-                    <span className="text-sm font-normal text-[#60715f]">
+                    <span className="text-sm font-normal text-[#475569]">
                       /mo
                     </span>
                   </p>
                 </div>
-                <div className="rounded-md bg-[#f7f8f3] p-4 border border-[#e3e8df]">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#60715f]">
+                <div className="rounded-md bg-[#f8fafc] p-4 border border-[#e2e8f0]">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#475569]">
                     Terms
                   </p>
-                  <p className="mt-1 text-sm font-medium text-[#1b1f1d]">
+                  <p className="mt-1 text-sm font-medium text-[#0f172a]">
                     Due:{" "}
-                    <span className="font-normal text-[#435146]">
+                    <span className="font-normal text-[#334155]">
                       Day {viewingUnitDetails.due_day}
                     </span>
                   </p>
-                  <p className="text-sm font-medium text-[#1b1f1d]">
+                  <p className="text-sm font-medium text-[#0f172a]">
                     Late Fee:{" "}
-                    <span className="font-normal text-[#435146]">
+                    <span className="font-normal text-[#334155]">
                       {viewingUnitDetails.late_fee_percentage}% (Grace:{" "}
                       {viewingUnitDetails.grace_period_days}d)
                     </span>
@@ -6176,8 +6175,8 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 </div>
               </div>
 
-              <div className="mt-6 border-t border-[#e3e8df] pt-5">
-                <h4 className="font-semibold text-[#1b1f1d] mb-4 flex items-center gap-2">
+              <div className="mt-6 border-t border-[#e2e8f0] pt-5">
+                <h4 className="font-semibold text-[#0f172a] mb-4 flex items-center gap-2">
                   <svg
                     width="18"
                     height="18"
@@ -6197,44 +6196,44 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 </h4>
                 {viewingUnitDetails.tenancy_id === undefined ? (
                   <div className="animate-pulse space-y-3 py-2">
-                    <div className="h-4 bg-[#eef0eb] rounded w-1/3"></div>
-                    <div className="h-4 bg-[#eef0eb] rounded w-1/2"></div>
+                    <div className="h-4 bg-[#f1f5f9] rounded w-1/3"></div>
+                    <div className="h-4 bg-[#f1f5f9] rounded w-1/2"></div>
                   </div>
                 ) : viewingUnitDetails.tenancy_id ? (
                   <div className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
-                        <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
+                        <p className="text-xs font-medium uppercase tracking-wide text-[#475569]">
                           Tenant Info
                         </p>
-                        <p className="text-sm font-medium text-[#1b1f1d]">
+                        <p className="text-sm font-medium text-[#0f172a]">
                           {viewingUnitDetails.tenant_name || "N/A"}
                         </p>
-                        <p className="text-sm text-[#435146]">
+                        <p className="text-sm text-[#334155]">
                           {viewingUnitDetails.tenant_email}
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs font-medium uppercase tracking-wide text-[#60715f]">
+                        <p className="text-xs font-medium uppercase tracking-wide text-[#475569]">
                           Lease Details
                         </p>
-                        <p className="text-sm font-medium text-[#1b1f1d]">
+                        <p className="text-sm font-medium text-[#0f172a]">
                           Move-in:{" "}
-                          <span className="font-normal text-[#435146]">
+                          <span className="font-normal text-[#334155]">
                             {formatDate(
                               viewingUnitDetails.move_in_date ?? null,
                             )}
                           </span>
                         </p>
-                        <p className="text-sm font-medium text-[#1b1f1d]">
+                        <p className="text-sm font-medium text-[#0f172a]">
                           Deposit:{" "}
-                          <span className="font-normal text-[#435146]">
+                          <span className="font-normal text-[#334155]">
                             {formatMoney(viewingUnitDetails.deposit ?? 0)}
                           </span>
                         </p>
                       </div>
                     </div>
-                    <div className="flex justify-end pt-2 border-t border-dashed border-[#e3e8df]">
+                    <div className="flex justify-end pt-2 border-t border-dashed border-[#e2e8f0]">
                       <button
                         type="button"
                         onClick={() =>
@@ -6267,11 +6266,11 @@ This agreement is made on [Date] between the Owner and the Tenant...
               </div>
 
               {/* Unit Lease Agreement Section */}
-              <div className="mt-6 border-t border-[#e3e8df] pt-5">
+              <div className="mt-6 border-t border-[#e2e8f0] pt-5">
                 <div className="flex justify-between items-center mb-4">
-                  <h4 className="font-semibold text-[#1b1f1d] flex items-center gap-2">
+                  <h4 className="font-semibold text-[#0f172a] flex items-center gap-2">
                     <svg
-                      className="w-5 h-5 text-[#2f6f5e]"
+                      className="w-5 h-5 text-[#2563eb]"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -6301,7 +6300,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
                     )}
                     <button
                       type="button"
-                      className="rounded-lg bg-[#2f6f5e] hover:bg-[#235346] px-3 py-1 text-xs font-semibold text-white shadow-sm transition-all"
+                      className="rounded-lg bg-[#2563eb] hover:bg-[#1e40af] px-3 py-1 text-xs font-semibold text-white shadow-sm transition-all"
                       onClick={() => {
                         setEditingUnitLease(viewingUnitDetails);
                         const hasCustom =
@@ -6320,13 +6319,13 @@ This agreement is made on [Date] between the Owner and the Tenant...
                   </div>
                 </div>
 
-                <div className="text-xs text-[#435146] leading-relaxed whitespace-pre-wrap bg-[#f7f8f3] p-3 rounded-md border border-[#e3e8df] max-h-40 overflow-y-auto font-mono">
+                <div className="text-xs text-[#334155] leading-relaxed whitespace-pre-wrap bg-[#f8fafc] p-3 rounded-md border border-[#e2e8f0] max-h-40 overflow-y-auto font-mono">
                   {viewingUnitDetails.unit_lease_agreement ? (
                     viewingUnitDetails.unit_lease_agreement
                   ) : viewingUnitDetails.property_lease_agreement ? (
                     viewingUnitDetails.property_lease_agreement
                   ) : (
-                    <span className="text-[#8a9a88] italic">
+                    <span className="text-[#64748b] italic">
                       No lease agreement terms set for this unit or the
                       property.
                     </span>
@@ -6341,20 +6340,20 @@ This agreement is made on [Date] between the Owner and the Tenant...
       {/* Log Rent Payment Modal */}
       {loggingPaymentRent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 shadow-2xl relative">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-lg font-bold text-[#2f6f5e]">
+                <h3 className="text-lg font-bold text-[#2563eb]">
                   Log Rent Payment
                 </h3>
-                <p className="text-xs text-[#60715f]">
+                <p className="text-xs text-[#475569]">
                   Log payment for {loggingPaymentRent.tenant_name} (
                   {loggingPaymentRent.unit_name})
                 </p>
               </div>
               <button
                 type="button"
-                className="rounded-md p-1.5 text-[#60715f] transition-colors hover:bg-[#eef0eb] hover:text-[#1b1f1d]"
+                className="rounded-md p-1.5 text-[#475569] transition-colors hover:bg-[#f1f5f9] hover:text-[#0f172a]"
                 onClick={() => setLoggingPaymentRent(null)}
               >
                 <svg
@@ -6374,9 +6373,9 @@ This agreement is made on [Date] between the Owner and the Tenant...
             </div>
 
             <form onSubmit={handleLogPayment} className="grid gap-4">
-              <div className="rounded-lg bg-white p-3 border border-[#e3e8df] text-sm space-y-1">
+              <div className="rounded-lg bg-white p-3 border border-[#e2e8f0] text-sm space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-[#60715f]">Period:</span>{" "}
+                  <span className="text-[#475569]">Period:</span>{" "}
                   <span className="font-semibold text-gray-800">
                     {formatPeriod(
                       loggingPaymentRent.month,
@@ -6385,18 +6384,18 @@ This agreement is made on [Date] between the Owner and the Tenant...
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#60715f]">Rent Due:</span>{" "}
+                  <span className="text-[#475569]">Rent Due:</span>{" "}
                   <span className="font-semibold text-gray-800">
                     {formatMoney(loggingPaymentRent.amount)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#60715f]">Already Paid:</span>{" "}
+                  <span className="text-[#475569]">Already Paid:</span>{" "}
                   <span className="font-semibold text-gray-800">
                     {formatMoney(loggingPaymentRent.paid)}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-[#e3e8df] pt-1 mt-1 font-semibold">
+                <div className="flex justify-between border-t border-[#e2e8f0] pt-1 mt-1 font-semibold">
                   <span className="text-[#9a4d21]">Outstanding:</span>{" "}
                   <span className="text-[#9a4d21]">
                     {formatMoney(loggingPaymentRent.pending)}
@@ -6404,10 +6403,10 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 </div>
               </div>
 
-              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+              <label className="grid gap-1 text-sm font-medium text-[#334155]">
                 Payment Amount (₹)
                 <input
-                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                   type="number"
                   min="0.01"
                   step="0.01"
@@ -6418,10 +6417,10 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 />
               </label>
 
-              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+              <label className="grid gap-1 text-sm font-medium text-[#334155]">
                 Payment Method
                 <select
-                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   required
@@ -6435,14 +6434,14 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 </select>
               </label>
 
-              <label className="grid gap-1 text-sm font-medium text-[#435146]">
+              <label className="grid gap-1 text-sm font-medium text-[#334155]">
                 Transaction ID / Notes
-                <span className="font-normal text-[#8a9a88] text-xs">
+                <span className="font-normal text-[#64748b] text-xs">
                   {" "}
                   (optional)
                 </span>
                 <input
-                  className="rounded-md border border-[#c9d0c5] px-3 py-2 text-[#1b1f1d] outline-none focus:border-[#3d7b65]"
+                  className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
                   type="text"
                   value={paymentTxnId}
                   onChange={(e) => setPaymentTxnId(e.target.value)}
@@ -6453,14 +6452,14 @@ This agreement is made on [Date] between the Owner and the Tenant...
               <div className="mt-2 flex gap-3 justify-end">
                 <button
                   type="button"
-                  className="rounded-md border border-[#c9d0c5] px-4 py-2 text-sm font-semibold text-[#435146] transition-colors hover:bg-[#eef0eb]"
+                  className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
                   onClick={() => setLoggingPaymentRent(null)}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-md bg-[#2f6f5e] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                  className="rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                   disabled={loading || !paymentAmount}
                 >
                   {loading ? "Logging…" : "Log Payment"}
@@ -6493,8 +6492,8 @@ function Metric({
   tone?: "default" | "warn";
 }) {
   return (
-    <div className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm">
-      <p className="text-sm font-medium text-[#60715f]">{label}</p>
+    <div className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm">
+      <p className="text-sm font-medium text-[#475569]">{label}</p>
       <p
         className={
           (tone === "warn"
@@ -6516,7 +6515,7 @@ function DataTable({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-[#d8ded2] bg-white p-4 shadow-sm overflow-hidden">
+    <section className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm overflow-hidden">
       <h2 className="text-lg font-semibold">{title}</h2>
       <div className="mt-3 overflow-x-auto -mx-4 px-4">
         <table className="w-full min-w-[650px] border-collapse text-left text-sm md:min-w-[760px]">
@@ -6535,7 +6534,7 @@ function Th({
   className?: string;
 }) {
   return (
-    <th className={`pb-3 pr-4 font-semibold text-[#435146] ${className}`}>
+    <th className={`pb-3 pr-4 font-semibold text-[#334155] ${className}`}>
       {children}
     </th>
   );

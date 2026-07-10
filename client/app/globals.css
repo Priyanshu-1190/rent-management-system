@@ -13,12 +13,12 @@
   --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: "Consolas", "Courier New", monospace;
 
-  --color-brand-dark: #071210;
-  --color-brand-green-dark: #000000;
-  --color-brand-green-mid: #163630;
-  --color-brand-green-emerald: #2e7d63;
-  --color-brand-green-light: #44a587;
-  --color-brand-green-glow: #6ee7b7;
+  --color-brand-dark: #090d16;
+  --color-brand-blue-dark: #020617;
+  --color-brand-blue-mid: #1e3a8a;
+  --color-brand-blue-primary: #2563eb;
+  --color-brand-blue-light: #60a5fa;
+  --color-brand-blue-glow: #93c5fd;
   --color-brand-gold: #f5b84b;
   --color-brand-gold-light: #ffd074;
 
@@ -26,12 +26,12 @@
   --font-ru-sans:
     "Public Sans", "Publicsans Variablefont Wght", Arial, sans-serif;
 
-  --color-rucoria-bg-base: #fffafa;
-  --color-rucoria-text-sec: #000000;
-  --color-rucoria-text-tert: #624a56;
-  --color-rucoria-text-inv: #ff4843;
+  --color-rucoria-bg-base: #f8fafc;
+  --color-rucoria-text-sec: #0f172a;
+  --color-rucoria-text-tert: #475569;
+  --color-rucoria-text-inv: #3b82f6;
   --color-rucoria-bg-raised: #ffffff;
-  --color-rucoria-bg-strong: #380c23;
+  --color-rucoria-bg-strong: #0f172a;
 
   /* Radii scale */
   --radius-ru-xs: 4px;
@@ -55,10 +55,10 @@
     rgba(0, 0, 0, 0.02) 0px 8px 11.2px 0px,
     rgba(0, 0, 0, 0.06) 0px 1.6px 6.4px 0px;
   --shadow-ru-2:
-    rgba(56, 12, 35, 0.1) 0px 2px 3px 0px,
-    rgba(56, 12, 35, 0.09) 0px 6px 6px 0px,
-    rgba(56, 12, 35, 0.05) 0px 14px 8px 0px,
-    rgba(56, 12, 35, 0.01) 0px 25px 10px 0px;
+    rgba(15, 23, 42, 0.1) 0px 2px 3px 0px,
+    rgba(15, 23, 42, 0.09) 0px 6px 6px 0px,
+    rgba(15, 23, 42, 0.05) 0px 14px 8px 0px,
+    rgba(15, 23, 42, 0.01) 0px 25px 10px 0px;
 
   /* Typography scale */
   --text-ru-xs: 12px;
@@ -73,8 +73,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #071210;
-    --foreground: #f3f4f6;
+    --background: #020617;
+    --foreground: #f8fafc;
   }
 }
 
@@ -89,7 +89,7 @@ body {
 }
 
 @utility glassmorphism {
-  background: rgba(13, 35, 31, 0.7);
+  background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -99,7 +99,7 @@ body {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(216, 222, 210, 0.5);
+  border: 1px solid rgba(203, 213, 225, 0.5);
 }
 
 @utility text-gradient {
@@ -108,8 +108,8 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-@utility text-gradient-emerald {
-  background: linear-gradient(135deg, #c2f0d9 0%, #44a587 100%);
+@utility text-gradient-blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

@@ -43,25 +43,25 @@ interface TenantDirectoryModalProps {
 
 function TableRowSkeleton() {
   return (
-    <tr className="animate-pulse border-t border-[#e3e8df]">
+    <tr className="animate-pulse border-t border-[#e2e8f0]">
       <td className="px-6 py-4">
-        <div className="h-4 bg-[#eef0eb] rounded w-2/3 mb-2"></div>
-        <div className="h-3 bg-[#eef0eb]/70 rounded w-1/2"></div>
+        <div className="h-4 bg-[#f1f5f9] rounded w-2/3 mb-2"></div>
+        <div className="h-3 bg-[#f1f5f9]/70 rounded w-1/2"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-4 bg-[#eef0eb] rounded w-3/4"></div>
+        <div className="h-4 bg-[#f1f5f9] rounded w-3/4"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-4 bg-[#eef0eb] rounded w-1/2"></div>
+        <div className="h-4 bg-[#f1f5f9] rounded w-1/2"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-4 bg-[#eef0eb] rounded w-2/3"></div>
+        <div className="h-4 bg-[#f1f5f9] rounded w-2/3"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-4 bg-[#eef0eb] rounded w-1/3"></div>
+        <div className="h-4 bg-[#f1f5f9] rounded w-1/3"></div>
       </td>
       <td className="px-6 py-4">
-        <div className="h-6 bg-[#eef0eb]/80 rounded-full w-16 mx-auto"></div>
+        <div className="h-6 bg-[#f1f5f9]/80 rounded-full w-16 mx-auto"></div>
       </td>
     </tr>
   );
@@ -135,7 +135,7 @@ export default function TenantDirectoryModal({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-md p-4 sm:p-8 flex justify-center items-start">
-      <div className="w-full max-w-6xl my-8 rounded-xl border border-[#d8ded2] bg-[#f7f8f3] p-6 sm:p-8 shadow-2xl relative">
+      <div className="w-full max-w-6xl my-8 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 sm:p-8 shadow-2xl relative">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
@@ -222,8 +222,8 @@ export default function TenantDirectoryModal({
 
         {/* Table Content */}
         {!loading && filteredTenants.length === 0 ? (
-          <div className="text-center py-16 px-4 bg-white rounded-lg border border-[#e3e8df] flex flex-col items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-[#f3f5f0] flex items-center justify-center mb-4 text-[#2f6f5e]">
+          <div className="text-center py-16 px-4 bg-white rounded-lg border border-[#e2e8f0] flex flex-col items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-[#eff6ff] flex items-center justify-center mb-4 text-[#2563eb]">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -238,10 +238,10 @@ export default function TenantDirectoryModal({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-[#1b1f1d] mb-1">
+            <h3 className="text-lg font-semibold text-[#0f172a] mb-1">
               No Tenants Found
             </h3>
-            <p className="text-sm text-[#60715f] max-w-sm mb-6">
+            <p className="text-sm text-[#475569] max-w-sm mb-6">
               {activeTab === "all"
                 ? "You don't have any tenants assigned to properties or active invitations."
                 : `You don't have any ${activeTab} tenants.`}
@@ -250,7 +250,7 @@ export default function TenantDirectoryModal({
               <button
                 type="button"
                 onClick={onInviteClick}
-                className="inline-flex items-center gap-2 rounded-md bg-[#2f6f5e] hover:bg-[#235346] px-4 py-2 text-sm font-semibold text-white transition-all shadow-sm active:scale-[0.98]"
+                className="inline-flex items-center gap-2 rounded-md bg-[#2563eb] hover:bg-[#1e40af] px-4 py-2 text-sm font-semibold text-white transition-all shadow-sm active:scale-[0.98]"
               >
                 <svg
                   className="w-4 h-4"
