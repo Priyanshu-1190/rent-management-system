@@ -15,19 +15,30 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
   const { path } = await context.params;
 
   // Security fix: Prevent path traversal and malicious path manipulation
-  if (path.some((segment) => segment === ".." || segment === "." || segment.includes("/") || segment.includes("\\"))) {
+  if (
+    path.some(
+      (segment) =>
+        segment === ".." ||
+        segment === "." ||
+        segment.includes("/") ||
+        segment.includes("\\"),
+    )
+  ) {
     console.warn(`Blocked potential path traversal attempt: ${path.join("/")}`);
-    return NextResponse.json({ error: "Invalid path segments" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid path segments" },
+      { status: 400 },
+    );
   }
 
   const targetPath = path.join("/");
-  
+
   // SSRF Protection: Use the URL constructor to safely resolve the target path against the BACKEND_URL
   let backendUrl: string;
   try {
     const baseUrl = new URL(BACKEND_URL);
     const resolvedUrl = new URL(`/api/${targetPath}`, baseUrl);
-    
+
     // Copy search params from the original request
     const searchParams = new URL(request.url).searchParams;
     searchParams.forEach((value, key) => {
@@ -38,10 +49,12 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
     if (resolvedUrl.origin !== baseUrl.origin) {
       throw new Error("Origin mismatch");
     }
-    
+
     backendUrl = resolvedUrl.toString();
   } catch (err) {
-    console.warn(`Blocked potential SSRF attempt or invalid URL: /api/${targetPath}`);
+    console.warn(
+      `Blocked potential SSRF attempt or invalid URL: /api/${targetPath}`,
+    );
     return NextResponse.json({ error: "Invalid target" }, { status: 400 });
   }
 
@@ -70,7 +83,6 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
     }
   }
 
-
   try {
     const response = await fetch(backendUrl, {
       method: request.method,
@@ -95,10 +107,33 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
       if (v) outHeaders.set(h, v);
     }
 
-    return new NextResponse(blob, { status: response.status, headers: outHeaders });
+    return new NextResponse(blob, {
+      status: response.status,
+      headers: outHeaders,
+    });
   } catch (error) {
-    console.error(`Proxy error [${request.method} /api/${targetPath}]:`, error);
-    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
+    console.error(
+      `Proxy error for [${request.method} /api/${targetPath}]:`,
+      error,
+    );
+
+    // Check for a connection refused error, which indicates the backend is down.
+    if (error instanceof TypeError && error.message.includes("fetch failed")) {
+      // In Node.js environments, the 'cause' property has specific error codes.
+      // @ts-ignore
+      if (error.cause?.code === "ECONNREFUSED") {
+        return NextResponse.json(
+          {
+            error: `The backend server is not running or not reachable at ${BACKEND_URL}. Please start it. The recommended way is to run 'npm run dev' from the project's root directory.`,
+          },
+          { status: 503 },
+        );
+      }
+    }
+    return NextResponse.json(
+      { error: "Proxy service unavailable" },
+      { status: 503 },
+    );
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Tenant = {
   type: "tenant" | "invited";
@@ -14,6 +14,13 @@ type Tenant = {
   status: "active" | "past" | "invited" | "accepted" | "declined";
   deposit: number;
   tenancy_id: number;
+};
+
+// --- Application-Level Cache for Tenant Directory ---
+const CACHE_TTL = 60 * 1000; // 1 minute
+let tenantDirectoryCache = {
+  data: null as Tenant[] | null,
+  timestamp: 0,
 };
 
 function formatDate(value: string | null) {
@@ -79,10 +86,21 @@ export default function TenantDirectoryModal({
     "all" | "active" | "past" | "invited"
   >("all");
 
-  const fetchTenants = async () => {
+  const fetchTenants = useCallback(async () => {
+    const now = Date.now();
+    // 1. Check if we have fresh data in the cache
+    if (
+      tenantDirectoryCache.data &&
+      now - tenantDirectoryCache.timestamp < CACHE_TTL
+    ) {
+      setTenants(tenantDirectoryCache.data);
+      return; // Use cached data, skip fetch
+    }
+
     setLoading(true);
     setError("");
     try {
+      // 2. Fetch from the network
       const response = await fetch("/api/proxy/tenancies", {
         credentials: "include",
       });
@@ -93,6 +111,12 @@ export default function TenantDirectoryModal({
       }
 
       const data = await response.json();
+
+      // 3. Update state and cache on successful fetch
+      tenantDirectoryCache = {
+        data: data,
+        timestamp: Date.now(),
+      };
       setTenants(data);
     } catch (err) {
       setError(
@@ -101,13 +125,13 @@ export default function TenantDirectoryModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       fetchTenants();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchTenants]);
 
   if (!isOpen) return null;
 
@@ -259,7 +283,11 @@ export default function TenantDirectoryModal({
                   strokeWidth="2.5"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4.5v15m7.5-7.5h-15"
+                  />
                 </svg>
                 Invite a Tenant
               </button>
@@ -319,7 +347,9 @@ export default function TenantDirectoryModal({
                       <td className="px-6 py-4">
                         {formatDate(tenant.move_in_date)}
                       </td>
-                      <td className="px-6 py-4">{formatMoney(tenant.deposit)}</td>
+                      <td className="px-6 py-4">
+                        {formatMoney(tenant.deposit)}
+                      </td>
                       <td className="px-6 py-4 text-center">
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${

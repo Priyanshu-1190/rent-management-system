@@ -9,6 +9,7 @@ const {
   cancelInvite,
   getAvailableUnitsForOwner,
 } = require("./invite.service");
+const cache = require("../../utils/cache.service");
 
 /**
  * POST /api/invites — Owner sends an invite to a tenant email.
@@ -104,6 +105,11 @@ const acceptInvite = async (req, res, next) => {
     }
 
     const tenancy = await acceptInviteAndCreateTenancy(invite, req.user.id);
+
+    // Invalidate cache for available units for this owner
+    const cacheKey = `available_units_owner_${invite.owner_id}`;
+    cache.del(cacheKey);
+
     return res.json({ message: "Invite accepted, tenancy created", tenancy });
   } catch (error) {
     if (error.code === "23505") {
@@ -160,6 +166,10 @@ const removeInvite = async (req, res, next) => {
       return res.status(404).json({ error: "Pending invite not found" });
     }
 
+    // Invalidate cache for available units for this owner
+    const cacheKey = `available_units_owner_${req.user.id}`;
+    cache.del(cacheKey);
+
     return res.json({ message: "Invite cancelled" });
   } catch (error) {
     return next(error);
@@ -175,7 +185,17 @@ const listAvailableUnits = async (req, res, next) => {
       return res.status(403).json({ error: "Access denied" });
     }
 
+    const cacheKey = `available_units_owner_${req.user.id}`;
+    const cachedUnits = cache.get(cacheKey);
+
+    if (cachedUnits) {
+      return res.json(cachedUnits);
+    }
+
     const units = await getAvailableUnitsForOwner(req.user.id);
+
+    cache.set(cacheKey, units);
+
     return res.json(units);
   } catch (error) {
     return next(error);
