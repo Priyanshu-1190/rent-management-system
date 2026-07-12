@@ -4329,15 +4329,10 @@ export default function Home() {
             <DataTable title="Payment Status">
               <thead>
                 <tr>
-                  <Th>Tenant</Th>
-                  <Th>Property</Th>
-                  <Th>Unit</Th>
+                  <Th>Tenant & unit</Th>
                   <Th>Period</Th>
-                  <Th>Rent</Th>
-                  <Th>Paid</Th>
-                  <Th>Pending</Th>
+                  <Th>Payment</Th>
                   <Th>Status</Th>
-                  <Th>Receipts</Th>
                   <Th className="text-right">Actions</Th>
                 </tr>
               </thead>
@@ -4348,13 +4343,25 @@ export default function Home() {
                       key={rent.rent_id}
                       className="border-t border-[#e2e8f0]"
                     >
-                      <Td>{rent.tenant_name}</Td>
-                      <Td>{rent.property_name}</Td>
-                      <Td>{rent.unit_name}</Td>
+                      <Td className="min-w-[13rem]">
+                        <p className="font-semibold text-[#0f172a]">
+                          {rent.tenant_name}
+                        </p>
+                        <p className="mt-0.5 text-xs text-[#64748b]">
+                          {rent.property_name} · Unit {rent.unit_name}
+                        </p>
+                      </Td>
                       <Td>{formatPeriod(rent.month, rent.year)}</Td>
-                      <Td>{formatMoney(rent.amount)}</Td>
-                      <Td>{formatMoney(rent.paid)}</Td>
-                      <Td>{formatMoney(rent.pending)}</Td>
+                      <Td className="min-w-[10rem]">
+                        <p className="font-medium text-[#0f172a]">
+                          {formatMoney(rent.paid)} paid of {formatMoney(rent.amount)}
+                        </p>
+                        {rent.pending > 0 && (
+                          <p className="mt-0.5 text-xs text-[#b45309]">
+                            {formatMoney(rent.pending)} remaining
+                          </p>
+                        )}
+                      </Td>
                       <Td>
                         <StatusLabel
                           status={rent.payment_status}
@@ -4362,8 +4369,8 @@ export default function Home() {
                           overdueByDays={rent.overdue_by_days}
                         />
                       </Td>
-                      <Td>
-                        <div className="flex flex-col gap-2">
+                      <Td className="text-right">
+                        <div className="flex flex-col items-end gap-1.5">
                           {rent.payments && rent.payments.length ? (
                             rent.payments.length === 1 ? (
                               <button
@@ -4374,7 +4381,7 @@ export default function Home() {
                                   downloadReceipt(rent.payments[0].payment_id)
                                 }
                               >
-                                Receipt #{rent.payments[0].payment_id}
+                                View receipt
                               </button>
                             ) : (
                               <div className="relative flex flex-col gap-1.5">
@@ -4418,17 +4425,13 @@ export default function Home() {
                               </div>
                             )
                           ) : (
-                            <span className="text-sm text-[#475569]">
-                              No payment
-                            </span>
+                            <span className="text-sm text-[#94a3b8]">—</span>
                           )}
                         </div>
-                      </Td>
-                      <Td className="text-right">
                         {rent.payment_status !== "paid" && (
                           <button
                             type="button"
-                            className="rounded-md bg-[#2563eb] hover:bg-[#1e40af] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                            className="mt-2 rounded-md bg-[#2563eb] hover:bg-[#1e40af] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                             onClick={() => handleOpenLogPayment(rent)}
                           >
                             Log Payment
@@ -4440,7 +4443,7 @@ export default function Home() {
                 ) : (
                   <tr className="border-t border-[#e2e8f0]">
                     <td
-                      colSpan={10}
+                      colSpan={5}
                       className="py-4 text-center text-sm text-[#475569]"
                     >
                       No payment status information available.
