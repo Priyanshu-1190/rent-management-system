@@ -39,6 +39,7 @@ type OwnerDashboard = {
   }>;
   rent_status: Array<{
     rent_id: number;
+    tenant_id: number;
     property_id: number;
     unit_id: number;
     property_name: string;
@@ -213,6 +214,32 @@ function formatDate(value: string | null) {
     month: "short",
     day: "2-digit",
   }).format(new Date(value));
+}
+
+function groupRentsByTenant(rentStatus: OwnerDashboard["rent_status"]) {
+  const tenants = new Map<
+    number,
+    { tenantName: string; rents: OwnerDashboard["rent_status"] }
+  >();
+
+  rentStatus.forEach((rent) => {
+    const tenant = tenants.get(rent.tenant_id);
+
+    if (tenant) {
+      tenant.rents.push(rent);
+      return;
+    }
+
+    tenants.set(rent.tenant_id, {
+      tenantName: rent.tenant_name,
+      rents: [rent],
+    });
+  });
+
+  return Array.from(tenants, ([tenantId, tenant]) => ({
+    tenantId,
+    ...tenant,
+  }));
 }
 
 /**
@@ -801,6 +828,9 @@ export default function Home() {
 
   // Receipt expansion states
   const [expandedReceipts, setExpandedReceipts] = useState<
+    Record<number, boolean>
+  >({});
+  const [expandedTenantPayments, setExpandedTenantPayments] = useState<
     Record<number, boolean>
   >({});
 
@@ -4327,27 +4357,134 @@ export default function Home() {
             </DataTable>
 
             <DataTable title="Payment Status">
-              <thead>
-                <tr>
-                  <Th>Tenant & unit</Th>
-                  <Th>Period</Th>
-                  <Th>Payment</Th>
-                  <Th>Status</Th>
-                  <Th className="text-right">Actions</Th>
-                </tr>
-              </thead>
               <tbody>
                 {ownerDashboard.rent_status.length > 0 ? (
-                  ownerDashboard.rent_status.map((rent) => (
+                  groupRentsByTenant(ownerDashboard.rent_status).map((tenant) => {
+                    const totalDue = tenant.rents.reduce(
+                      (sum, rent) => sum + rent.amount,
+                      0,
+                    );
+                    const totalPending = tenant.rents.reduce(
+                      (sum, rent) => sum + rent.pending,
+                      0,
+                    );
+                    const unitCount = new Set(
+                      tenant.rents.map((rent) => rent.unit_id),
+                    ).size;
+                    const overdueCount = tenant.rents.filter(
+                      (rent) => rent.payment_status === "overdue",
+                    ).length;
+                    const openPaymentCount = tenant.rents.filter(
+                      (rent) => rent.pending > 0,
+                    ).length;
+                    const isExpanded = expandedTenantPayments[tenant.tenantId];
+                    const summary =
+                      totalPending === 0
+                        ? "All paid"
+                        : overdueCount > 0
+                          ? `${overdueCount} overdue`
+                          : `${openPaymentCount} due`;
+
+                    return (
+                      <React.Fragment key={tenant.tenantId}>
+                        <tr className="border-t border-[#e2e8f0]">
+                          <td colSpan={5} className="p-0">
+                            <button
+                              type="button"
+                              aria-expanded={isExpanded}
+                              aria-controls={`tenant-payments-${tenant.tenantId}`}
+                              onClick={() =>
+                                setExpandedTenantPayments((prev) => ({
+                                  ...prev,
+                                  [tenant.tenantId]: !prev[tenant.tenantId],
+                                }))
+                              }
+                              className="grid w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-[#f8fafc] sm:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] sm:items-center"
+                            >
+                              <div>
+                                <p className="font-semibold text-[#0f172a]">
+                                  {tenant.tenantName}
+                                </p>
+                                <p className="mt-0.5 text-xs text-[#64748b]">
+                                  {unitCount} unit{unitCount === 1 ? "" : "s"} · {tenant.rents.length} payment{tenant.rents.length === 1 ? "" : "s"}
+                                </p>
+                              </div>
+                              <div className="text-left sm:text-right">
+                                <p className="text-xs text-[#64748b]">Total due</p>
+                                <p className="font-semibold text-[#0f172a]">
+                                  {formatMoney(totalDue)}
+                                </p>
+                              </div>
+                              <div className="text-left sm:text-right">
+                                <p className="text-xs text-[#64748b]">Pending</p>
+                                <p
+                                  className={`font-semibold ${
+                                    totalPending > 0
+                                      ? "text-[#b45309]"
+                                      : "text-[#15803d]"
+                                  }`}
+                                >
+                                  {formatMoney(totalPending)}
+                                </p>
+                              </div>
+                              <span
+                                className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                  totalPending === 0
+                                    ? "bg-[#dcfce7] text-[#15803d]"
+                                    : overdueCount > 0
+                                      ? "bg-[#fee2e2] text-[#b91c1c]"
+                                      : "bg-[#fef3c7] text-[#a16207]"
+                                }`}
+                              >
+                                {summary}
+                              </span>
+                              <svg
+                                className={`h-4 w-4 text-[#64748b] transition-transform duration-300 ${
+                                  isExpanded ? "rotate-180" : ""
+                                }`}
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m6 9 6 6 6-6"
+                                />
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr id={`tenant-payments-${tenant.tenantId}`}>
+                          <td colSpan={5} className="p-0">
+                            <div
+                              className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                                isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                              }`}
+                            >
+                              <div className="min-h-0 overflow-hidden">
+                                <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-4 py-4">
+                                  <div className="overflow-x-auto rounded-md border border-[#e2e8f0] bg-white">
+                                    <table className="w-full text-sm">
+                                      <thead className="bg-[#f8fafc] text-left text-xs font-semibold uppercase tracking-wide text-[#64748b]">
+                                        <tr>
+                                          <th className="px-4 py-2.5">Property & unit</th>
+                                          <th className="px-4 py-2.5">Period</th>
+                                          <th className="px-4 py-2.5">Payment</th>
+                                          <th className="px-4 py-2.5">Status</th>
+                                          <th className="px-4 py-2.5 text-right">Actions</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {tenant.rents.map((rent) => (
                     <tr
                       key={rent.rent_id}
                       className="border-t border-[#e2e8f0]"
                     >
                       <Td className="min-w-[13rem]">
-                        <p className="font-semibold text-[#0f172a]">
-                          {rent.tenant_name}
-                        </p>
-                        <p className="mt-0.5 text-xs text-[#64748b]">
+                        <p className="font-medium text-[#0f172a]">
                           {rent.property_name} · Unit {rent.unit_name}
                         </p>
                       </Td>
@@ -4439,7 +4576,18 @@ export default function Home() {
                         )}
                       </Td>
                     </tr>
-                  ))
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  })
                 ) : (
                   <tr className="border-t border-[#e2e8f0]">
                     <td
