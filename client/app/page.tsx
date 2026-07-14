@@ -45,6 +45,7 @@ type OwnerDashboard = {
     property_name: string;
     unit_name: string;
     tenant_name: string;
+    tenant_email: string | null;
     month: number;
     year: number;
     amount: number;
@@ -219,7 +220,11 @@ function formatDate(value: string | null) {
 function groupRentsByTenant(rentStatus: OwnerDashboard["rent_status"]) {
   const tenants = new Map<
     number,
-    { tenantName: string; rents: OwnerDashboard["rent_status"] }
+    {
+      tenantName: string;
+      tenantEmail: string | null;
+      rents: OwnerDashboard["rent_status"];
+    }
   >();
 
   rentStatus.forEach((rent) => {
@@ -232,6 +237,7 @@ function groupRentsByTenant(rentStatus: OwnerDashboard["rent_status"]) {
 
     tenants.set(rent.tenant_id, {
       tenantName: rent.tenant_name,
+      tenantEmail: rent.tenant_email,
       rents: [rent],
     });
   });
@@ -4405,6 +4411,11 @@ export default function Home() {
                                 <p className="font-semibold text-[#0f172a]">
                                   {tenant.tenantName}
                                 </p>
+                                {tenant.tenantEmail && (
+                                  <p className="mt-0.5 text-xs text-[#475569]">
+                                    {tenant.tenantEmail}
+                                  </p>
+                                )}
                                 <p className="mt-0.5 text-xs text-[#64748b]">
                                   {unitCount} unit{unitCount === 1 ? "" : "s"} · {tenant.rents.length} payment{tenant.rents.length === 1 ? "" : "s"}
                                 </p>
@@ -4483,11 +4494,11 @@ export default function Home() {
                       key={rent.rent_id}
                       className="border-t border-[#e2e8f0]"
                     >
-                      <Td className="min-w-[13rem]">
+                      <td className="min-w-[13rem] px-4 py-3">
                         <p className="font-medium text-[#0f172a]">
                           {rent.property_name} · Unit {rent.unit_name}
                         </p>
-                      </Td>
+                      </td>
                       <Td>{formatPeriod(rent.month, rent.year)}</Td>
                       <Td className="min-w-[10rem]">
                         <p className="font-medium text-[#0f172a]">

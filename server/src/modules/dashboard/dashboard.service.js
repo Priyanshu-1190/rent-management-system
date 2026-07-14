@@ -87,6 +87,7 @@ const getOwnerDashboard = async (ownerId) => {
       units.name AS unit_name,
       tenant.id AS tenant_id,
       tenant.name AS tenant_name,
+      tenant.email AS tenant_email,
       rent_schedules.month,
       rent_schedules.year,
       rent_schedules.amount,
