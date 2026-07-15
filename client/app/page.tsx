@@ -248,6 +248,37 @@ function groupRentsByTenant(rentStatus: OwnerDashboard["rent_status"]) {
   }));
 }
 
+function groupRentsByUnit(rents: OwnerDashboard["rent_status"]) {
+  const units = new Map<
+    string,
+    {
+      propertyId: number;
+      unitId: number;
+      propertyName: string;
+      unitName: string;
+      rents: OwnerDashboard["rent_status"];
+    }
+  >();
+
+  rents.forEach((rent) => {
+    const key = `${rent.property_id}-${rent.unit_id}`;
+    const unit = units.get(key);
+    if (unit) {
+      unit.rents.push(rent);
+      return;
+    }
+    units.set(key, {
+      propertyId: rent.property_id,
+      unitId: rent.unit_id,
+      propertyName: rent.property_name,
+      unitName: rent.unit_name,
+      rents: [rent],
+    });
+  });
+
+  return Array.from(units.values());
+}
+
 /**
  * Extracted view for the Owner Dashboard
  */
@@ -838,6 +869,9 @@ export default function Home() {
   >({});
   const [expandedTenantPayments, setExpandedTenantPayments] = useState<
     Record<number, boolean>
+  >({});
+  const [expandedUnitPayments, setExpandedUnitPayments] = useState<
+    Record<string, boolean>
   >({});
 
   // Log payment state
@@ -4477,119 +4511,232 @@ export default function Home() {
                             >
                               <div className="min-h-0 overflow-hidden">
                                 <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-4 py-4">
-                                  <div className="overflow-x-auto rounded-md border border-[#e2e8f0] bg-white">
-                                    <table className="w-full text-sm">
-                                      <thead className="bg-[#f8fafc] text-left text-xs font-semibold uppercase tracking-wide text-[#64748b]">
-                                        <tr>
-                                          <th className="px-4 py-2.5">Property & unit</th>
-                                          <th className="px-4 py-2.5">Period</th>
-                                          <th className="px-4 py-2.5">Payment</th>
-                                          <th className="px-4 py-2.5">Status</th>
-                                          <th className="px-4 py-2.5 text-right">Actions</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {tenant.rents.map((rent) => (
-                    <tr
-                      key={rent.rent_id}
-                      className="border-t border-[#e2e8f0]"
-                    >
-                      <td className="min-w-[13rem] px-4 py-3">
-                        <p className="font-medium text-[#0f172a]">
-                          {rent.property_name} · Unit {rent.unit_name}
-                        </p>
-                      </td>
-                      <Td>{formatPeriod(rent.month, rent.year)}</Td>
-                      <Td className="min-w-[10rem]">
-                        <p className="font-medium text-[#0f172a]">
-                          {formatMoney(rent.paid)} paid of {formatMoney(rent.amount)}
-                        </p>
-                        {rent.pending > 0 && (
-                          <p className="mt-0.5 text-xs text-[#b45309]">
-                            {formatMoney(rent.pending)} remaining
-                          </p>
-                        )}
-                      </Td>
-                      <Td>
-                        <StatusLabel
-                          status={rent.payment_status}
-                          dueInDays={rent.due_in_days}
-                          overdueByDays={rent.overdue_by_days}
-                        />
-                      </Td>
-                      <Td className="text-right">
-                        <div className="flex flex-col items-end gap-1.5">
-                          {rent.payments && rent.payments.length ? (
-                            rent.payments.length === 1 ? (
-                              <button
-                                key={rent.payments[0].payment_id}
-                                className="w-fit rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
-                                type="button"
-                                onClick={() =>
-                                  downloadReceipt(rent.payments[0].payment_id)
-                                }
-                              >
-                                View receipt
-                              </button>
-                            ) : (
-                              <div className="relative flex flex-col gap-1.5">
-                                <button
-                                  type="button"
-                                  className="w-fit flex items-center gap-1.5 rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
-                                  onClick={() =>
-                                    setExpandedReceipts((prev) => ({
-                                      ...prev,
-                                      [rent.rent_id]: !prev[rent.rent_id],
-                                    }))
-                                  }
-                                >
-                                  <span>Receipts ({rent.payments.length})</span>
-                                  <span
-                                    className={`inline-block transition-transform duration-200 ${
-                                      expandedReceipts[rent.rent_id]
-                                        ? "rotate-180"
-                                        : ""
-                                    }`}
-                                  >
-                                    ▾
-                                  </span>
-                                </button>
-                                {expandedReceipts[rent.rent_id] && (
-                                  <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2563eb]/30 mt-1">
-                                    {rent.payments.map((payment) => (
-                                      <button
-                                        key={payment.payment_id}
-                                        className="w-fit text-left rounded-md px-2 py-0.5 text-xs font-semibold text-[#2563eb] hover:bg-[#eff6ff] transition-colors"
-                                        type="button"
-                                        onClick={() =>
-                                          downloadReceipt(payment.payment_id)
-                                        }
-                                      >
-                                        Receipt #{payment.payment_id}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          ) : (
-                            <span className="text-sm text-[#94a3b8]">—</span>
-                          )}
-                        </div>
-                        {rent.payment_status !== "paid" && (
-                          <button
-                            type="button"
-                            className="mt-2 rounded-md bg-[#2563eb] hover:bg-[#1e40af] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                            onClick={() => handleOpenLogPayment(rent)}
-                          >
-                            Log Payment
-                          </button>
-                        )}
-                      </Td>
-                    </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
+                                  <div className="flex flex-col gap-3">
+                                    {groupRentsByUnit(tenant.rents).map((unit) => {
+                                      const unitKey = `${tenant.tenantId}-${unit.propertyId}-${unit.unitId}`;
+                                      const unitRents = unit.rents;
+                                      const isUnitExpanded =
+                                        expandedUnitPayments[unitKey] !== undefined
+                                          ? expandedUnitPayments[unitKey]
+                                          : groupRentsByUnit(tenant.rents).length === 1;
+
+                                      const unitTotalDue = unitRents.reduce(
+                                        (sum, rent) => sum + rent.amount,
+                                        0,
+                                      );
+                                      const unitTotalPending = unitRents.reduce(
+                                        (sum, rent) => sum + rent.pending,
+                                        0,
+                                      );
+                                      const unitOverdueCount = unitRents.filter(
+                                        (rent) => rent.payment_status === "overdue",
+                                      ).length;
+                                      const unitOpenPaymentCount = unitRents.filter(
+                                        (rent) => rent.pending > 0,
+                                      ).length;
+                                      const unitSummary =
+                                        unitTotalPending === 0
+                                          ? "All paid"
+                                          : unitOverdueCount > 0
+                                            ? `${unitOverdueCount} overdue`
+                                            : `${unitOpenPaymentCount} due`;
+
+                                      const currentExpanded =
+                                        expandedUnitPayments[unitKey] ??
+                                        (groupRentsByUnit(tenant.rents).length === 1);
+
+                                      return (
+                                        <div
+                                          key={unitKey}
+                                          className="rounded-lg border border-[#e2e8f0] bg-white shadow-sm overflow-hidden"
+                                        >
+                                          <button
+                                            type="button"
+                                            aria-expanded={isUnitExpanded}
+                                            onClick={() =>
+                                              setExpandedUnitPayments((prev) => ({
+                                                ...prev,
+                                                [unitKey]: !currentExpanded,
+                                              }))
+                                            }
+                                            className="grid w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-[#f8fafc] sm:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] sm:items-center bg-[#f8fafc]/30"
+                                          >
+                                            <div>
+                                              <p className="font-semibold text-[#0f172a] text-sm">
+                                                {unit.propertyName} · Unit {unit.unitName}
+                                              </p>
+                                              <p className="mt-0.5 text-xs text-[#64748b]">
+                                                {unitRents.length} payment{unitRents.length === 1 ? "" : "s"}
+                                              </p>
+                                            </div>
+                                            <div className="text-left sm:text-right">
+                                              <p className="text-xs text-[#64748b]">Total due</p>
+                                              <p className="font-semibold text-sm text-[#0f172a]">
+                                                {formatMoney(unitTotalDue)}
+                                              </p>
+                                            </div>
+                                            <div className="text-left sm:text-right">
+                                              <p className="text-xs text-[#64748b]">Pending</p>
+                                              <p
+                                                className={`font-semibold text-sm ${
+                                                  unitTotalPending > 0
+                                                    ? "text-[#b45309]"
+                                                    : "text-[#15803d]"
+                                                }`}
+                                              >
+                                                {formatMoney(unitTotalPending)}
+                                              </p>
+                                            </div>
+                                            <span
+                                              className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                unitTotalPending === 0
+                                                  ? "bg-[#dcfce7] text-[#15803d]"
+                                                  : unitOverdueCount > 0
+                                                    ? "bg-[#fee2e2] text-[#b91c1c]"
+                                                    : "bg-[#fef3c7] text-[#a16207]"
+                                              }`}
+                                            >
+                                              {unitSummary}
+                                            </span>
+                                            <svg
+                                              className={`h-4 w-4 text-[#64748b] transition-transform duration-300 ${
+                                                isUnitExpanded ? "rotate-180" : ""
+                                              }`}
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth="2"
+                                              aria-hidden="true"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="m6 9 6 6 6-6"
+                                              />
+                                            </svg>
+                                          </button>
+
+                                          <div
+                                            className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                                              isUnitExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                                            }`}
+                                          >
+                                            <div className="min-h-0 overflow-hidden border-t border-[#e2e8f0]">
+                                              <div className="overflow-x-auto bg-white">
+                                                <table className="w-full text-sm">
+                                                  <thead className="bg-[#f8fafc] text-left text-xs font-semibold uppercase tracking-wide text-[#64748b]">
+                                                    <tr>
+                                                      <th className="px-4 py-2.5">Period</th>
+                                                      <th className="px-4 py-2.5">Payment</th>
+                                                      <th className="px-4 py-2.5">Status</th>
+                                                      <th className="px-4 py-2.5 text-right">Actions</th>
+                                                    </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                    {unitRents.map((rent) => (
+                                                      <tr
+                                                        key={rent.rent_id}
+                                                        className="border-t border-[#e2e8f0]"
+                                                      >
+                                                        <td className="px-4 py-3">
+                                                          {formatPeriod(rent.month, rent.year)}
+                                                        </td>
+                                                        <Td className="min-w-[10rem]">
+                                                          <p className="font-medium text-[#0f172a]">
+                                                            {formatMoney(rent.paid)} paid of {formatMoney(rent.amount)}
+                                                          </p>
+                                                          {rent.pending > 0 && (
+                                                            <p className="mt-0.5 text-xs text-[#b45309]">
+                                                              {formatMoney(rent.pending)} remaining
+                                                            </p>
+                                                          )}
+                                                        </Td>
+                                                        <Td>
+                                                          <StatusLabel
+                                                            status={rent.payment_status}
+                                                            dueInDays={rent.due_in_days}
+                                                            overdueByDays={rent.overdue_by_days}
+                                                          />
+                                                        </Td>
+                                                        <Td className="text-right">
+                                                          <div className="flex flex-col items-end gap-1.5">
+                                                            {rent.payments && rent.payments.length ? (
+                                                              rent.payments.length === 1 ? (
+                                                                <button
+                                                                  key={rent.payments[0].payment_id}
+                                                                  className="w-fit rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
+                                                                  type="button"
+                                                                  onClick={() =>
+                                                                    downloadReceipt(rent.payments[0].payment_id)
+                                                                  }
+                                                                >
+                                                                  View receipt
+                                                                </button>
+                                                              ) : (
+                                                                <div className="relative flex flex-col gap-1.5">
+                                                                  <button
+                                                                    type="button"
+                                                                    className="w-fit flex items-center gap-1.5 rounded-md border border-[#2563eb] hover:bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#2563eb] transition-colors"
+                                                                    onClick={() =>
+                                                                      setExpandedReceipts((prev) => ({
+                                                                        ...prev,
+                                                                        [rent.rent_id]: !prev[rent.rent_id],
+                                                                      }))
+                                                                    }
+                                                                  >
+                                                                    <span>Receipts ({rent.payments.length})</span>
+                                                                    <span
+                                                                      className={`inline-block transition-transform duration-200 ${
+                                                                        expandedReceipts[rent.rent_id]
+                                                                          ? "rotate-180"
+                                                                          : ""
+                                                                      }`}
+                                                                    >
+                                                                      ▾
+                                                                    </span>
+                                                                  </button>
+                                                                  {expandedReceipts[rent.rent_id] && (
+                                                                    <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2563eb]/30 mt-1">
+                                                                      {rent.payments.map((payment) => (
+                                                                        <button
+                                                                          key={payment.payment_id}
+                                                                          className="w-fit text-left rounded-md px-2 py-0.5 text-xs font-semibold text-[#2563eb] hover:bg-[#eff6ff] transition-colors"
+                                                                          type="button"
+                                                                          onClick={() =>
+                                                                            downloadReceipt(payment.payment_id)
+                                                                          }
+                                                                        >
+                                                                          Receipt #{payment.payment_id}
+                                                                        </button>
+                                                                      ))}
+                                                                    </div>
+                                                                  )}
+                                                                </div>
+                                                              )
+                                                            ) : (
+                                                              <span className="text-sm text-[#94a3b8]">—</span>
+                                                            )}
+                                                          </div>
+                                                          {rent.payment_status !== "paid" && (
+                                                            <button
+                                                              type="button"
+                                                              className="mt-2 rounded-md bg-[#2563eb] hover:bg-[#1e40af] px-3 py-1.5 text-xs font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                                                              onClick={() => handleOpenLogPayment(rent)}
+                                                            >
+                                                              Log Payment
+                                                            </button>
+                                                          )}
+                                                        </Td>
+                                                      </tr>
+                                                    ))}
+                                                  </tbody>
+                                                </table>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               </div>
@@ -6728,7 +6875,9 @@ function StatusLabel({
       ? `Pending (due in ${dueInDays} ${dayWord(dueInDays)})`
       : normalized === "overdue" && typeof overdueByDays === "number"
         ? `Overdue (${overdueByDays} ${dayWord(overdueByDays)})`
-        : status;
+        : normalized === "upcoming" && typeof dueInDays === "number"
+          ? `Due in ${dueInDays} ${dayWord(dueInDays)}`
+          : status;
   const className =
     normalized === "paid"
       ? "bg-[#e6f4ea] text-[#23633d]"

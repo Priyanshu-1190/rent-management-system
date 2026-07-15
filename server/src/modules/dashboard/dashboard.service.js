@@ -101,7 +101,6 @@ const getOwnerDashboard = async (ownerId) => {
       ) AS pending,
       CASE
         WHEN COALESCE(payment_totals.paid, 0) < rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0)
-         AND CURRENT_DATE >= (rent_schedules.due_date - INTERVAL '9 days')
          AND CURRENT_DATE <= rent_schedules.due_date
         THEN (rent_schedules.due_date - CURRENT_DATE)
         ELSE NULL
@@ -236,7 +235,6 @@ const getTenantDashboard = async (tenantId) => {
       ) AS pending,
       CASE
         WHEN COALESCE(payment_totals.paid, 0) < rent_schedules.amount + COALESCE(rent_schedules.late_fee, 0)
-         AND CURRENT_DATE >= (rent_schedules.due_date - INTERVAL '9 days')
          AND CURRENT_DATE <= rent_schedules.due_date
         THEN (rent_schedules.due_date - CURRENT_DATE)
         ELSE NULL
