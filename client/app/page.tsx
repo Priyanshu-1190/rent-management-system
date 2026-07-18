@@ -3764,7 +3764,7 @@ export default function Home() {
                     />
                   </label>
                   <button
-                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                     type="submit"
                     disabled={loading}
                   >
@@ -3819,7 +3819,7 @@ export default function Home() {
                     </select>
                   </label>
                   <button
-                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                     type="submit"
                     disabled={loading}
                   >
@@ -3915,7 +3915,7 @@ export default function Home() {
                   </div>
                 )}
                 <button
-                  className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                  className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   type="submit"
                   disabled={loading}
                 >
@@ -4117,7 +4117,7 @@ export default function Home() {
                     )}
                   </div>
                   <button
-                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                     type="submit"
                     disabled={loading || !selectedPropertyId}
                   >
@@ -4328,7 +4328,7 @@ export default function Home() {
                         />
                       </label>
                       <button
-                        className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#98aaa1]"
+                        className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                         type="submit"
                         disabled={loading || !inviteUnitId || !inviteMoveIn}
                       >
