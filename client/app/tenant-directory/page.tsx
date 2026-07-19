@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import useSWR from "swr";
+import { fetcher } from "../lib/fetcher";
 
 type Tenant = {
   type: "tenant" | "invited";
@@ -85,47 +87,15 @@ function TableRowSkeleton({ showMoveOut = false }: { showMoveOut?: boolean }) {
 }
 
 export default function TenantDirectory() {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<
     "all" | "active" | "past" | "invited"
   >("all");
 
-  useEffect(() => {
-    fetchTenants();
-  }, []);
-
-  const fetchTenants = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await fetch("/api/proxy/tenancies", {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          setError("Access denied. Only property owners can view this.");
-        } else if (response.status === 401) {
-          setError("Please log in first.");
-        } else {
-          setError("Failed to fetch tenants");
-        }
-        return;
-      }
-
-      const data = await response.json();
-      setTenants(data);
-    } catch (err) {
-      setError(
-        "Error fetching tenants: " +
-          (err instanceof Error ? err.message : "Unknown error"),
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: tenants = [],
+    error,
+    isLoading,
+  } = useSWR<Tenant[]>("/api/proxy/tenancies", fetcher);
 
   const filteredTenants = useMemo(() => {
     switch (activeTab) {
@@ -187,7 +157,7 @@ export default function TenantDirectory() {
         {/* Error Alert */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-            {error}
+            {error.message}
           </div>
         )}
 
@@ -238,7 +208,7 @@ export default function TenantDirectory() {
         </div>
 
         {/* Empty State */}
-        {!loading && filteredTenants.length === 0 ? (
+        {!isLoading && filteredTenants.length === 0 ? (
           <div className="text-center py-16 px-4 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center shadow-sm">
             <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4 text-[#2563eb]">
               <svg
@@ -310,7 +280,7 @@ export default function TenantDirectory() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {isLoading ? (
                   <>
                     <TableRowSkeleton showMoveOut={activeTab === "past"} />
                     <TableRowSkeleton showMoveOut={activeTab === "past"} />

@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "../lib/fetcher";
 
 type Tenant = {
   type: "tenant" | "invited";
@@ -14,13 +16,6 @@ type Tenant = {
   status: "active" | "past" | "invited" | "accepted" | "declined";
   deposit: number;
   tenancy_id: number;
-};
-
-// --- Application-Level Cache for Tenant Directory ---
-const CACHE_TTL = 60 * 1000; // 1 minute
-let tenantDirectoryCache = {
-  data: null as Tenant[] | null,
-  timestamp: 0,
 };
 
 function formatDate(value: string | null) {
@@ -79,59 +74,15 @@ export default function TenantDirectoryModal({
   onClose,
   onInviteClick,
 }: TenantDirectoryModalProps) {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<
     "all" | "active" | "past" | "invited"
   >("all");
 
-  const fetchTenants = useCallback(async () => {
-    const now = Date.now();
-    // 1. Check if we have fresh data in the cache
-    if (
-      tenantDirectoryCache.data &&
-      now - tenantDirectoryCache.timestamp < CACHE_TTL
-    ) {
-      setTenants(tenantDirectoryCache.data);
-      return; // Use cached data, skip fetch
-    }
-
-    setLoading(true);
-    setError("");
-    try {
-      // 2. Fetch from the network
-      const response = await fetch("/api/proxy/tenancies", {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to fetch tenants");
-      }
-
-      const data = await response.json();
-
-      // 3. Update state and cache on successful fetch
-      tenantDirectoryCache = {
-        data: data,
-        timestamp: Date.now(),
-      };
-      setTenants(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unexpected error occurred",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchTenants();
-    }
-  }, [isOpen, fetchTenants]);
+  const {
+    data: tenants = [],
+    error,
+    isLoading,
+  } = useSWR<Tenant[]>(isOpen ? "/api/proxy/tenancies" : null, fetcher);
 
   if (!isOpen) return null;
 
@@ -194,7 +145,7 @@ export default function TenantDirectoryModal({
         {/* Error Alert */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-            {error}
+            {error.message}
           </div>
         )}
 
@@ -245,7 +196,7 @@ export default function TenantDirectoryModal({
         </div>
 
         {/* Table Content */}
-        {!loading && filteredTenants.length === 0 ? (
+        {!isLoading && filteredTenants.length === 0 ? (
           <div className="text-center py-16 px-4 bg-white rounded-lg border border-[#e2e8f0] flex flex-col items-center justify-center">
             <div className="w-16 h-16 rounded-full bg-[#eff6ff] flex items-center justify-center mb-4 text-[#2563eb]">
               <svg
@@ -322,7 +273,7 @@ export default function TenantDirectoryModal({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 border-t border-gray-200">
-                {loading ? (
+                {isLoading ? (
                   <>
                     <TableRowSkeleton />
                     <TableRowSkeleton />
