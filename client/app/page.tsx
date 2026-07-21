@@ -136,6 +136,17 @@ export type Unit = {
   due_day: number;
   late_fee_percentage: number;
   grace_period_days: number;
+  lease_agreement?: string | null;
+  unit_lease_agreement?: string | null;
+  property_name?: string;
+  property_lease_agreement?: string | null;
+  tenancy_id?: number | null;
+  move_in_date?: string | null;
+  deposit?: number | null;
+  is_active?: boolean;
+  tenant_id?: number | null;
+  tenant_name?: string | null;
+  tenant_email?: string | null;
 };
 
 export type Invite = {
@@ -167,6 +178,7 @@ export type AvailableUnit = {
 export type UnitDetails = {
   unit_id?: number;
   unit_name: string;
+  property_id?: number;
   property_name: string;
   rent_amount: number;
   due_day: number;
@@ -175,10 +187,12 @@ export type UnitDetails = {
   unit_lease_agreement?: string | null;
   property_lease_agreement?: string | null;
   tenancy_id?: number | null;
+  tenant_id?: number | null;
   tenant_name?: string | null;
   tenant_email?: string | null;
   move_in_date?: string | null;
   deposit?: number;
+  is_active?: boolean;
 };
 
 export function formatKolkataTime(timestamp: string) {
@@ -521,7 +535,7 @@ export default function Home() {
     }
   }, [notice, user]);
 
-  // Morph animation lifecycle management using FLIP
+  // Morph animation lifecycle management using FLIP for property details
   useLayoutEffect(() => {
     if (
       viewingPropertyDetails &&
@@ -562,25 +576,32 @@ export default function Home() {
         title.style.color = "#2563eb";
       }
 
-      modal.offsetHeight;
+      let timer: NodeJS.Timeout;
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(() => {
+          modal.style.transition =
+            "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
+          modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+          modal.style.opacity = "1";
 
-      modal.style.transition =
-        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
-      modal.style.transform = "translate3d(0, 0, 0) scale(1)";
-      modal.style.opacity = "1";
+          if (title) {
+            title.style.transition =
+              "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
+            title.style.transform = "translate3d(0, 0, 0) scale(1)";
+            title.style.color = "#0f172a";
+          }
 
-      if (title) {
-        title.style.transition =
-          "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
-        title.style.transform = "translate3d(0, 0, 0) scale(1)";
-        title.style.color = "#0f172a";
-      }
+          timer = setTimeout(() => {
+            setMorphPhase("expanded");
+          }, 320);
+        });
+        return () => cancelAnimationFrame(raf2);
+      });
 
-      const timer = setTimeout(() => {
-        setMorphPhase("expanded");
-      }, 250);
-
-      return () => clearTimeout(timer);
+      return () => {
+        cancelAnimationFrame(raf1);
+        if (timer) clearTimeout(timer);
+      };
     }
   }, [viewingPropertyDetails, morphStartRect, titleStartRect, morphPhase]);
 
@@ -625,25 +646,32 @@ export default function Home() {
         title.style.color = "#2563eb";
       }
 
-      modal.offsetHeight;
+      let timer: NodeJS.Timeout;
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(() => {
+          modal.style.transition =
+            "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
+          modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+          modal.style.opacity = "1";
 
-      modal.style.transition =
-        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
-      modal.style.transform = "translate3d(0, 0, 0) scale(1)";
-      modal.style.opacity = "1";
+          if (title) {
+            title.style.transition =
+              "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
+            title.style.transform = "translate3d(0, 0, 0) scale(1)";
+            title.style.color = "#0f172a";
+          }
 
-      if (title) {
-        title.style.transition =
-          "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
-        title.style.transform = "translate3d(0, 0, 0) scale(1)";
-        title.style.color = "#0f172a";
-      }
+          timer = setTimeout(() => {
+            setUnitMorphPhase("expanded");
+          }, 320);
+        });
+        return () => cancelAnimationFrame(raf2);
+      });
 
-      const timer = setTimeout(() => {
-        setUnitMorphPhase("expanded");
-      }, 250);
-
-      return () => clearTimeout(timer);
+      return () => {
+        cancelAnimationFrame(raf1);
+        if (timer) clearTimeout(timer);
+      };
     }
   }, [
     viewingUnitDetails,
@@ -693,25 +721,32 @@ export default function Home() {
         title.style.color = "#2563eb";
       }
 
-      modal.offsetHeight;
+      let timer: NodeJS.Timeout;
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(() => {
+          modal.style.transition =
+            "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
+          modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+          modal.style.opacity = "1";
 
-      modal.style.transition =
-        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
-      modal.style.transform = "translate3d(0, 0, 0) scale(1)";
-      modal.style.opacity = "1";
+          if (title) {
+            title.style.transition =
+              "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
+            title.style.transform = "translate3d(0, 0, 0) scale(1)";
+            title.style.color = "#2563eb";
+          }
 
-      if (title) {
-        title.style.transition =
-          "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
-        title.style.transform = "translate3d(0, 0, 0) scale(1)";
-        title.style.color = "#2563eb";
-      }
+          timer = setTimeout(() => {
+            setEditPropMorphPhase("expanded");
+          }, 320);
+        });
+        return () => cancelAnimationFrame(raf2);
+      });
 
-      const timer = setTimeout(() => {
-        setEditPropMorphPhase("expanded");
-      }, 250);
-
-      return () => clearTimeout(timer);
+      return () => {
+        cancelAnimationFrame(raf1);
+        if (timer) clearTimeout(timer);
+      };
     }
   }, [
     editingProperty,
@@ -761,25 +796,32 @@ export default function Home() {
         title.style.color = "#2563eb";
       }
 
-      modal.offsetHeight;
+      let timer: NodeJS.Timeout;
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(() => {
+          modal.style.transition =
+            "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
+          modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+          modal.style.opacity = "1";
 
-      modal.style.transition =
-        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
-      modal.style.transform = "translate3d(0, 0, 0) scale(1)";
-      modal.style.opacity = "1";
+          if (title) {
+            title.style.transition =
+              "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
+            title.style.transform = "translate3d(0, 0, 0) scale(1)";
+            title.style.color = "#2563eb";
+          }
 
-      if (title) {
-        title.style.transition =
-          "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
-        title.style.transform = "translate3d(0, 0, 0) scale(1)";
-        title.style.color = "#2563eb";
-      }
+          timer = setTimeout(() => {
+            setEditUnitMorphPhase("expanded");
+          }, 320);
+        });
+        return () => cancelAnimationFrame(raf2);
+      });
 
-      const timer = setTimeout(() => {
-        setEditUnitMorphPhase("expanded");
-      }, 250);
-
-      return () => clearTimeout(timer);
+      return () => {
+        cancelAnimationFrame(raf1);
+        if (timer) clearTimeout(timer);
+      };
     }
   }, [
     editingUnit,
@@ -1300,24 +1342,36 @@ export default function Home() {
     const animationStartTime = Date.now();
 
     // Look up cached unit info so we can morph/render immediately
+    const preloadedList = Object.values(preloadedUnits).flat();
     const unit =
-      viewingPropertyUnits.find((u) => u.id === unitId) ||
-      propertyUnits.find((u) => u.id === unitId);
+      viewingPropertyUnits.find((u) => u.id === unitId || (u as any).unit_id === unitId) ||
+      propertyUnits.find((u) => u.id === unitId || (u as any).unit_id === unitId) ||
+      preloadedList.find((u) => u.id === unitId || (u as any).unit_id === unitId);
 
     if (unit) {
       const prop =
         properties.find((p) => p.id === unit.property_id) ||
         viewingPropertyDetails;
-      const propertyName = prop ? prop.name || prop.property_name : "";
+      const propertyName = unit.property_name || (prop ? prop.name || prop.property_name : "");
 
       setViewingUnitDetails({
-        unit_name: unit.name,
+        unit_id: unit.id || (unit as any).unit_id,
+        unit_name: unit.name || (unit as any).unit_name || "",
+        property_id: unit.property_id,
         property_name: propertyName || "",
         rent_amount: unit.rent_amount,
         due_day: unit.due_day,
         late_fee_percentage: unit.late_fee_percentage,
         grace_period_days: unit.grace_period_days,
-        tenancy_id: undefined, // undefined tenancy_id represents loading state
+        unit_lease_agreement: unit.unit_lease_agreement !== undefined ? unit.unit_lease_agreement : (unit.lease_agreement || null),
+        property_lease_agreement: unit.property_lease_agreement !== undefined ? unit.property_lease_agreement : (prop?.lease_agreement || null),
+        tenancy_id: unit.tenancy_id !== undefined ? unit.tenancy_id : null,
+        tenant_id: unit.tenant_id ?? null,
+        tenant_name: unit.tenant_name ?? null,
+        tenant_email: unit.tenant_email ?? null,
+        move_in_date: unit.move_in_date ?? null,
+        deposit: unit.deposit ?? 0,
+        is_active: unit.is_active ?? false,
       });
     }
 
@@ -1481,7 +1535,7 @@ export default function Home() {
     setMorphPhase("morphing-out");
 
     modal.style.transition =
-      "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+      "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
     modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
     modal.style.opacity = "0";
     modal.style.transformOrigin = "top left";
@@ -1494,7 +1548,7 @@ export default function Home() {
       const tScale = titleStartRect.height / titleFinalRect.height;
 
       title.style.transition =
-        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+        "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
       title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
       title.style.transformOrigin = "top left";
       title.style.color = "#2563eb";
@@ -1504,7 +1558,7 @@ export default function Home() {
       setViewingPropertyDetails(null);
       setMorphPhase("idle");
       setMorphStartRect(null);
-    }, 250);
+    }, 320);
   };
 
   const handleCloseUnitDetails = () => {
@@ -1549,7 +1603,7 @@ export default function Home() {
     setUnitMorphPhase("morphing-out");
 
     modal.style.transition =
-      "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+      "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
     modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
     modal.style.opacity = "0";
     modal.style.transformOrigin = "top left";
@@ -1562,7 +1616,7 @@ export default function Home() {
       const tScale = unitTitleStartRect.height / titleFinalRect.height;
 
       title.style.transition =
-        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+        "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
       title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
       title.style.transformOrigin = "top left";
       title.style.color = "#2563eb";
@@ -1572,7 +1626,7 @@ export default function Home() {
       setViewingUnitDetails(null);
       setUnitMorphPhase("idle");
       setUnitMorphStartRect(null);
-    }, 250);
+    }, 320);
   };
 
   const handleOpenEditProperty = (p: Property, e?: React.MouseEvent) => {
@@ -1651,7 +1705,7 @@ export default function Home() {
     setEditPropMorphPhase("morphing-out");
 
     modal.style.transition =
-      "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+      "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
     modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
     modal.style.opacity = "0";
     modal.style.transformOrigin = "top left";
@@ -1669,7 +1723,7 @@ export default function Home() {
       const tScale = editPropTitleStartRect.height / titleFinalRect.height;
 
       title.style.transition =
-        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+        "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
       title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
       title.style.transformOrigin = "top left";
       title.style.color = "#2563eb";
@@ -1679,7 +1733,7 @@ export default function Home() {
       setEditingProperty(null);
       setEditPropMorphPhase("idle");
       setEditPropMorphStartRect(null);
-    }, 250);
+    }, 320);
   };
 
   const handleOpenEditUnit = (u: Unit, e?: React.MouseEvent) => {
@@ -1762,7 +1816,7 @@ export default function Home() {
     setEditUnitMorphPhase("morphing-out");
 
     modal.style.transition =
-      "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease";
+      "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
     modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
     modal.style.opacity = "0";
     modal.style.transformOrigin = "top left";
@@ -1780,7 +1834,7 @@ export default function Home() {
       const tScale = editUnitTitleStartRect.height / titleFinalRect.height;
 
       title.style.transition =
-        "transform 250ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
+        "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
       title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
       title.style.transformOrigin = "top left";
       title.style.color = "#2563eb";
@@ -1790,7 +1844,7 @@ export default function Home() {
       setEditingUnit(null);
       setEditUnitMorphPhase("idle");
       setEditUnitMorphStartRect(null);
-    }, 250);
+    }, 320);
   };
 
   const refreshViewingPropertyUnits = async (propertyId: number) => {
@@ -3599,8 +3653,8 @@ export default function Home() {
 
         {/* ── Owner: Send Invite ── */}
         {user?.role === "owner" && showInvitesModal ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f8fafc] p-6 shadow-xl border border-[#e2e8f0]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-backdrop-fade">
+            <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f8fafc] p-6 shadow-xl border border-[#e2e8f0] animate-modal-scale">
               <div className="flex justify-end mb-4">
                 <button
                   type="button"
@@ -3796,8 +3850,8 @@ export default function Home() {
 
         {/* ── Tenant: Invites Section ── */}
         {user?.role === "tenant" && showInvitesModal ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-            <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f8fafc] p-6 shadow-xl border border-[#e2e8f0]">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-backdrop-fade">
+            <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f8fafc] p-6 shadow-xl border border-[#e2e8f0] animate-modal-scale">
               <div className="flex justify-end mb-4">
                 <button
                   type="button"
@@ -3948,8 +4002,10 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
-            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
-              morphPhase === "expanded" ? "opacity-100" : "opacity-0"
+            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-320 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+              morphPhase !== "idle" && morphPhase !== "morphing-out"
+                ? "opacity-100"
+                : "opacity-0"
             }`}
             onClick={handleClosePropertyDetails}
           />
@@ -3970,15 +4026,15 @@ export default function Home() {
             <button
               type="button"
               className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#475569] transition-all hover:bg-[#f1f5f9] hover:text-[#0f172a] hover:scale-105 active:scale-95 ${
-                morphPhase === "expanded"
+                morphPhase !== "idle" && morphPhase !== "morphing-out"
                   ? "opacity-100 pointer-events-auto"
                   : "opacity-0 pointer-events-none"
               }`}
               style={{
                 transition:
-                  morphPhase === "expanded"
-                    ? "opacity 250ms ease-out 200ms"
-                    : "opacity 150ms ease-out",
+                  morphPhase !== "idle" && morphPhase !== "morphing-out"
+                    ? "opacity 320ms cubic-bezier(0.16, 1, 0.3, 1)"
+                    : "opacity 180ms ease-out",
               }}
               onClick={handleClosePropertyDetails}
             >
@@ -4000,15 +4056,27 @@ export default function Home() {
             {/* Header: Always visible during transition */}
             <div className="mb-6 pr-10 relative z-20">
               <p
-                className="text-xs font-semibold uppercase tracking-[0.18em] text-[#475569] transition-opacity duration-[250ms]"
-                style={{ opacity: morphPhase === "expanded" ? 1 : 0 }}
+                className="text-xs font-semibold uppercase tracking-[0.18em] text-[#475569]"
+                style={{
+                  opacity:
+                    morphPhase !== "idle" && morphPhase !== "morphing-out"
+                      ? 1
+                      : 0,
+                  transition: "opacity 320ms cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
               >
                 Property Details
               </p>
               <h3 className="mt-1 text-2xl font-bold text-[#0f172a] flex items-center gap-2">
                 <svg
-                  className="w-6 h-6 text-[#2563eb] transition-opacity duration-[250ms]"
-                  style={{ opacity: morphPhase === "expanded" ? 1 : 0 }}
+                  className="w-6 h-6 text-[#2563eb]"
+                  style={{
+                    opacity:
+                      morphPhase !== "idle" && morphPhase !== "morphing-out"
+                        ? 1
+                        : 0,
+                    transition: "opacity 320ms cubic-bezier(0.16, 1, 0.3, 1)",
+                  }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -4029,14 +4097,17 @@ export default function Home() {
               </h3>
             </div>
 
-            {/* Rest of the contents: Fade-in after morph completes */}
+            {/* Rest of the contents: Fade-in during morph expansion */}
             <div
               style={{
-                opacity: morphPhase === "expanded" ? 1 : 0,
+                opacity:
+                  morphPhase !== "idle" && morphPhase !== "morphing-out"
+                    ? 1
+                    : 0,
                 transition:
-                  morphPhase === "expanded"
-                    ? "opacity 250ms ease-out 200ms"
-                    : "opacity 150ms ease-out",
+                  morphPhase !== "idle" && morphPhase !== "morphing-out"
+                    ? "opacity 280ms cubic-bezier(0.16, 1, 0.3, 1) 40ms"
+                    : "opacity 180ms ease-out",
               }}
             >
               {properties.find(
@@ -4589,8 +4660,8 @@ export default function Home() {
 
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop-fade">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl animate-modal-scale">
             <h3 className="text-lg font-semibold text-[#0f172a]">Log Out</h3>
             <p className="mt-2 text-sm text-[#475569]">
               Are you sure you want to log out?
@@ -4618,8 +4689,8 @@ export default function Home() {
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop-fade">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl animate-modal-scale">
             <h3 className="text-lg font-semibold text-[#933232]">
               Delete Account
             </h3>
@@ -4650,8 +4721,8 @@ export default function Home() {
 
       {/* Delete Property Confirmation Modal */}
       {deletingProperty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop-fade">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl animate-modal-scale">
             <h3 className="text-lg font-semibold text-[#933232]">
               Delete Property
             </h3>
@@ -4682,8 +4753,8 @@ export default function Home() {
 
       {/* Delete Unit Confirmation Modal */}
       {deletingUnit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop-fade">
+          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl animate-modal-scale">
             <h3 className="text-lg font-semibold text-[#933232]">
               Delete Unit
             </h3>
@@ -4717,8 +4788,10 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
-            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
-              editPropMorphPhase === "expanded" ? "opacity-100" : "opacity-0"
+            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-320 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+              editPropMorphPhase !== "idle" && editPropMorphPhase !== "morphing-out"
+                ? "opacity-100"
+                : "opacity-0"
             }`}
             onClick={handleCloseEditProperty}
           />
@@ -4746,14 +4819,17 @@ export default function Home() {
               </h3>
             </div>
 
-            {/* Rest of the contents: Fade-in after morph completes */}
+            {/* Rest of the contents: Fade-in during morph expansion */}
             <div
               style={{
-                opacity: editPropMorphPhase === "expanded" ? 1 : 0,
+                opacity:
+                  editPropMorphPhase !== "idle" && editPropMorphPhase !== "morphing-out"
+                    ? 1
+                    : 0,
                 transition:
-                  editPropMorphPhase === "expanded"
-                    ? "opacity 250ms ease-out 200ms"
-                    : "opacity 150ms ease-out",
+                  editPropMorphPhase !== "idle" && editPropMorphPhase !== "morphing-out"
+                    ? "opacity 280ms cubic-bezier(0.16, 1, 0.3, 1) 40ms"
+                    : "opacity 180ms ease-out",
               }}
             >
               <form onSubmit={handleEditProperty} className="grid gap-3">
@@ -4805,7 +4881,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop overlay */}
           <div
-            className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-200"
+            className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-200 animate-backdrop-fade"
             onClick={() => {
               setShowLeaseEditModal(false);
               setEditingLeaseProp(null);
@@ -4813,7 +4889,7 @@ export default function Home() {
           />
 
           {/* Modal card */}
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale">
             <div className="mb-4 pr-10">
               <h3 className="text-lg font-bold text-[#2563eb]">
                 Write Lease Agreement — {editingLeaseProp.name}
@@ -4871,7 +4947,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop overlay */}
           <div
-            className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-200"
+            className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-200 animate-backdrop-fade"
             onClick={() => {
               setShowUnitLeaseModal(false);
               setEditingUnitLease(null);
@@ -4879,7 +4955,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
           />
 
           {/* Modal card */}
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale">
             <div className="mb-4 pr-10">
               <h3 className="text-lg font-bold text-[#2563eb]">
                 Write Lease Agreement — {editingUnitLease.unit_name}
@@ -4992,8 +5068,10 @@ This agreement is made on [Date] between the Owner and the Tenant...
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
-            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
-              editUnitMorphPhase === "expanded" ? "opacity-100" : "opacity-0"
+            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-320 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+              editUnitMorphPhase !== "idle" && editUnitMorphPhase !== "morphing-out"
+                ? "opacity-100"
+                : "opacity-0"
             }`}
             onClick={handleCloseEditUnit}
           />
@@ -5021,14 +5099,17 @@ This agreement is made on [Date] between the Owner and the Tenant...
               </h3>
             </div>
 
-            {/* Rest of the contents: Fade-in after morph completes */}
+            {/* Rest of the contents: Fade-in during morph expansion */}
             <div
               style={{
-                opacity: editUnitMorphPhase === "expanded" ? 1 : 0,
+                opacity:
+                  editUnitMorphPhase !== "idle" && editUnitMorphPhase !== "morphing-out"
+                    ? 1
+                    : 0,
                 transition:
-                  editUnitMorphPhase === "expanded"
-                    ? "opacity 250ms ease-out 200ms"
-                    : "opacity 150ms ease-out",
+                  editUnitMorphPhase !== "idle" && editUnitMorphPhase !== "morphing-out"
+                    ? "opacity 280ms cubic-bezier(0.16, 1, 0.3, 1) 40ms"
+                    : "opacity 180ms ease-out",
               }}
             >
               <form onSubmit={handleEditUnit} className="grid gap-3">
@@ -5107,8 +5188,10 @@ This agreement is made on [Date] between the Owner and the Tenant...
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
-            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
-              unitMorphPhase === "expanded" ? "opacity-100" : "opacity-0"
+            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-320 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+              unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out"
+                ? "opacity-100"
+                : "opacity-0"
             }`}
             onClick={handleCloseUnitDetails}
           />
@@ -5129,15 +5212,15 @@ This agreement is made on [Date] between the Owner and the Tenant...
             <button
               type="button"
               className={`absolute right-6 top-6 z-30 rounded-lg p-2 text-[#475569] transition-all hover:bg-[#f1f5f9] hover:text-[#0f172a] hover:scale-105 active:scale-95 ${
-                unitMorphPhase === "expanded"
+                unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out"
                   ? "opacity-100 pointer-events-auto"
                   : "opacity-0 pointer-events-none"
               }`}
               style={{
                 transition:
-                  unitMorphPhase === "expanded"
-                    ? "opacity 250ms ease-out 200ms"
-                    : "opacity 150ms ease-out",
+                  unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out"
+                    ? "opacity 320ms cubic-bezier(0.16, 1, 0.3, 1)"
+                    : "opacity 180ms ease-out",
               }}
               onClick={handleCloseUnitDetails}
             >
@@ -5166,21 +5249,30 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 {viewingUnitDetails.unit_name}
               </h3>
               <p
-                className="text-sm text-[#475569] transition-opacity duration-[250ms]"
-                style={{ opacity: unitMorphPhase === "expanded" ? 1 : 0 }}
+                className="text-sm text-[#475569]"
+                style={{
+                  opacity:
+                    unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out"
+                      ? 1
+                      : 0,
+                  transition: "opacity 320ms cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
               >
                 {viewingUnitDetails.property_name}
               </p>
             </div>
 
-            {/* Rest of the contents: Fade-in after morph completes */}
+            {/* Rest of the contents: Fade-in during morph expansion */}
             <div
               style={{
-                opacity: unitMorphPhase === "expanded" ? 1 : 0,
+                opacity:
+                  unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out"
+                    ? 1
+                    : 0,
                 transition:
-                  unitMorphPhase === "expanded"
-                    ? "opacity 250ms ease-out 200ms"
-                    : "opacity 150ms ease-out",
+                  unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out"
+                    ? "opacity 280ms cubic-bezier(0.16, 1, 0.3, 1) 40ms"
+                    : "opacity 180ms ease-out",
               }}
             >
               <div className="grid gap-4 sm:grid-cols-2">

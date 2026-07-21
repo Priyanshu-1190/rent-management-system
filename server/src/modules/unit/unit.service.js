@@ -53,8 +53,22 @@ const deleteOwnerUnit = async (ownerId, unitId) => {
 
 const getUnitsByProperty = async (ownerId, propertyId) => {
   const result = await pool.query(
-    `SELECT u.* FROM units u
+    `SELECT
+      u.*,
+      u.lease_agreement AS unit_lease_agreement,
+      p.name AS property_name,
+      p.lease_agreement AS property_lease_agreement,
+      t.id AS tenancy_id,
+      t.move_in_date,
+      t.deposit,
+      t.is_active,
+      usr.id AS tenant_id,
+      usr.name AS tenant_name,
+      usr.email AS tenant_email
+     FROM units u
      JOIN properties p ON p.id = u.property_id
+     LEFT JOIN tenancies t ON t.unit_id = u.id AND t.is_active = TRUE
+     LEFT JOIN users usr ON usr.id = t.tenant_id
      WHERE u.property_id = $1 AND p.owner_id = $2
      ORDER BY u.created_at DESC, u.id DESC`,
     [propertyId, ownerId]
