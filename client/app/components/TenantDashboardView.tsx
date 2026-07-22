@@ -274,19 +274,25 @@ export function TenantDashboardView({
                               ▾
                             </span>
                           </button>
-                          {expandedReceipts[rent.rent_id] && (
-                            <div className="flex flex-col gap-1 pl-2 border-l-2 border-[#2563eb]/30">
-                              {rent.payments.map((p) => (
-                                <button
-                                  key={p.payment_id}
-                                  className="text-left text-xs font-semibold text-[#2563eb] hover:underline cursor-pointer"
-                                  onClick={() => downloadReceipt(p.payment_id)}
-                                >
-                                  Receipt #{p.payment_id}
-                                </button>
-                              ))}
+                          <div
+                            className={`grid transition-[grid-template-rows] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                              expandedReceipts[rent.rent_id] ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                            }`}
+                          >
+                            <div className="overflow-hidden">
+                              <div className="flex flex-col gap-1 pl-2 pt-1 border-l-2 border-[#2563eb]/30">
+                                {rent.payments.map((p) => (
+                                  <button
+                                    key={p.payment_id}
+                                    className="text-left text-xs font-semibold text-[#2563eb] hover:underline cursor-pointer"
+                                    onClick={() => downloadReceipt(p.payment_id)}
+                                  >
+                                    Receipt #{p.payment_id}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                          )}
+                          </div>
                         </div>
                       )
                     ) : (
