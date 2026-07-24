@@ -4,236 +4,45 @@ import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import TenantDirectoryModal from "./components/TenantDirectoryModal";
 import { OwnerDashboardView } from "./components/OwnerDashboardView";
 import { TenantDashboardView } from "./components/TenantDashboardView";
+import { ToastContainer } from "./components/ToastContainer";
+import { AuthView } from "./components/AuthView";
+import { HeaderNav } from "./components/HeaderNav";
+import { InvitesModal } from "./components/modals/InvitesModal";
+import { PaymentModal } from "./components/modals/PaymentModal";
+import { ConfirmModal } from "./components/modals/ConfirmModal";
 import type { FormEvent, ReactNode } from "react";
 
-export type Role = "owner" | "tenant";
+// Re-export types, formatters, and UI primitives for backward compatibility
+export type {
+  Role,
+  User,
+  Toast,
+  OwnerDashboard,
+  TenantDashboard,
+  Property,
+  Unit,
+  Invite,
+  AvailableUnit,
+  UnitDetails,
+} from "./types";
+export { formatKolkataTime, formatMoney, formatPeriod, formatDate } from "./lib/formatters";
+export { Metric, DataTable, Th, Td, StatusLabel, InviteStatusLabel } from "./components/ui/Primitives";
 
-export type User = {
-  id: number;
-  email?: string;
-  role: Role;
-  name?: string;
-};
+import type {
+  Role,
+  User,
+  Toast,
+  OwnerDashboard,
+  TenantDashboard,
+  Property,
+  Unit,
+  Invite,
+  AvailableUnit,
+  UnitDetails,
+} from "./types";
+import { formatKolkataTime, formatMoney, formatPeriod, formatDate } from "./lib/formatters";
+import { Metric, DataTable, Th, Td, StatusLabel, InviteStatusLabel } from "./components/ui/Primitives";
 
-export type Toast = {
-  id: number;
-  message: string;
-  type: "success" | "error" | "info";
-};
-
-export type OwnerDashboard = {
-  totals: {
-    total_properties: number;
-    total_units: number;
-    occupied_units: number;
-    total_rent: number;
-    total_collected: number;
-    total_pending: number;
-  };
-  properties: Array<{
-    property_id: number;
-    property_name: string;
-    total_units: number;
-    occupied_units: number;
-    total_rent: number;
-    total_collected: number;
-    total_pending: number;
-  }>;
-  rent_status: Array<{
-    rent_id: number;
-    tenant_id: number;
-    property_id: number;
-    unit_id: number;
-    property_name: string;
-    unit_name: string;
-    tenant_name: string;
-    tenant_email: string | null;
-    month: number;
-    year: number;
-    amount: number;
-    late_fee: number;
-    total_due: number;
-    paid: number;
-    pending: number;
-    payment_status: string;
-    due_in_days: number | null;
-    overdue_by_days: number | null;
-    payments: Array<{
-      payment_id: number;
-      amount: number;
-      payment_method: string | null;
-      payment_date: string;
-      transaction_id: string | null;
-    }>;
-  }>;
-};
-
-export type TenantDashboard = {
-  summary: {
-    total_rent: number;
-    total_paid: number;
-    total_pending: number;
-  };
-  rent_history: Array<{
-    rent_id: number;
-    property_name: string;
-    unit_name: string;
-    month: number;
-    year: number;
-    amount: number;
-    due_date: string | null;
-    paid: number;
-    pending: number;
-    payment_status: string;
-    due_in_days: number | null;
-    overdue_by_days: number | null;
-    payments: Array<{
-      payment_id: number;
-      amount: number;
-      payment_method: string | null;
-      payment_date: string;
-      transaction_id: string | null;
-    }>;
-  }>;
-  active_tenancy?: {
-    property_id: number;
-    property_name: string;
-    property_address: string | null;
-    property_lease_agreement?: string | null;
-    unit_lease_agreement?: string | null;
-    lease_agreement: string | null;
-    unit_name: string;
-    move_in_date: string | null;
-    deposit: number;
-  } | null;
-  active_tenancies?: Array<{
-    property_id: number;
-    property_name: string;
-    property_address: string | null;
-    property_lease_agreement?: string | null;
-    unit_lease_agreement?: string | null;
-    lease_agreement: string | null;
-    unit_name: string;
-    move_in_date: string | null;
-    deposit: number;
-  }>;
-};
-
-export type Property = {
-  id: number;
-  name: string;
-  address: string | null;
-  lease_agreement?: string | null;
-  created_at: string;
-  images?: Array<{ id: number; image_path: string }>;
-};
-
-export type Unit = {
-  id: number;
-  property_id: number;
-  name: string;
-  rent_amount: number;
-  due_day: number;
-  late_fee_percentage: number;
-  grace_period_days: number;
-  lease_agreement?: string | null;
-  unit_lease_agreement?: string | null;
-  property_name?: string;
-  property_lease_agreement?: string | null;
-  tenancy_id?: number | null;
-  move_in_date?: string | null;
-  deposit?: number | null;
-  is_active?: boolean;
-  tenant_id?: number | null;
-  tenant_name?: string | null;
-  tenant_email?: string | null;
-};
-
-export type Invite = {
-  id: number;
-  unit_id: number;
-  unit_name: string;
-  rent_amount?: number;
-  property_name: string;
-  property_address?: string;
-  owner_name?: string;
-  owner_email?: string;
-  tenant_email?: string;
-  deposit: number;
-  move_in_date: string | null;
-  message: string | null;
-  status: string;
-  created_at: string;
-  responded_at: string | null;
-};
-
-export type AvailableUnit = {
-  id: number;
-  name: string;
-  rent_amount: number;
-  property_name: string;
-  property_id: number;
-};
-
-export type UnitDetails = {
-  unit_id?: number;
-  unit_name: string;
-  property_id?: number;
-  property_name: string;
-  rent_amount: number;
-  due_day: number;
-  late_fee_percentage: number;
-  grace_period_days: number;
-  unit_lease_agreement?: string | null;
-  property_lease_agreement?: string | null;
-  tenancy_id?: number | null;
-  tenant_id?: number | null;
-  tenant_name?: string | null;
-  tenant_email?: string | null;
-  move_in_date?: string | null;
-  deposit?: number;
-  is_active?: boolean;
-};
-
-export function formatKolkataTime(timestamp: string) {
-  return new Intl.DateTimeFormat("en-IN", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-    timeZoneName: "short",
-  }).format(new Date(timestamp));
-}
-
-export function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-export function formatPeriod(month: number, year: number) {
-  return new Intl.DateTimeFormat("en-IN", {
-    month: "short",
-    year: "numeric",
-  }).format(new Date(Date.UTC(year, month - 1, 1)));
-}
-
-export function formatDate(value: string | null) {
-  if (!value) return "N/A";
-
-  return new Intl.DateTimeFormat("en-IN", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  }).format(new Date(value));
-}
 
 export default function Home() {
   const [apiStatus, setApiStatus] = useState("");
@@ -2446,822 +2255,51 @@ export default function Home() {
 
   if (!user) {
     return (
-      <main className="min-h-screen w-full bg-rucoria-bg-base text-rucoria-text-sec font-ru-sans text-ru-lg leading-[24px] selection:bg-rucoria-text-inv selection:text-white">
-        {/* Sticky Header */}
-        <header className="sticky top-0 z-40 w-full border-b border-rucoria-text-tert/25 bg-rucoria-bg-base/75 backdrop-blur-md text-rucoria-text-sec shadow-ru-1 transition-all duration-300">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-ru-8 py-ru-5">
-            <a
-              href="#"
-              className="flex items-center gap-ru-2 group rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
-              onClick={(e) => {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
-                setMobileMenuOpen(false);
-              }}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-ru-md bg-rucoria-text-inv text-white font-bold text-ru-2xl shadow-ru-1 group-hover:scale-105 transition-transform duration-300">
-                ₹
-              </div>
-              <span className="text-ru-2xl font-bold tracking-tight text-rucoria-text-sec group-hover:text-rucoria-text-inv transition-colors duration-300">
-                Rent Khata
-              </span>
-            </a>
-
-            {/* Desktop Navigation */}
-            <nav
-              className="hidden md:flex items-center gap-ru-5"
-              aria-label="Landing page"
-            >
-              <a
-                className="relative px-ru-4 py-ru-3 text-ru-sm font-semibold text-rucoria-text-sec/80 transition-all duration-300 hover:text-rucoria-text-inv focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
-                href="#features"
-                onClick={(e) => handleScrollTo(e, "features")}
-              >
-                Features
-              </a>
-              <a
-                className="relative px-ru-4 py-ru-3 text-ru-sm font-semibold text-rucoria-text-sec/80 transition-all duration-300 hover:text-rucoria-text-inv focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
-                href="#access"
-                onClick={(e) => {
-                  setAuthMode("login");
-                  setNotice("");
-                  handleScrollTo(e, "access");
-                }}
-              >
-                Login
-              </a>
-              <div className="hidden h-5 w-px bg-rucoria-text-tert/30 sm:block" />
-              <a
-                className="rounded-ru-lg bg-rucoria-text-inv hover:bg-rucoria-text-inv/90 active:bg-rucoria-text-inv/80 px-ru-5 py-ru-3 text-ru-sm font-bold text-white shadow-ru-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
-                href="#access"
-                onClick={(e) => {
-                  setAuthMode("register");
-                  setNotice("");
-                  handleScrollTo(e, "access");
-                }}
-              >
-                Create Account
-              </a>
-            </nav>
-
-            {/* Hamburger Button for Mobile */}
-            <button
-              type="button"
-              className="md:hidden rounded-ru-md p-ru-2 text-rucoria-text-sec/80 hover:text-rucoria-text-inv hover:bg-rucoria-text-tert/10 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
-              onClick={() => setMobileMenuOpen((open) => !open)}
-              aria-label="Toggle Menu"
-            >
-              {mobileMenuOpen ? (
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Mobile menu dropdown overlay */}
-          <div
-            className={`md:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-in-out bg-rucoria-bg-base/95 backdrop-blur-md ${
-              mobileMenuOpen
-                ? "grid-rows-[1fr] opacity-100 border-t border-rucoria-text-tert/25"
-                : "grid-rows-[0fr] opacity-0 border-t-0"
-            }`}
-          >
-            <div className="min-h-0 overflow-hidden">
-              <nav
-                className="flex flex-col space-y-3 px-ru-8 py-ru-5"
-                aria-label="Mobile navigation"
-              >
-                <a
-                  className="text-ru-md font-semibold text-rucoria-text-sec/80 hover:text-rucoria-text-inv transition-colors py-ru-3 border-b border-rucoria-text-tert/10 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
-                  href="#features"
-                  onClick={(e) => {
-                    setMobileMenuOpen(false);
-                    handleScrollTo(e, "features");
-                  }}
-                >
-                  Features
-                </a>
-                <a
-                  className="text-ru-md font-semibold text-rucoria-text-sec/80 hover:text-rucoria-text-inv transition-colors py-ru-3 border-b border-rucoria-text-tert/10 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
-                  href="#access"
-                  onClick={(e) => {
-                    setMobileMenuOpen(false);
-                    setAuthMode("login");
-                    setNotice("");
-                    handleScrollTo(e, "access");
-                  }}
-                >
-                  Login
-                </a>
-                <a
-                  className="rounded-ru-lg bg-rucoria-text-inv hover:bg-rucoria-text-inv/90 active:bg-rucoria-text-inv/80 px-ru-5 py-ru-4 text-center text-ru-sm font-bold text-white shadow-ru-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] mt-ru-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
-                  href="#access"
-                  onClick={(e) => {
-                    setMobileMenuOpen(false);
-                    setAuthMode("register");
-                    setNotice("");
-                    handleScrollTo(e, "access");
-                  }}
-                >
-                  Create Account
-                </a>
-              </nav>
-            </div>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <section className="relative min-h-[90vh] overflow-hidden bg-rucoria-bg-base text-rucoria-text-sec flex items-center py-ru-8 lg:py-ru-8">
-          {/* Ambient Glows */}
-          <div className="absolute top-1/4 left-1/10 w-96 h-96 rounded-ru-xl bg-rucoria-bg-strong/5 blur-3xl animate-pulse-glow pointer-events-none" />
-          <div
-            className="absolute bottom-1/4 right-1/10 w-[450px] h-[450px] rounded-ru-xl bg-rucoria-text-inv/5 blur-3xl animate-pulse-glow pointer-events-none"
-            style={{ animationDelay: "4s" }}
-          />
-
-          <div className="mx-auto max-w-5xl w-full px-ru-8 relative z-10 -mt-10 md:mt-10">
-            <div className="flex flex-col items-center text-center space-y-8">
-              <div className="inline-flex items-center gap-ru-2 rounded-ru-xl border border-rucoria-text-inv/30 bg-rucoria-bg-raised/80 px-ru-5 py-ru-3 text-ru-xs font-semibold uppercase tracking-wider text-rucoria-text-inv backdrop-blur-sm shadow-ru-1">
-                <span className="flex h-2 w-2 rounded-ru-xl bg-rucoria-text-inv animate-pulse" />
-                Your Ultimate Rental Ledger
-              </div>
-
-              <h1 className="text-ru-4xl font-extrabold tracking-tight font-ru-sans leading-[1.1] text-rucoria-text-sec max-w-4xl">
-                Rent, tenants, receipts, & dues in{" "}
-                <span className="italic font-normal text-rucoria-text-inv">
-                  one calm workspace.
-                </span>
-              </h1>
-
-              <p className="max-w-2xl text-ru-lg leading-relaxed text-rucoria-text-sec/80 font-normal">
-                A modern, clean workspace designed for owners and tenants.
-                Manage properties, coordinate leases, log payments, and generate
-                invoices with ease.
-              </p>
-
-              <div className="flex flex-wrap justify-center gap-ru-5 pt-2">
-                <a
-                  className="inline-flex items-center justify-center rounded-ru-lg bg-rucoria-text-inv hover:bg-rucoria-text-inv/90 active:bg-rucoria-text-inv/80 px-ru-6 py-ru-5 text-ru-sm font-bold text-white shadow-ru-2 transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
-                  href="#access"
-                  onClick={(e) => {
-                    setAuthMode("register");
-                    setNotice("");
-                    handleScrollTo(e, "access");
-                  }}
-                >
-                  Start Managing
-                </a>
-                <a
-                  className="inline-flex items-center justify-center rounded-ru-lg border border-rucoria-text-tert bg-rucoria-bg-raised px-ru-6 py-ru-5 text-ru-sm font-bold text-rucoria-text-sec shadow-ru-1 transition-all duration-300 hover:bg-rucoria-bg-raised/90 hover:border-rucoria-text-inv/50 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2"
-                  href="#features"
-                  onClick={(e) => handleScrollTo(e, "features")}
-                >
-                  Explore Features
-                </a>
-              </div>
-
-              {/* Micro Stats */}
-              <div className="grid grid-cols-3 gap-ru-5 pt-ru-8 border-t border-rucoria-text-tert/20 max-w-lg w-full text-center">
-                <div>
-                  <p className="text-ru-3xl font-extrabold text-rucoria-text-inv">
-                    100%
-                  </p>
-                  <p className="text-ru-xs text-rucoria-text-sec/60 uppercase tracking-wider mt-1 leading-tight font-semibold">
-                    Ledger Accuracy
-                  </p>
-                </div>
-                <div>
-                  <p className="text-ru-3xl font-extrabold text-rucoria-text-sec">
-                    Instant
-                  </p>
-                  <p className="text-ru-xs text-rucoria-text-sec/60 uppercase tracking-wider mt-1 leading-tight font-semibold">
-                    PDF Receipts
-                  </p>
-                </div>
-                <div>
-                  <p className="text-ru-3xl font-extrabold text-rucoria-text-sec/60">
-                    Zero
-                  </p>
-                  <p className="text-ru-xs text-rucoria-text-sec/60 uppercase tracking-wider mt-1 leading-tight font-semibold">
-                    Clutter
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Grid Section */}
-        <section
-          id="features"
-          className="scroll-mt-16 pt-20 pb-10 bg-rucoria-bg-base border-t border-rucoria-text-tert/15 relative"
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,12,35,0.05),transparent_60%)] pointer-events-none" />
-
-          <div className="mx-auto max-w-7xl px-ru-8 relative z-10">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-ru-sm font-semibold uppercase tracking-wider text-rucoria-text-inv">
-                Platform Features
-              </h2>
-              <p className="mt-2 text-ru-3xl font-bold font-ru-sans text-rucoria-text-sec leading-tight">
-                Everything you need to manage rental operations smoothly
-              </p>
-              <p className="mt-4 text-rucoria-text-sec/70">
-                Forget messy spreadsheets and chaotic WhatsApp chats. Rent Khata
-                organizes everything into clean, auditable records.
-              </p>
-            </div>
-
-            <div className="grid gap-ru-8 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                {
-                  title: "Owner Dashboard",
-                  body: "Track total properties, units, current occupancy, total rents, actual collections, and pending dues from a single window.",
-                  icon: (
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      />
-                    </svg>
-                  ),
-                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
-                },
-                {
-                  title: "Tenant Portal",
-                  body: "Tenants get a focused view of rent status, due dates, outstanding amount, grace periods, and payment history.",
-                  icon: (
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  ),
-                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
-                },
-                {
-                  title: "Property & Unit Operations",
-                  body: "Create and edit properties, add individual rental units, customize rent cycles, due dates, late fee rates, and grace periods.",
-                  icon: (
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2"
-                      />
-                    </svg>
-                  ),
-                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
-                },
-                {
-                  title: "Financial Ledger Clarity",
-                  body: "Obligations (rents) are tracked independently from transactions (payments), ensuring ledger logs never mismatch.",
-                  icon: (
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                  ),
-                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
-                },
-                {
-                  title: "PDF Rent Receipts",
-                  body: "Generate professional, download-ready PDF receipts for payments, equipped with transaction IDs and timestamp details.",
-                  icon: (
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                  ),
-                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
-                },
-                {
-                  title: "Leasing & Invitations",
-                  body: "Invite tenants to specific units via email. Set lease starting dates, security deposits, and customized invitation notes.",
-                  icon: (
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M3 19v-8.93a2 2 0 01.89-1.664l8-5.333a2 2 0 012.22 0l8 5.333A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-2.25-1.5a2 2 0 00-2.22 0l-2.25 1.5m4.72 0V12a9 9 0 00-9-9"
-                      />
-                    </svg>
-                  ),
-                  color: "bg-rucoria-text-inv/10 text-rucoria-text-inv",
-                },
-              ].map((f, i) => (
-                <div
-                  key={i}
-                  className="group rounded-ru-lg bg-rucoria-bg-raised p-ru-8 border border-rucoria-text-tert/20 hover:border-rucoria-text-inv/40 hover:-translate-y-1 shadow-ru-2 transition-all duration-300 relative overflow-hidden"
-                >
-                  <div
-                    className={`h-12 w-12 rounded-ru-md ${f.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    {f.icon}
-                  </div>
-                  <h3 className="text-ru-xl font-bold text-rucoria-text-sec group-hover:text-rucoria-text-inv transition-colors duration-300">
-                    {f.title}
-                  </h3>
-                  <p className="mt-3 text-ru-sm leading-relaxed text-rucoria-text-sec/70">
-                    {f.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Access Section (Authentication) */}
-        <section
-          id="access"
-          className="scroll-mt-16 bg-rucoria-bg-base border-t border-rucoria-text-tert/15 relative overflow-hidden py-20"
-        >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rucoria-bg-strong/5 blur-3xl rounded-ru-xl pointer-events-none" />
-
-          <div className="mx-auto max-w-7xl px-ru-8 relative z-10">
-            <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
-              {/* Text content left */}
-              <div className="lg:col-span-7 space-y-4">
-                <div className="inline-flex items-center gap-ru-2 rounded-ru-xl border border-rucoria-text-inv/30 bg-rucoria-bg-raised/80 px-ru-5 py-ru-3 text-ru-xs font-semibold uppercase tracking-wider text-rucoria-text-inv backdrop-blur-sm shadow-ru-1">
-                  Access Portal
-                </div>
-                <h2 className="text-ru-3xl font-bold font-ru-sans text-rucoria-text-sec leading-tight">
-                  Ready to experience absolute ledger peace?
-                </h2>
-                <p className="max-w-2xl text-rucoria-text-sec/70 leading-relaxed">
-                  Join Rent Khata now to eliminate spreadsheet errors,
-                  centralize invoices, and keep accounts clear.
-                </p>
-
-                <div className="space-y-3 pt-2">
-                  <div className="flex gap-ru-3">
-                    <div className="h-6 w-6 rounded-ru-xl bg-rucoria-text-inv/20 flex items-center justify-center text-rucoria-text-inv flex-shrink-0 mt-0.5 text-ru-xs font-bold">
-                      ✓
-                    </div>
-                    <p className="text-ru-sm text-rucoria-text-sec/80 leading-relaxed">
-                      <strong className="text-rucoria-text-sec font-bold">
-                        For Owners:
-                      </strong>{" "}
-                      Comprehensive property dashboard, automatic late fee
-                      calculations, security deposit status tracker, and simple
-                      inviting mechanism.
-                    </p>
-                  </div>
-                  <div className="flex gap-ru-3">
-                    <div className="h-6 w-6 rounded-ru-xl bg-rucoria-text-inv/20 flex items-center justify-center text-rucoria-text-inv flex-shrink-0 mt-0.5 text-ru-xs font-bold">
-                      ✓
-                    </div>
-                    <p className="text-ru-sm text-rucoria-text-sec/80 leading-relaxed">
-                      <strong className="text-rucoria-text-sec font-bold">
-                        For Tenants:
-                      </strong>{" "}
-                      Instant receipt generation, real-time dashboard of pending
-                      dues, and email-based contract accepts.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  {apiStatus && (
-                    <div className="inline-flex items-center gap-ru-3 rounded-ru-md bg-rucoria-bg-raised border border-rucoria-text-tert px-ru-5 py-ru-4 text-ru-xs font-mono text-rucoria-text-sec/70 shadow-ru-1">
-                      <span className="h-2 w-2 rounded-ru-xl bg-rucoria-text-inv animate-pulse" />
-                      {apiStatus}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Auth Panel right */}
-              <div className="lg:col-span-5 relative">
-                <div className="absolute inset-0 bg-rucoria-bg-strong/5 blur-3xl rounded-ru-xl pointer-events-none" />
-                {authPanel}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="bg-rucoria-bg-base text-rucoria-text-sec border-t border-rucoria-text-tert/15 py-12 font-ru-sans">
-          <div className="mx-auto max-w-7xl px-ru-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-              <div className="space-y-3">
-                <div className="flex items-center gap-ru-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-ru-sm bg-rucoria-text-inv text-white font-bold text-ru-lg shadow-ru-1">
-                    ₹
-                  </div>
-                  <span className="text-ru-xl font-bold tracking-tight text-rucoria-text-sec">
-                    Rent Khata
-                  </span>
-                </div>
-                <p className="max-w-md text-ru-sm leading-relaxed text-rucoria-text-sec/60">
-                  A focused rental operations workspace for properties, tenants,
-                  rent schedules, payments, and receipts. Built for simplicity
-                  and ledger peace.
-                </p>
-              </div>
-              <nav
-                className="flex flex-wrap gap-x-8 gap-y-4"
-                aria-label="Footer"
-              >
-                <a
-                  className="text-ru-sm font-semibold text-rucoria-text-sec/60 hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                >
-                  Home
-                </a>
-                <a
-                  className="text-ru-sm font-semibold text-rucoria-text-sec/60 hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
-                  href="#features"
-                  onClick={(e) => handleScrollTo(e, "features")}
-                >
-                  Features
-                </a>
-                <a
-                  className="text-ru-sm font-semibold text-rucoria-text-sec/60 hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
-                  href="#access"
-                  onClick={(e) => {
-                    setAuthMode("login");
-                    setNotice("");
-                    handleScrollTo(e, "access");
-                  }}
-                >
-                  Login
-                </a>
-              </nav>
-            </div>
-            <div className="mt-8 pt-8 border-t border-rucoria-text-tert/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-ru-xs text-rucoria-text-sec/40">
-              <p>
-                &copy; {new Date().getFullYear()} Rent Khata. All rights
-                reserved.
-              </p>
-              <p className="flex gap-4">
-                <a
-                  href="#"
-                  className="hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Privacy Policy
-                </a>
-                <a
-                  href="#"
-                  className="hover:text-rucoria-text-inv transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-rucoria-text-inv focus-visible:outline-offset-2 rounded"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  Terms of Service
-                </a>
-              </p>
-            </div>
-          </div>
-        </footer>
-      </main>
+      <AuthView
+        apiStatus={apiStatus}
+        authMode={authMode}
+        setAuthMode={setAuthMode}
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        regName={regName}
+        setRegName={setRegName}
+        regEmail={regEmail}
+        setRegEmail={setRegEmail}
+        regPassword={regPassword}
+        setRegPassword={setRegPassword}
+        regRole={regRole}
+        setRegRole={setRegRole}
+        notice={notice}
+        setNotice={setNotice}
+        loading={loading}
+        mobileMenuOpen={mobileMenuOpen}
+        setMobileMenuOpen={setMobileMenuOpen}
+        handleLogin={handleLogin}
+        handleRegister={handleRegister}
+        handleScrollTo={handleScrollTo}
+      />
     );
   }
   //Header Section
   return (
     <main className="min-h-screen w-full bg-[#f8fafc] text-[#0f172a]">
-      <header className="border-b border-[#e2e8f0] bg-[#f8fafc]/25 backdrop-blur(16)">
-        <div className="mx-auto flex w-full max-w-7xl items-start justify-between px-4 py-5 sm:px-6 lg:px-8">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#475569]">
-              Rent Management
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold">Dashboard</h1>
-            {apiStatus ? (
-              <p className="mt-1 text-sm text-[#475569]">{apiStatus}</p>
-            ) : null}
-            {user ? (
-              <p className="text-sm text-[#475569]">
-                Signed in as {user.role} #{user.id}
-              </p>
-            ) : null}
-          </div>
-          {user ? (
-            <div className="relative">
-              <button
-                type="button"
-                className="rounded-md p-2 text-[#475569] transition-colors hover:bg-[#f1f5f9] hover:text-[#0f172a]"
-                onClick={() => setShowMenu((v) => !v)}
-                aria-label="Menu"
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <circle cx="10" cy="4" r="1.5" />
-                  <circle cx="10" cy="10" r="1.5" />
-                  <circle cx="10" cy="16" r="1.5" />
-                </svg>
-              </button>
-              {showMenu && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => {
-                      setShowMenu(false);
-                      setShowAccountDetails(false);
-                    }}
-                  />
-                  <div className="absolute right-0 z-50 mt-1 w-56 rounded-lg border border-[#e2e8f0] bg-white py-1 shadow-lg">
-                    <div className="border-b border-[#e2e8f0] px-4 py-2">
-                      <button
-                        type="button"
-                        className="flex w-full items-center justify-between rounded-md px-0 py-1 text-left transition-colors hover:text-[#0f172a]"
-                        onClick={() => setShowAccountDetails((value) => !value)}
-                        aria-expanded={showAccountDetails}
-                        aria-controls="account-details"
-                      >
-                        <span className="text-sm font-semibold text-[#0f172a]">
-                          Account
-                        </span>
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 20 20"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className={`text-[#475569] transition-transform ${
-                            showAccountDetails ? "rotate-180" : ""
-                          }`}
-                        >
-                          <path d="M5 8l5 5 5-5" />
-                        </svg>
-                      </button>
-                      <div
-                        className={`grid transition-[grid-template-rows,opacity,margin-top] duration-300 ease-in-out ${
-                          showAccountDetails
-                            ? "mt-2 grid-rows-[1fr] opacity-100"
-                            : "mt-0 grid-rows-[0fr] opacity-0"
-                        }`}
-                      >
-                        <div className="min-h-0 overflow-hidden">
-                          <div
-                            id="account-details"
-                            className="space-y-2 rounded-md bg-[#f8fafc] p-2.5"
-                          >
-                            <p className="truncate text-sm font-semibold text-[#0f172a]">
-                              {user.name || "User"}
-                            </p>
-                            <p className="truncate text-xs text-[#475569]">
-                              {user.email || "No email"}
-                            </p>
-                            <button
-                              type="button"
-                              className="flex w-full justify-center rounded-md border border-[#c44d4d] px-2 py-1.5 text-xs font-medium text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                              onClick={() => {
-                                setShowDeleteConfirm(true);
-                                setShowMenu(false);
-                                setShowAccountDetails(false);
-                              }}
-                            >
-                              Delete Account
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    {user?.role === "owner" && (
-                      <button
-                        type="button"
-                        className="flex w-full px-4 py-2 text-sm font-medium text-[#334155] text-left transition-colors hover:bg-[#f1f5f9]"
-                        onClick={() => {
-                          setShowTenantDirectory(true);
-                          setShowMenu(false);
-                        }}
-                      >
-                        Tenant Directory
-                      </button>
-                    )}
-                    {user?.role && (
-                      <button
-                        type="button"
-                        className="flex w-full px-4 py-2 text-sm font-medium text-[#334155] text-left transition-colors hover:bg-[#f1f5f9]"
-                        onClick={() => {
-                          setShowInvitesModal(true);
-                          setShowMenu(false);
-                        }}
-                      >
-                        Invites
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="flex w-full px-4 py-2 text-sm font-medium text-[#334155] transition-colors hover:bg-[#f1f5f9]"
-                      onClick={() => {
-                        setShowLogoutConfirm(true);
-                        setShowMenu(false);
-                      }}
-                    >
-                      Log Out
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ) : null}
-        </div>
-      </header>
+      <HeaderNav
+        apiStatus={apiStatus}
+        user={user}
+        showMenu={showMenu}
+        setShowMenu={setShowMenu}
+        showAccountDetails={showAccountDetails}
+        setShowAccountDetails={setShowAccountDetails}
+        setShowDeleteConfirm={setShowDeleteConfirm}
+        setShowLogoutConfirm={setShowLogoutConfirm}
+        setShowTenantDirectory={setShowTenantDirectory}
+        setShowInvitesModal={setShowInvitesModal}
+      />
 
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        <section className="grid gap-4 lg:grid-cols-[1fr_1.5fr]">
-          {!user && (
-            <div className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm">
-              <div className="flex gap-1 rounded-md bg-[#f1f5f9] p-1">
-                <button
-                  type="button"
-                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
-                    authMode === "login"
-                      ? "bg-white text-[#0f172a] shadow-sm"
-                      : "text-[#475569] hover:text-[#334155]"
-                  }`}
-                  onClick={() => {
-                    setAuthMode("login");
-                    setNotice("");
-                  }}
-                >
-                  Login
-                </button>
-                <button
-                  type="button"
-                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
-                    authMode === "register"
-                      ? "bg-white text-[#0f172a] shadow-sm"
-                      : "text-[#475569] hover:text-[#334155]"
-                  }`}
-                  onClick={() => {
-                    setAuthMode("register");
-                    setNotice("");
-                  }}
-                >
-                  Register
-                </button>
-              </div>
 
-              {authMode === "login" ? (
-                <form onSubmit={handleLogin} className="mt-4 grid gap-3">
-                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                    Email
-                    <input
-                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                      type="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                    />
-                  </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                    Password
-                    <input
-                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                      type="password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                    />
-                  </label>
-                  <button
-                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    type="submit"
-                    disabled={loading}
-                  >
-                    {loading ? "Logging in..." : "Login"}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleRegister} className="mt-4 grid gap-3">
-                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                    Name
-                    <input
-                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                      type="text"
-                      value={regName}
-                      onChange={(event) => setRegName(event.target.value)}
-                      required
-                      minLength={2}
-                    />
-                  </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                    Email
-                    <input
-                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                      type="email"
-                      value={regEmail}
-                      onChange={(event) => setRegEmail(event.target.value)}
-                      required
-                    />
-                  </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                    Password
-                    <input
-                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                      type="password"
-                      value={regPassword}
-                      onChange={(event) => setRegPassword(event.target.value)}
-                      required
-                      minLength={6}
-                    />
-                  </label>
-                  <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                    Role
-                    <select
-                      className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                      value={regRole}
-                      onChange={(event) =>
-                        setRegRole(event.target.value as Role)
-                      }
-                    >
-                      <option value="tenant">Tenant</option>
-                      <option value="owner">Owner</option>
-                    </select>
-                  </label>
-                  <button
-                    className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    type="submit"
-                    disabled={loading}
-                  >
-                    {loading ? "Registering..." : "Register"}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-        </section>
 
         {user?.role === "owner" ? (
           <section className="grid gap-4 lg:grid-cols-2">
@@ -3651,193 +2689,31 @@ export default function Home() {
           </section>
         ) : null}
 
-        {/* ── Owner: Send Invite ── */}
-        {user?.role === "owner" && showInvitesModal ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-backdrop-fade">
-            <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f8fafc] p-6 shadow-xl border border-[#e2e8f0] animate-modal-scale">
-              <div className="flex justify-end mb-4">
-                <button
-                  type="button"
-                  className="rounded-md p-2 -mr-2 -mt-2 text-[#475569] transition-colors hover:bg-[#f1f5f9] hover:text-[#0f172a]"
-                  onClick={() => setShowInvitesModal(false)}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-              <section id="invites" className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
-                  <h2 className="text-lg font-semibold">
-                    Send Invite to Tenant
-                  </h2>
-                  {availableUnits.length === 0 ? (
-                    <p className="mt-3 text-sm text-[#475569]">
-                      No available units. Add units first or wait for existing
-                      invites to be resolved.
-                    </p>
-                  ) : (
-                    <form
-                      onSubmit={handleSendInvite}
-                      className="mt-3 grid gap-3"
-                    >
-                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                        Tenant Email
-                        <input
-                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                          type="email"
-                          value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                          required
-                          placeholder="tenant@example.com"
-                        />
-                      </label>
-                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                        Unit
-                        <select
-                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                          value={inviteUnitId ?? ""}
-                          onChange={(e) =>
-                            setInviteUnitId(Number(e.target.value) || null)
-                          }
-                          required
-                        >
-                          <option value="">Select unit…</option>
-                          {availableUnits.map((u) => (
-                            <option key={u.id} value={u.id}>
-                              {u.property_name} — {u.name} (
-                              {formatMoney(u.rent_amount)}/mo)
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                        Deposit (₹){" "}
-                        <span className="font-normal text-[#64748b]">
-                          (optional)
-                        </span>
-                        <input
-                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={inviteDeposit}
-                          onChange={(e) => setInviteDeposit(e.target.value)}
-                          placeholder="e.g. 25000"
-                        />
-                      </label>
-                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                        Move-in Date{" "}
-                        <input
-                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                          type="date"
-                          value={inviteMoveIn}
-                          onChange={(e) => setInviteMoveIn(e.target.value)}
-                          required
-                        />
-                      </label>
-                      <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                        Message{" "}
-                        <span className="font-normal text-[#64748b]">
-                          (optional)
-                        </span>
-                        <textarea
-                          className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6] resize-none"
-                          rows={2}
-                          value={inviteMessage}
-                          onChange={(e) => setInviteMessage(e.target.value)}
-                          placeholder="Welcome message…"
-                        />
-                      </label>
-                      <button
-                        className="rounded-md bg-[#2563eb] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                        type="submit"
-                        disabled={loading || !inviteUnitId || !inviteMoveIn}
-                      >
-                        {loading ? "Sending..." : "Send Invite"}
-                      </button>
-                    </form>
-                  )}
-                </div>
-
-                {/* Sent Invites List */}
-                <div className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
-                  <h2 className="text-lg font-semibold">Sent Invites</h2>
-                  {sentInvites.length === 0 ? (
-                    <p className="mt-3 text-sm text-[#475569]">
-                      No invites sent yet.
-                    </p>
-                  ) : (
-                    <ul className="mt-3 grid gap-2">
-                      {sentInvites.map((inv) => (
-                        <li
-                          key={inv.id}
-                          className="rounded-md border border-[#e2e8f0] p-3"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium">
-                                {inv.tenant_email}
-                              </p>
-                              <p className="text-xs text-[#475569]">
-                                {inv.property_name} — {inv.unit_name}
-                              </p>
-                              {inv.move_in_date && (
-                                <p className="text-xs text-[#475569]">
-                                  Move-in: {formatDate(inv.move_in_date)}
-                                </p>
-                              )}
-                              {inv.deposit > 0 && (
-                                <p className="text-xs text-[#475569]">
-                                  Deposit: {formatMoney(inv.deposit)}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <InviteStatusLabel status={inv.status} />
-                              {inv.status === "pending" && (
-                                <button
-                                  type="button"
-                                  className="rounded p-1 text-[#c44d4d] transition-colors hover:bg-[#fde8e8]"
-                                  onClick={() => handleCancelInvite(inv.id)}
-                                  disabled={loading}
-                                  title="Cancel invite"
-                                >
-                                  <svg
-                                    width="14"
-                                    height="14"
-                                    viewBox="0 0 14 14"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                  >
-                                    <line x1="2" y1="2" x2="12" y2="12" />
-                                    <line x1="12" y1="2" x2="2" y2="12" />
-                                  </svg>
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </section>
-            </div>
-          </div>
-        ) : null}
+        {user && showInvitesModal && (
+          <InvitesModal
+            user={user}
+            isOpen={showInvitesModal}
+            onClose={() => setShowInvitesModal(false)}
+            availableUnits={availableUnits}
+            inviteEmail={inviteEmail}
+            setInviteEmail={setInviteEmail}
+            inviteUnitId={inviteUnitId}
+            setInviteUnitId={setInviteUnitId}
+            inviteDeposit={inviteDeposit}
+            setInviteDeposit={setInviteDeposit}
+            inviteMoveIn={inviteMoveIn}
+            setInviteMoveIn={setInviteMoveIn}
+            inviteMessage={inviteMessage}
+            setInviteMessage={setInviteMessage}
+            sentInvites={sentInvites}
+            receivedInvites={receivedInvites}
+            loading={loading}
+            handleSendInvite={handleSendInvite}
+            handleCancelInvite={handleCancelInvite}
+            handleAcceptInvite={handleAcceptInvite}
+            handleDeclineInvite={handleDeclineInvite}
+          />
+        )}
 
         {ownerDashboard ? (
           <OwnerDashboardView
@@ -3846,148 +2722,6 @@ export default function Home() {
             onLogPayment={handleOpenLogPayment}
             downloadReceipt={downloadReceipt}
           />
-        ) : null}
-
-        {/* ── Tenant: Invites Section ── */}
-        {user?.role === "tenant" && showInvitesModal ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-backdrop-fade">
-            <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-[#f8fafc] p-6 shadow-xl border border-[#e2e8f0] animate-modal-scale">
-              <div className="flex justify-end mb-4">
-                <button
-                  type="button"
-                  className="rounded-md p-2 -mr-2 -mt-2 text-[#475569] transition-colors hover:bg-[#f1f5f9] hover:text-[#0f172a]"
-                  onClick={() => setShowInvitesModal(false)}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-              <section id="invites" className="grid gap-4">
-                <div className="rounded-lg border border-[#e2e8f0] bg-white p-5 shadow-sm">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      stroke="#2563eb"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="2" y="4" width="16" height="12" rx="2" />
-                      <polyline points="2 4 10 11 18 4" />
-                    </svg>
-                    Property Invites
-                    {receivedInvites.filter((i) => i.status === "pending")
-                      .length > 0 && (
-                      <span className="inline-flex items-center justify-center rounded-full bg-[#2563eb] px-2 py-0.5 text-xs font-bold text-white">
-                        {
-                          receivedInvites.filter((i) => i.status === "pending")
-                            .length
-                        }
-                      </span>
-                    )}
-                  </h2>
-                  {receivedInvites.length === 0 ? (
-                    <p className="mt-3 text-sm text-[#475569]">
-                      No invites received yet. Property owners can invite you to
-                      their units.
-                    </p>
-                  ) : (
-                    <ul className="mt-3 grid gap-3">
-                      {receivedInvites.map((inv) => (
-                        <li
-                          key={inv.id}
-                          className={`rounded-lg border p-4 transition-all ${
-                            inv.status === "pending"
-                              ? "border-[#2563eb]/30 bg-[#eff6ff] shadow-sm"
-                              : "border-[#e2e8f0] bg-white"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <p className="font-semibold text-[#0f172a]">
-                                {inv.property_name} — {inv.unit_name}
-                              </p>
-                              {inv.property_address && (
-                                <p className="text-xs text-[#475569]">
-                                  {inv.property_address}
-                                </p>
-                              )}
-                              <p className="mt-1 text-sm text-[#334155]">
-                                From: {inv.owner_name || inv.owner_email}
-                              </p>
-                              {inv.rent_amount != null && (
-                                <p className="text-sm text-[#334155]">
-                                  Rent:{" "}
-                                  <span className="font-semibold text-[#2563eb]">
-                                    {formatMoney(inv.rent_amount)}/mo
-                                  </span>
-                                </p>
-                              )}
-                              {inv.deposit > 0 && (
-                                <p className="text-sm text-[#334155]">
-                                  Deposit: {formatMoney(inv.deposit)}
-                                </p>
-                              )}
-                              {inv.move_in_date && (
-                                <p className="text-sm text-[#334155]">
-                                  Move-in: {formatDate(inv.move_in_date)}
-                                </p>
-                              )}
-                              {inv.message && (
-                                <p className="mt-1 rounded-md bg-[#f1f5f9] px-3 py-2 text-sm italic text-[#334155]">
-                                  &ldquo;{inv.message}&rdquo;
-                                </p>
-                              )}
-                              <p className="mt-1 text-xs text-[#64748b]">
-                                Received {formatDate(inv.created_at)}
-                              </p>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <InviteStatusLabel status={inv.status} />
-                              {inv.status === "pending" && (
-                                <div className="flex gap-2">
-                                  <button
-                                    type="button"
-                                    className="rounded-md bg-[#2563eb] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#1d4ed8] disabled:opacity-50"
-                                    onClick={() => handleAcceptInvite(inv.id)}
-                                    disabled={loading}
-                                  >
-                                    Accept
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="rounded-md border border-[#cbd5e1] px-3 py-1.5 text-xs font-semibold text-[#c44d4d] transition-colors hover:bg-[#fde8e8] disabled:opacity-50"
-                                    onClick={() => handleDeclineInvite(inv.id)}
-                                    disabled={loading}
-                                  >
-                                    Decline
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </section>
-            </div>
-          </div>
         ) : null}
 
         {tenantDashboard ? (
@@ -4584,204 +3318,62 @@ export default function Home() {
         </div>
       )}
 
-      {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            className={`pointer-events-auto flex items-start gap-3 rounded-lg border p-4 shadow-lg transition-all duration-300 transform translate-y-0 ${
-              t.type === "success"
-                ? "border-[#2563eb]/20 bg-[#eff6ff] text-[#2563eb]"
-                : t.type === "error"
-                  ? "border-red-500/20 bg-red-50/90 text-red-700"
-                  : "border-[#e2e8f0] bg-white text-[#334155]"
-            }`}
-          >
-            {t.type === "success" && (
-              <svg
-                className="w-5 h-5 text-[#2563eb] flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            )}
-            {t.type === "error" && (
-              <svg
-                className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            )}
-            {t.type === "info" && (
-              <svg
-                className="w-5 h-5 text-[#334155] flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            )}
-            <div className="flex-1 text-sm font-semibold leading-relaxed">
-              {t.message}
-            </div>
-            <button
-              type="button"
-              className="text-gray-400 hover:text-gray-600 transition-colors text-xs font-bold font-mono pl-1"
-              onClick={() =>
-                setToasts((prev) => prev.filter((toast) => toast.id !== t.id))
-              }
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-      </div>
+      <ToastContainer
+        toasts={toasts}
+        onDismiss={(id) =>
+          setToasts((prev) => prev.filter((t) => t.id !== id))
+        }
+      />
 
-      {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop-fade">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl animate-modal-scale">
-            <h3 className="text-lg font-semibold text-[#0f172a]">Log Out</h3>
-            <p className="mt-2 text-sm text-[#475569]">
-              Are you sure you want to log out?
-            </p>
-            <div className="mt-5 flex gap-3 justify-end">
-              <button
-                type="button"
-                className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
-                onClick={() => setShowLogoutConfirm(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1e40af] disabled:opacity-50"
-                onClick={handleLogout}
-                disabled={loading}
-              >
-                {loading ? "Logging out…" : "Log Out"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Account Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop-fade">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl animate-modal-scale">
-            <h3 className="text-lg font-semibold text-[#933232]">
-              Delete Account
-            </h3>
-            <p className="mt-2 text-sm text-[#334155]">
-              Are you sure? This will permanently delete your account and all
-              associated data. This action cannot be undone.
-            </p>
-            <div className="mt-5 flex gap-3 justify-end">
-              <button
-                type="button"
-                className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="rounded-md bg-[#c44d4d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a83a3a] disabled:opacity-50"
-                onClick={handleDeleteAccount}
-                disabled={loading}
-              >
-                {loading ? "Deleting…" : "Yes, Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Property Confirmation Modal */}
-      {deletingProperty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop-fade">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl animate-modal-scale">
-            <h3 className="text-lg font-semibold text-[#933232]">
-              Delete Property
-            </h3>
-            <p className="mt-2 text-sm text-[#334155]">
-              Delete <strong>&ldquo;{deletingProperty.name}&rdquo;</strong> and
-              all its units? This action cannot be undone.
-            </p>
-            <div className="mt-5 flex gap-3 justify-end">
-              <button
-                type="button"
-                className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
-                onClick={() => setDeletingProperty(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="rounded-md bg-[#c44d4d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a83a3a] disabled:opacity-50"
-                onClick={handleDeleteProperty}
-                disabled={loading}
-              >
-                {loading ? "Deleting…" : "Yes, Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Unit Confirmation Modal */}
-      {deletingUnit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop-fade">
-          <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl animate-modal-scale">
-            <h3 className="text-lg font-semibold text-[#933232]">
-              Delete Unit
-            </h3>
-            <p className="mt-2 text-sm text-[#334155]">
-              Delete <strong>&ldquo;{deletingUnit.name}&rdquo;</strong> and all
-              its associated data? This action cannot be undone.
-            </p>
-            <div className="mt-5 flex gap-3 justify-end">
-              <button
-                type="button"
-                className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
-                onClick={() => setDeletingUnit(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="rounded-md bg-[#c44d4d] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a83a3a] disabled:opacity-50"
-                onClick={handleDeleteUnit}
-                disabled={loading}
-              >
-                {loading ? "Deleting…" : "Yes, Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        title="Log Out"
+        message="Are you sure you want to log out?"
+        confirmLabel="Log Out"
+        loading={loading}
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Delete Account"
+        message="Are you sure? This will permanently delete your account and all associated data. This action cannot be undone."
+        confirmLabel="Yes, Delete"
+        isDanger={true}
+        loading={loading}
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+      <ConfirmModal
+        isOpen={!!deletingProperty}
+        title="Delete Property"
+        message={
+          <span>
+            Delete <strong>&ldquo;{deletingProperty?.name}&rdquo;</strong> and
+            all its units? This action cannot be undone.
+          </span>
+        }
+        confirmLabel="Yes, Delete"
+        isDanger={true}
+        loading={loading}
+        onConfirm={handleDeleteProperty}
+        onCancel={() => setDeletingProperty(null)}
+      />
+      <ConfirmModal
+        isOpen={!!deletingUnit}
+        title="Delete Unit"
+        message={
+          <span>
+            Delete <strong>&ldquo;{deletingUnit?.name}&rdquo;</strong> and all
+            its associated data? This action cannot be undone.
+          </span>
+        }
+        confirmLabel="Yes, Delete"
+        isDanger={true}
+        loading={loading}
+        onConfirm={handleDeleteUnit}
+        onCancel={() => setDeletingUnit(null)}
+      />
 
       {/* Edit Property Modal */}
       {editingProperty && (
@@ -5469,138 +4061,18 @@ This agreement is made on [Date] between the Owner and the Tenant...
         </div>
       )}
 
-      {/* Log Rent Payment Modal */}
-      {loggingPaymentRent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-[#2563eb]">
-                  Log Rent Payment
-                </h3>
-                <p className="text-xs text-[#475569]">
-                  Log payment for {loggingPaymentRent.tenant_name} (
-                  {loggingPaymentRent.unit_name})
-                </p>
-              </div>
-              <button
-                type="button"
-                className="rounded-md p-1.5 text-[#475569] transition-colors hover:bg-[#f1f5f9] hover:text-[#0f172a]"
-                onClick={() => setLoggingPaymentRent(null)}
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleLogPayment} className="grid gap-4">
-              <div className="rounded-lg bg-white p-3 border border-[#e2e8f0] text-sm space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-[#475569]">Period:</span>{" "}
-                  <span className="font-semibold text-gray-800">
-                    {formatPeriod(
-                      loggingPaymentRent.month,
-                      loggingPaymentRent.year,
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#475569]">Rent Due:</span>{" "}
-                  <span className="font-semibold text-gray-800">
-                    {formatMoney(loggingPaymentRent.amount)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#475569]">Already Paid:</span>{" "}
-                  <span className="font-semibold text-gray-800">
-                    {formatMoney(loggingPaymentRent.paid)}
-                  </span>
-                </div>
-                <div className="flex justify-between border-t border-[#e2e8f0] pt-1 mt-1 font-semibold">
-                  <span className="text-[#9a4d21]">Outstanding:</span>{" "}
-                  <span className="text-[#9a4d21]">
-                    {formatMoney(loggingPaymentRent.pending)}
-                  </span>
-                </div>
-              </div>
-
-              <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                Payment Amount (₹)
-                <input
-                  className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  max={loggingPaymentRent.pending}
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  required
-                />
-              </label>
-
-              <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                Payment Method
-                <select
-                  className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  required
-                >
-                  <option value="cash">Cash</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="upi">UPI (GPay/PhonePe/Paytm)</option>
-                  <option value="card">Credit/Debit Card</option>
-                  <option value="cheque">Cheque</option>
-                  <option value="other">Other</option>
-                </select>
-              </label>
-
-              <label className="grid gap-1 text-sm font-medium text-[#334155]">
-                Transaction ID / Notes
-                <span className="font-normal text-[#64748b] text-xs">
-                  {" "}
-                  (optional)
-                </span>
-                <input
-                  className="rounded-md border border-[#cbd5e1] px-3 py-2 text-[#0f172a] outline-none focus:border-[#3b82f6]"
-                  type="text"
-                  value={paymentTxnId}
-                  onChange={(e) => setPaymentTxnId(e.target.value)}
-                  placeholder="e.g. TXN123456789"
-                />
-              </label>
-
-              <div className="mt-2 flex gap-3 justify-end">
-                <button
-                  type="button"
-                  className="rounded-md border border-[#cbd5e1] px-4 py-2 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#f1f5f9]"
-                  onClick={() => setLoggingPaymentRent(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                  disabled={loading || !paymentAmount}
-                >
-                  {loading ? "Logging…" : "Log Payment"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <PaymentModal
+        loggingPaymentRent={loggingPaymentRent}
+        onClose={() => setLoggingPaymentRent(null)}
+        paymentAmount={paymentAmount}
+        setPaymentAmount={setPaymentAmount}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        paymentTxnId={paymentTxnId}
+        setPaymentTxnId={setPaymentTxnId}
+        loading={loading}
+        handleLogPayment={handleLogPayment}
+      />
 
       <TenantDirectoryModal
         isOpen={showTenantDirectory}
@@ -5611,132 +4083,5 @@ This agreement is made on [Date] between the Owner and the Tenant...
         }}
       />
     </main>
-  );
-}
-
-export function Metric({
-  label,
-  value,
-  tone = "default",
-}: {
-  label: string;
-  value: string;
-  tone?: "default" | "warn";
-}) {
-  return (
-    <div className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm">
-      <p className="text-sm font-medium text-[#475569]">{label}</p>
-      <p
-        className={
-          (tone === "warn"
-            ? "mt-2 text-xl font-semibold text-[#9a4d21]"
-            : "mt-2 text-xl font-semibold") + " sm:text-2xl"
-        }
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
-export function DataTable({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-sm overflow-hidden">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <div className="mt-3 overflow-x-auto -mx-4 px-4">
-        <table className="w-full min-w-[650px] border-collapse text-left text-sm md:min-w-[760px]">
-          {children}
-        </table>
-      </div>
-    </section>
-  );
-}
-
-export function Th({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <th className={`pb-3 pr-4 font-semibold text-[#334155] ${className}`}>
-      {children}
-    </th>
-  );
-}
-
-export function Td({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return <td className={`py-3 pr-4 ${className}`}>{children}</td>;
-}
-
-export function StatusLabel({
-  status,
-  dueInDays,
-  overdueByDays,
-}: {
-  status: string;
-  dueInDays?: number | null;
-  overdueByDays?: number | null;
-}) {
-  const normalized = status.toLowerCase();
-  const dayWord = (count: number) => (count === 1 ? "day" : "days");
-  const label =
-    normalized === "pending" && typeof dueInDays === "number"
-      ? `Pending (due in ${dueInDays} ${dayWord(dueInDays)})`
-      : normalized === "overdue" && typeof overdueByDays === "number"
-        ? `Overdue (${overdueByDays} ${dayWord(overdueByDays)})`
-        : normalized === "upcoming" && typeof dueInDays === "number"
-          ? `Due in ${dueInDays} ${dayWord(dueInDays)}`
-          : status;
-  const className =
-    normalized === "paid"
-      ? "bg-[#e6f4ea] text-[#23633d]"
-      : normalized === "partial"
-        ? "bg-[#fef08a] text-[#854d0e]"
-        : normalized === "overdue"
-          ? "bg-[#fde8e8] text-[#933232]"
-          : normalized === "upcoming"
-            ? "bg-[#f3f4f6] text-[#4b5563]"
-            : "bg-[#e0e7ff] text-[#3730a3]";
-
-  return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}
-    >
-      {label}
-    </span>
-  );
-}
-
-function InviteStatusLabel({ status }: { status: string }) {
-  const normalized = status.toLowerCase();
-  const className =
-    normalized === "accepted"
-      ? "bg-[#e6f4ea] text-[#23633d]"
-      : normalized === "pending"
-        ? "bg-[#e8f0fe] text-[#1a56db]"
-        : normalized === "declined"
-          ? "bg-[#fde8e8] text-[#933232]"
-          : "bg-[#f3f4f6] text-[#6b7280]";
-
-  return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${className}`}
-    >
-      {status}
-    </span>
   );
 }

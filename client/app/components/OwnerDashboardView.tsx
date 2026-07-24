@@ -1,17 +1,7 @@
 import React, { useState, useMemo } from "react";
-import {
-  OwnerDashboard,
-  Property,
-  Unit,
-  formatMoney,
-  formatPeriod,
-  formatDate,
-  Metric,
-  DataTable,
-  Th,
-  Td,
-  StatusLabel,
-} from "../page";
+import { OwnerDashboard, Property, Unit } from "../types";
+import { formatMoney, formatPeriod, formatDate } from "../lib/formatters";
+import { Metric, DataTable, Th, Td, StatusLabel } from "./ui/Primitives";
 
 function groupRentsByTenant(rentStatus: OwnerDashboard["rent_status"]) {
   const tenants = new Map<

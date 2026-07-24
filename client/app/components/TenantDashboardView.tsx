@@ -1,15 +1,7 @@
 import React, { useState } from "react";
-import {
-  TenantDashboard,
-  formatMoney,
-  formatPeriod,
-  formatDate,
-  Metric,
-  DataTable,
-  Th,
-  Td,
-  StatusLabel,
-} from "../page";
+import { TenantDashboard } from "../types";
+import { formatMoney, formatPeriod, formatDate } from "../lib/formatters";
+import { Metric, DataTable, Th, Td, StatusLabel } from "./ui/Primitives";
 
 export function TenantDashboardView({
   dashboard,

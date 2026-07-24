@@ -2,40 +2,9 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { fetcher } from "../lib/fetcher";
-
-type Tenant = {
-  type: "tenant" | "invited";
-  tenant_id: number | null;
-  name: string | null;
-  email: string;
-  property_name: string;
-  unit_name: string;
-  move_in_date: string | null;
-  move_out_date: string | null;
-  status: "active" | "past" | "invited" | "accepted" | "declined";
-  deposit: number;
-  tenancy_id: number;
-};
-
-function formatDate(value: string | null) {
-  if (!value) return "N/A";
-
-  return new Intl.DateTimeFormat("en-IN", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  }).format(new Date(value));
-}
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
+import { formatDate, formatMoney } from "../lib/formatters";
+import { TenantDirectoryRecord as Tenant } from "../types";
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface TenantDirectoryModalProps {
   isOpen: boolean;
