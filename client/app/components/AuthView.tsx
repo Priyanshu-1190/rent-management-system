@@ -102,7 +102,7 @@ export function AuthView({
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-[#475569]">
             Email Address
             <input
-              className="rounded-md border border-[#cbd5e1] bg-[#f8fafc] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
+              className="rounded-md border border-[#cbd5e1] bg-[#faf8f5] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -113,7 +113,7 @@ export function AuthView({
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-[#475569]">
             Password
             <input
-              className="rounded-md border border-[#cbd5e1] bg-[#f8fafc] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
+              className="rounded-md border border-[#cbd5e1] bg-[#faf8f5] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -134,7 +134,7 @@ export function AuthView({
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-[#475569]">
             Full Name
             <input
-              className="rounded-md border border-[#cbd5e1] bg-[#f8fafc] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
+              className="rounded-md border border-[#cbd5e1] bg-[#faf8f5] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
               type="text"
               value={regName}
               onChange={(event) => setRegName(event.target.value)}
@@ -145,7 +145,7 @@ export function AuthView({
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-[#475569]">
             Email Address
             <input
-              className="rounded-md border border-[#cbd5e1] bg-[#f8fafc] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
+              className="rounded-md border border-[#cbd5e1] bg-[#faf8f5] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
               type="email"
               value={regEmail}
               onChange={(event) => setRegEmail(event.target.value)}
@@ -156,7 +156,7 @@ export function AuthView({
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-[#475569]">
             Password
             <input
-              className="rounded-md border border-[#cbd5e1] bg-[#f8fafc] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
+              className="rounded-md border border-[#cbd5e1] bg-[#faf8f5] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300"
               type="password"
               value={regPassword}
               onChange={(event) => setRegPassword(event.target.value)}
@@ -168,7 +168,7 @@ export function AuthView({
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wider text-[#475569]">
             Account Role
             <select
-              className="rounded-md border border-[#cbd5e1] bg-[#f8fafc] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300 cursor-pointer"
+              className="rounded-md border border-[#cbd5e1] bg-[#faf8f5] px-4 py-2.5 text-sm text-[#0f172a] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]/20 hover:border-[#94a3b8] transition-all duration-300 cursor-pointer"
               value={regRole}
               onChange={(event) => setRegRole(event.target.value as Role)}
             >
@@ -189,9 +189,9 @@ export function AuthView({
   );
 
   return (
-    <main className="min-h-screen w-full bg-[#f8fafc] text-[#0f172a] font-sans text-lg leading-[24px] selection:bg-[#2563eb] selection:text-white">
+    <main className="min-h-screen w-full bg-[#faf8f5] text-[#0f172a] font-sans text-lg leading-[24px] selection:bg-[#2563eb] selection:text-white">
       {/* Sticky Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-[#e2e8f0] bg-[#f8fafc]/80 backdrop-blur-md text-[#0f172a] shadow-sm transition-all duration-300">
+      <header className="sticky top-0 z-40 w-full border-b border-[#e2e8f0] bg-[#faf8f5]/80 backdrop-blur-md text-[#0f172a] shadow-sm transition-all duration-300">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-8 py-4">
           <a
             href="#"
@@ -288,7 +288,7 @@ export function AuthView({
 
         {/* Mobile menu dropdown overlay */}
         <div
-          className={`md:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-in-out bg-[#f8fafc]/95 backdrop-blur-md ${
+          className={`md:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-in-out bg-[#faf8f5]/95 backdrop-blur-md ${
             mobileMenuOpen
               ? "grid-rows-[1fr] opacity-100 border-t border-[#e2e8f0]"
               : "grid-rows-[0fr] opacity-0 border-t-0"
@@ -339,12 +339,7 @@ export function AuthView({
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] overflow-hidden bg-[#f8fafc] text-[#0f172a] flex items-center py-12">
-        {/* Ambient Glows */}
-        <div className="absolute top-1/4 left-1/10 w-96 h-96 rounded-full bg-blue-100/50 blur-3xl pointer-events-none" />
-        <div
-          className="absolute bottom-1/4 right-1/10 w-[450px] h-[450px] rounded-full bg-blue-50/50 blur-3xl pointer-events-none"
-        />
+      <section className="relative min-h-[85vh] overflow-hidden bg-[#faf8f5] text-[#0f172a] flex items-center py-12">
 
         <div className="mx-auto max-w-5xl w-full px-4 sm:px-8 relative z-10 -mt-6 md:mt-4">
           <div className="flex flex-col items-center text-center space-y-6">
@@ -379,7 +374,7 @@ export function AuthView({
                 Start Managing
               </a>
               <a
-                className="inline-flex items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-6 py-3.5 text-sm font-bold text-[#334155] shadow-sm transition-all duration-300 hover:bg-[#f8fafc] hover:border-[#94a3b8] active:scale-[0.98]"
+                className="inline-flex items-center justify-center rounded-xl border border-[#cbd5e1] bg-white px-6 py-3.5 text-sm font-bold text-[#334155] shadow-sm transition-all duration-300 hover:bg-[#faf8f5] hover:border-[#94a3b8] active:scale-[0.98]"
                 href="#features"
                 onClick={(e) => handleScrollTo(e, "features")}
               >
@@ -421,7 +416,7 @@ export function AuthView({
       {/* Features Grid Section */}
       <section
         id="features"
-        className="scroll-mt-16 pt-16 pb-12 bg-[#f8fafc] border-t border-[#e2e8f0] relative"
+        className="scroll-mt-16 pt-16 pb-12 bg-[#faf8f5] border-t border-[#e2e8f0] relative"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-12">
@@ -584,7 +579,7 @@ export function AuthView({
       {/* Access Section (Authentication) */}
       <section
         id="access"
-        className="scroll-mt-16 bg-[#f8fafc] border-t border-[#e2e8f0] relative overflow-hidden py-16"
+        className="scroll-mt-16 bg-[#faf8f5] border-t border-[#e2e8f0] relative overflow-hidden py-16"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-8 relative z-10">
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">

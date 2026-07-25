@@ -2284,7 +2284,7 @@ export default function Home() {
   }
   //Header Section
   return (
-    <main className="min-h-screen w-full bg-[#f8fafc] text-[#0f172a]">
+    <main className="min-h-screen w-full bg-[#faf8f5] text-[#0f172a]">
       <HeaderNav
         apiStatus={apiStatus}
         user={user}

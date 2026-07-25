@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     `localhost:${devPort}`,
     `127.0.0.1:${devPort}`,
-    `10.11.255.1`,
+    `10.98.244.1`,
   ],
   turbopack: {
     root: path.resolve(__dirname, ".."),

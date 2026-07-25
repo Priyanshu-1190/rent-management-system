@@ -27,7 +27,7 @@ export function HeaderNav({
   setShowInvitesModal,
 }: HeaderNavProps) {
   return (
-    <header className="border-b border-[#e2e8f0] bg-[#f8fafc]/25 backdrop-blur(16)">
+    <header className="border-b border-[#e2e8f0] bg-[#faf8f5]/80 backdrop-blur(16)">
       <div className="mx-auto flex w-full max-w-7xl items-start justify-between px-4 py-5 sm:px-6 lg:px-8">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#475569]">
