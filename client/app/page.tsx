@@ -353,12 +353,15 @@ export default function Home() {
       morphPhase === "morphing-in"
     ) {
       const modal = modalRef.current;
+      if (modal.dataset.morphing === "true") return;
+      modal.dataset.morphing = "true";
+
       const finalRect = modal.getBoundingClientRect();
 
       let tDeltaX = 0;
       let tDeltaY = 0;
       let tScale = 1;
-      let title = null;
+      let title: HTMLElement | null = null;
 
       if (titleRef.current && titleStartRect) {
         title = titleRef.current;
@@ -386,8 +389,9 @@ export default function Home() {
       }
 
       let timer: NodeJS.Timeout;
+      let raf2: number;
       const raf1 = requestAnimationFrame(() => {
-        const raf2 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
           modal.style.transition =
             "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
           modal.style.transform = "translate3d(0, 0, 0) scale(1)";
@@ -401,14 +405,15 @@ export default function Home() {
           }
 
           timer = setTimeout(() => {
+            delete modal.dataset.morphing;
             setMorphPhase("expanded");
           }, 320);
         });
-        return () => cancelAnimationFrame(raf2);
       });
 
       return () => {
         cancelAnimationFrame(raf1);
+        if (raf2) cancelAnimationFrame(raf2);
         if (timer) clearTimeout(timer);
       };
     }
@@ -423,12 +428,15 @@ export default function Home() {
       unitMorphPhase === "morphing-in"
     ) {
       const modal = unitModalRef.current;
+      if (modal.dataset.morphing === "true") return;
+      modal.dataset.morphing = "true";
+
       const finalRect = modal.getBoundingClientRect();
 
       let tDeltaX = 0;
       let tDeltaY = 0;
       let tScale = 1;
-      let title = null;
+      let title: HTMLElement | null = null;
 
       if (unitTitleRef.current && unitTitleStartRect) {
         title = unitTitleRef.current;
@@ -456,8 +464,9 @@ export default function Home() {
       }
 
       let timer: NodeJS.Timeout;
+      let raf2: number;
       const raf1 = requestAnimationFrame(() => {
-        const raf2 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
           modal.style.transition =
             "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
           modal.style.transform = "translate3d(0, 0, 0) scale(1)";
@@ -471,14 +480,15 @@ export default function Home() {
           }
 
           timer = setTimeout(() => {
+            delete modal.dataset.morphing;
             setUnitMorphPhase("expanded");
           }, 320);
         });
-        return () => cancelAnimationFrame(raf2);
       });
 
       return () => {
         cancelAnimationFrame(raf1);
+        if (raf2) cancelAnimationFrame(raf2);
         if (timer) clearTimeout(timer);
       };
     }
@@ -498,12 +508,15 @@ export default function Home() {
       editPropMorphPhase === "morphing-in"
     ) {
       const modal = editPropModalRef.current;
+      if (modal.dataset.morphing === "true") return;
+      modal.dataset.morphing = "true";
+
       const finalRect = modal.getBoundingClientRect();
 
       let tDeltaX = 0;
       let tDeltaY = 0;
       let tScale = 1;
-      let title = null;
+      let title: HTMLElement | null = null;
 
       if (editPropTitleRef.current && editPropTitleStartRect) {
         title = editPropTitleRef.current;
@@ -531,8 +544,9 @@ export default function Home() {
       }
 
       let timer: NodeJS.Timeout;
+      let raf2: number;
       const raf1 = requestAnimationFrame(() => {
-        const raf2 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
           modal.style.transition =
             "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
           modal.style.transform = "translate3d(0, 0, 0) scale(1)";
@@ -546,14 +560,15 @@ export default function Home() {
           }
 
           timer = setTimeout(() => {
+            delete modal.dataset.morphing;
             setEditPropMorphPhase("expanded");
           }, 320);
         });
-        return () => cancelAnimationFrame(raf2);
       });
 
       return () => {
         cancelAnimationFrame(raf1);
+        if (raf2) cancelAnimationFrame(raf2);
         if (timer) clearTimeout(timer);
       };
     }
@@ -573,12 +588,15 @@ export default function Home() {
       editUnitMorphPhase === "morphing-in"
     ) {
       const modal = editUnitModalRef.current;
+      if (modal.dataset.morphing === "true") return;
+      modal.dataset.morphing = "true";
+
       const finalRect = modal.getBoundingClientRect();
 
       let tDeltaX = 0;
       let tDeltaY = 0;
       let tScale = 1;
-      let title = null;
+      let title: HTMLElement | null = null;
 
       if (editUnitTitleRef.current && editUnitTitleStartRect) {
         title = editUnitTitleRef.current;
@@ -606,8 +624,9 @@ export default function Home() {
       }
 
       let timer: NodeJS.Timeout;
+      let raf2: number;
       const raf1 = requestAnimationFrame(() => {
-        const raf2 = requestAnimationFrame(() => {
+        raf2 = requestAnimationFrame(() => {
           modal.style.transition =
             "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
           modal.style.transform = "translate3d(0, 0, 0) scale(1)";
@@ -621,14 +640,15 @@ export default function Home() {
           }
 
           timer = setTimeout(() => {
+            delete modal.dataset.morphing;
             setEditUnitMorphPhase("expanded");
           }, 320);
         });
-        return () => cancelAnimationFrame(raf2);
       });
 
       return () => {
         cancelAnimationFrame(raf1);
+        if (raf2) cancelAnimationFrame(raf2);
         if (timer) clearTimeout(timer);
       };
     }
@@ -1305,6 +1325,7 @@ export default function Home() {
   };
 
   const handleClosePropertyDetails = () => {
+    if (morphPhase === "morphing-out") return;
     if (!modalRef.current || !morphStartRect) {
       setViewingPropertyDetails(null);
       setMorphPhase("idle");
@@ -1313,6 +1334,7 @@ export default function Home() {
     }
 
     const modal = modalRef.current;
+    delete modal.dataset.morphing;
     let latestRect = morphStartRect;
 
     const rowElement = document.querySelector(
@@ -1371,6 +1393,7 @@ export default function Home() {
   };
 
   const handleCloseUnitDetails = () => {
+    if (unitMorphPhase === "morphing-out") return;
     if (!unitModalRef.current || !unitMorphStartRect) {
       setViewingUnitDetails(null);
       setUnitMorphPhase("idle");
@@ -1379,6 +1402,7 @@ export default function Home() {
     }
 
     const modal = unitModalRef.current;
+    delete modal.dataset.morphing;
     let latestRect = unitMorphStartRect;
 
     const rowElement =
@@ -1475,6 +1499,7 @@ export default function Home() {
   };
 
   const handleCloseEditProperty = () => {
+    if (editPropMorphPhase === "morphing-out") return;
     if (!editPropModalRef.current || !editPropMorphStartRect) {
       setEditingProperty(null);
       setEditPropMorphPhase("idle");
@@ -1483,6 +1508,7 @@ export default function Home() {
     }
 
     const modal = editPropModalRef.current;
+    delete modal.dataset.morphing;
     let latestRect = editPropMorphStartRect;
 
     const rowElement = document.querySelector(
@@ -1584,6 +1610,7 @@ export default function Home() {
   };
 
   const handleCloseEditUnit = () => {
+    if (editUnitMorphPhase === "morphing-out") return;
     if (!editUnitModalRef.current || !editUnitMorphStartRect) {
       setEditingUnit(null);
       setEditUnitMorphPhase("idle");
@@ -1592,6 +1619,7 @@ export default function Home() {
     }
 
     const modal = editUnitModalRef.current;
+    delete modal.dataset.morphing;
     let latestRect = editUnitMorphStartRect;
 
     const rowElement =
