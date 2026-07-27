@@ -1,13 +1,14 @@
 const express = require("express");
 const router = express.Router();
 
-const { register, login, deleteAccount, getMe } = require("./auth.controller");
+const { register, login, logout, deleteAccount, getMe } = require("./auth.controller");
 const { validate } = require("../../middleware/validate.middleware");
 const { protect } = require("../../middleware/auth.middleware");
 const { registerSchema, loginSchema } = require("./auth.validation");
 
 router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
+router.post("/logout", logout);
 router.get("/me", protect, getMe);
 router.delete("/me", protect, deleteAccount);
 

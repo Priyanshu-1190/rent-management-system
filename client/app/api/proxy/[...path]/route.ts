@@ -60,6 +60,7 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
+    Cookie: `auth_token=${token}; token=${token}`,
   };
 
   const contentType = request.headers.get("content-type");

@@ -1,6 +1,7 @@
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 const { authLimiter, inviteLimiter, apiLimiter } = require("./middleware/rateLimiter.middleware");
 
@@ -9,8 +10,11 @@ const app = express();
 // Security HTTP headers
 app.use(helmet());
 
+app.use(cookieParser());
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000"
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  credentials: true,
 }));
 app.use(express.json());
 

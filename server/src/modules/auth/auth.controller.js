@@ -2,6 +2,14 @@ const bcrypt = require("bcrypt");
 const { generateToken } = require("../../utils/jwt");
 const { registerUser, findUserByEmail, deleteUserById } = require("./auth.service");
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
+
 const register = async (req, res, next) => {
   try {
     const user = await registerUser(req.body);
@@ -27,6 +35,10 @@ const login = async (req, res, next) => {
 
     const token = generateToken(user);
 
+    // Set HttpOnly SameSite cookie for XSS defense
+    res.cookie("token", token, COOKIE_OPTIONS);
+    res.cookie("auth_token", token, COOKIE_OPTIONS);
+
     return res.json({
       token,
       user: { id: user.id, email: user.email, role: user.role, name: user.name },
@@ -36,9 +48,17 @@ const login = async (req, res, next) => {
   }
 };
 
+const logout = async (req, res) => {
+  res.clearCookie("token", COOKIE_OPTIONS);
+  res.clearCookie("auth_token", COOKIE_OPTIONS);
+  return res.json({ message: "Logged out successfully" });
+};
+
 const deleteAccount = async (req, res, next) => {
   try {
     await deleteUserById(req.user.id);
+    res.clearCookie("token", COOKIE_OPTIONS);
+    res.clearCookie("auth_token", COOKIE_OPTIONS);
     return res.json({ message: "Account deleted" });
   } catch (err) {
     return next(err);
@@ -57,4 +77,4 @@ const getMe = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, deleteAccount, getMe };
+module.exports = { register, login, logout, deleteAccount, getMe };
