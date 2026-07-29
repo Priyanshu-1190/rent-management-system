@@ -78,7 +78,7 @@ export default function TenantDirectoryModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-md p-4 sm:p-8 flex justify-center items-start animate-backdrop-fade">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-md p-4 sm:p-8 flex justify-center items-center animate-backdrop-fade">
       <div className="w-full max-w-6xl my-8 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 sm:p-8 shadow-2xl relative animate-modal-scale">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">

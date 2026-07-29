@@ -267,7 +267,7 @@ export function TenantDashboardView({
                             </span>
                           </button>
                           <div
-                            className={`grid transition-[grid-template-rows] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                            className={`grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                               expandedReceipts[rent.rent_id] ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
                             }`}
                           >

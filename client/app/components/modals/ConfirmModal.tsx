@@ -26,8 +26,8 @@ export function ConfirmModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-backdrop-fade">
-      <div className="mx-4 w-full max-w-sm rounded-lg border border-[#e2e8f0] bg-white p-6 shadow-xl animate-modal-scale">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-backdrop-fade">
+      <div className="w-full max-w-sm rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-2xl animate-modal-scale">
         <h3
           className={`text-lg font-semibold ${
             isDanger ? "text-[#933232]" : "text-[#0f172a]"

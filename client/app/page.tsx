@@ -177,6 +177,14 @@ export default function Home() {
     height: number;
   } | null>(null);
   const titleRef = useRef<HTMLSpanElement>(null);
+  const [subStartRect, setSubStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const subRef = useRef<HTMLParagraphElement>(null);
+
   // Morph transition state for unit details
   const [unitMorphStartRect, setUnitMorphStartRect] = useState<{
     left: number;
@@ -196,6 +204,13 @@ export default function Home() {
     height: number;
   } | null>(null);
   const unitTitleRef = useRef<HTMLHeadingElement>(null);
+  const [unitSubStartRect, setUnitSubStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const unitSubRef = useRef<HTMLParagraphElement>(null);
 
   // Morph transition state for editing property
   const [editPropMorphStartRect, setEditPropMorphStartRect] = useState<{
@@ -216,6 +231,13 @@ export default function Home() {
     height: number;
   } | null>(null);
   const editPropTitleRef = useRef<HTMLHeadingElement>(null);
+  const [editPropSubStartRect, setEditPropSubStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const editPropSubRef = useRef<HTMLParagraphElement>(null);
 
   // Morph transition state for editing unit
   const [editUnitMorphStartRect, setEditUnitMorphStartRect] = useState<{
@@ -236,6 +258,13 @@ export default function Home() {
     height: number;
   } | null>(null);
   const editUnitTitleRef = useRef<HTMLHeadingElement>(null);
+  const [editUnitSubStartRect, setEditUnitSubStartRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const editUnitSubRef = useRef<HTMLParagraphElement>(null);
 
   // Invite state
   const [sentInvites, setSentInvites] = useState<Invite[]>([]);
@@ -344,6 +373,34 @@ export default function Home() {
     }
   }, [notice, user]);
 
+  // Listen for Escape key to smoothly dismiss any active morph modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (viewingPropertyDetails && morphPhase !== "morphing-out") {
+          handleClosePropertyDetails();
+        } else if (viewingUnitDetails && unitMorphPhase !== "morphing-out") {
+          handleCloseUnitDetails();
+        } else if (editingProperty && editPropMorphPhase !== "morphing-out") {
+          handleCloseEditProperty();
+        } else if (editingUnit && editUnitMorphPhase !== "morphing-out") {
+          handleCloseEditUnit();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    viewingPropertyDetails,
+    morphPhase,
+    viewingUnitDetails,
+    unitMorphPhase,
+    editingProperty,
+    editPropMorphPhase,
+    editingUnit,
+    editUnitMorphPhase,
+  ]);
+
   // Morph animation lifecycle management using FLIP for property details
   useLayoutEffect(() => {
     if (
@@ -357,35 +414,69 @@ export default function Home() {
       modal.dataset.morphing = "true";
 
       const finalRect = modal.getBoundingClientRect();
-
-      let tDeltaX = 0;
-      let tDeltaY = 0;
-      let tScale = 1;
-      let title: HTMLElement | null = null;
-
-      if (titleRef.current && titleStartRect) {
-        title = titleRef.current;
-        const titleFinalRect = title.getBoundingClientRect();
-        tDeltaX = titleStartRect.left - titleFinalRect.left;
-        tDeltaY = titleStartRect.top - titleFinalRect.top;
-        tScale = titleStartRect.height / titleFinalRect.height;
-      }
-
       const deltaX = morphStartRect.left - finalRect.left;
       const deltaY = morphStartRect.top - finalRect.top;
       const scaleX = morphStartRect.width / finalRect.width;
       const scaleY = morphStartRect.height / finalRect.height;
+
+      let title: HTMLElement | null = null;
+      let tDeltaX = 0;
+      let tDeltaY = 0;
+      let tScaleX = 1;
+      let tScaleY = 1;
+
+      if (titleRef.current && titleStartRect && scaleX && scaleY) {
+        title = titleRef.current;
+        const titleFinalRect = title.getBoundingClientRect();
+        const relX = titleFinalRect.left - finalRect.left;
+        const relY = titleFinalRect.top - finalRect.top;
+        const childVisOffsetX =
+          titleStartRect.left - (morphStartRect.left + relX * scaleX);
+        const childVisOffsetY =
+          titleStartRect.top - (morphStartRect.top + relY * scaleY);
+        tDeltaX = childVisOffsetX / scaleX;
+        tDeltaY = childVisOffsetY / scaleY;
+        tScaleX = titleStartRect.width / titleFinalRect.width / scaleX;
+        tScaleY = titleStartRect.height / titleFinalRect.height / scaleY;
+      }
+
+      let subTitle: HTMLElement | null = null;
+      let sDeltaX = 0;
+      let sDeltaY = 0;
+      let sScaleX = 1;
+      let sScaleY = 1;
+
+      if (subRef.current && subStartRect && scaleX && scaleY) {
+        subTitle = subRef.current;
+        const subFinalRect = subTitle.getBoundingClientRect();
+        const relX = subFinalRect.left - finalRect.left;
+        const relY = subFinalRect.top - finalRect.top;
+        const childVisOffsetX =
+          subStartRect.left - (morphStartRect.left + relX * scaleX);
+        const childVisOffsetY =
+          subStartRect.top - (morphStartRect.top + relY * scaleY);
+        sDeltaX = childVisOffsetX / scaleX;
+        sDeltaY = childVisOffsetY / scaleY;
+        sScaleX = subStartRect.width / subFinalRect.width / scaleX;
+        sScaleY = subStartRect.height / subFinalRect.height / scaleY;
+      }
 
       modal.style.transition = "none";
       modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
       modal.style.opacity = "1";
       modal.style.transformOrigin = "top left";
 
-      if (title && scaleX && scaleY) {
+      if (title) {
         title.style.transition = "none";
-        title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        title.style.transform = `translate3d(${tDeltaX}px, ${tDeltaY}px, 0) scale(${tScaleX}, ${tScaleY})`;
         title.style.transformOrigin = "top left";
         title.style.color = "#2563eb";
+      }
+
+      if (subTitle) {
+        subTitle.style.transition = "none";
+        subTitle.style.transform = `translate3d(${sDeltaX}px, ${sDeltaY}px, 0) scale(${sScaleX}, ${sScaleY})`;
+        subTitle.style.transformOrigin = "top left";
       }
 
       let timer: NodeJS.Timeout;
@@ -393,21 +484,27 @@ export default function Home() {
       const raf1 = requestAnimationFrame(() => {
         raf2 = requestAnimationFrame(() => {
           modal.style.transition =
-            "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
-          modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+            "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), opacity 340ms cubic-bezier(0.32, 0.72, 0, 1)";
+          modal.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
           modal.style.opacity = "1";
 
           if (title) {
             title.style.transition =
-              "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
-            title.style.transform = "translate3d(0, 0, 0) scale(1)";
+              "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), color 340ms ease";
+            title.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
             title.style.color = "#0f172a";
+          }
+
+          if (subTitle) {
+            subTitle.style.transition =
+              "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), opacity 340ms ease";
+            subTitle.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
           }
 
           timer = setTimeout(() => {
             delete modal.dataset.morphing;
             setMorphPhase("expanded");
-          }, 320);
+          }, 340);
         });
       });
 
@@ -417,7 +514,7 @@ export default function Home() {
         if (timer) clearTimeout(timer);
       };
     }
-  }, [viewingPropertyDetails, morphStartRect, titleStartRect, morphPhase]);
+  }, [viewingPropertyDetails, morphStartRect, titleStartRect, subStartRect, morphPhase]);
 
   // Morph animation lifecycle management using FLIP for unit details
   useLayoutEffect(() => {
@@ -432,35 +529,69 @@ export default function Home() {
       modal.dataset.morphing = "true";
 
       const finalRect = modal.getBoundingClientRect();
-
-      let tDeltaX = 0;
-      let tDeltaY = 0;
-      let tScale = 1;
-      let title: HTMLElement | null = null;
-
-      if (unitTitleRef.current && unitTitleStartRect) {
-        title = unitTitleRef.current;
-        const titleFinalRect = title.getBoundingClientRect();
-        tDeltaX = unitTitleStartRect.left - titleFinalRect.left;
-        tDeltaY = unitTitleStartRect.top - titleFinalRect.top;
-        tScale = unitTitleStartRect.height / titleFinalRect.height;
-      }
-
       const deltaX = unitMorphStartRect.left - finalRect.left;
       const deltaY = unitMorphStartRect.top - finalRect.top;
       const scaleX = unitMorphStartRect.width / finalRect.width;
       const scaleY = unitMorphStartRect.height / finalRect.height;
+
+      let title: HTMLElement | null = null;
+      let tDeltaX = 0;
+      let tDeltaY = 0;
+      let tScaleX = 1;
+      let tScaleY = 1;
+
+      if (unitTitleRef.current && unitTitleStartRect && scaleX && scaleY) {
+        title = unitTitleRef.current;
+        const titleFinalRect = title.getBoundingClientRect();
+        const relX = titleFinalRect.left - finalRect.left;
+        const relY = titleFinalRect.top - finalRect.top;
+        const childVisOffsetX =
+          unitTitleStartRect.left - (unitMorphStartRect.left + relX * scaleX);
+        const childVisOffsetY =
+          unitTitleStartRect.top - (unitMorphStartRect.top + relY * scaleY);
+        tDeltaX = childVisOffsetX / scaleX;
+        tDeltaY = childVisOffsetY / scaleY;
+        tScaleX = unitTitleStartRect.width / titleFinalRect.width / scaleX;
+        tScaleY = unitTitleStartRect.height / titleFinalRect.height / scaleY;
+      }
+
+      let subTitle: HTMLElement | null = null;
+      let sDeltaX = 0;
+      let sDeltaY = 0;
+      let sScaleX = 1;
+      let sScaleY = 1;
+
+      if (unitSubRef.current && unitSubStartRect && scaleX && scaleY) {
+        subTitle = unitSubRef.current;
+        const subFinalRect = subTitle.getBoundingClientRect();
+        const relX = subFinalRect.left - finalRect.left;
+        const relY = subFinalRect.top - finalRect.top;
+        const childVisOffsetX =
+          unitSubStartRect.left - (unitMorphStartRect.left + relX * scaleX);
+        const childVisOffsetY =
+          unitSubStartRect.top - (unitMorphStartRect.top + relY * scaleY);
+        sDeltaX = childVisOffsetX / scaleX;
+        sDeltaY = childVisOffsetY / scaleY;
+        sScaleX = unitSubStartRect.width / subFinalRect.width / scaleX;
+        sScaleY = unitSubStartRect.height / subFinalRect.height / scaleY;
+      }
 
       modal.style.transition = "none";
       modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
       modal.style.opacity = "1";
       modal.style.transformOrigin = "top left";
 
-      if (title && scaleX && scaleY) {
+      if (title) {
         title.style.transition = "none";
-        title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        title.style.transform = `translate3d(${tDeltaX}px, ${tDeltaY}px, 0) scale(${tScaleX}, ${tScaleY})`;
         title.style.transformOrigin = "top left";
         title.style.color = "#2563eb";
+      }
+
+      if (subTitle) {
+        subTitle.style.transition = "none";
+        subTitle.style.transform = `translate3d(${sDeltaX}px, ${sDeltaY}px, 0) scale(${sScaleX}, ${sScaleY})`;
+        subTitle.style.transformOrigin = "top left";
       }
 
       let timer: NodeJS.Timeout;
@@ -468,21 +599,27 @@ export default function Home() {
       const raf1 = requestAnimationFrame(() => {
         raf2 = requestAnimationFrame(() => {
           modal.style.transition =
-            "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
-          modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+            "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), opacity 340ms cubic-bezier(0.32, 0.72, 0, 1)";
+          modal.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
           modal.style.opacity = "1";
 
           if (title) {
             title.style.transition =
-              "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
-            title.style.transform = "translate3d(0, 0, 0) scale(1)";
+              "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), color 340ms ease";
+            title.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
             title.style.color = "#0f172a";
+          }
+
+          if (subTitle) {
+            subTitle.style.transition =
+              "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), opacity 340ms ease";
+            subTitle.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
           }
 
           timer = setTimeout(() => {
             delete modal.dataset.morphing;
             setUnitMorphPhase("expanded");
-          }, 320);
+          }, 340);
         });
       });
 
@@ -496,6 +633,7 @@ export default function Home() {
     viewingUnitDetails,
     unitMorphStartRect,
     unitTitleStartRect,
+    unitSubStartRect,
     unitMorphPhase,
   ]);
 
@@ -512,35 +650,69 @@ export default function Home() {
       modal.dataset.morphing = "true";
 
       const finalRect = modal.getBoundingClientRect();
-
-      let tDeltaX = 0;
-      let tDeltaY = 0;
-      let tScale = 1;
-      let title: HTMLElement | null = null;
-
-      if (editPropTitleRef.current && editPropTitleStartRect) {
-        title = editPropTitleRef.current;
-        const titleFinalRect = title.getBoundingClientRect();
-        tDeltaX = editPropTitleStartRect.left - titleFinalRect.left;
-        tDeltaY = editPropTitleStartRect.top - titleFinalRect.top;
-        tScale = editPropTitleStartRect.height / titleFinalRect.height;
-      }
-
       const deltaX = editPropMorphStartRect.left - finalRect.left;
       const deltaY = editPropMorphStartRect.top - finalRect.top;
       const scaleX = editPropMorphStartRect.width / finalRect.width;
       const scaleY = editPropMorphStartRect.height / finalRect.height;
+
+      let title: HTMLElement | null = null;
+      let tDeltaX = 0;
+      let tDeltaY = 0;
+      let tScaleX = 1;
+      let tScaleY = 1;
+
+      if (editPropTitleRef.current && editPropTitleStartRect && scaleX && scaleY) {
+        title = editPropTitleRef.current;
+        const titleFinalRect = title.getBoundingClientRect();
+        const relX = titleFinalRect.left - finalRect.left;
+        const relY = titleFinalRect.top - finalRect.top;
+        const childVisOffsetX =
+          editPropTitleStartRect.left - (editPropMorphStartRect.left + relX * scaleX);
+        const childVisOffsetY =
+          editPropTitleStartRect.top - (editPropMorphStartRect.top + relY * scaleY);
+        tDeltaX = childVisOffsetX / scaleX;
+        tDeltaY = childVisOffsetY / scaleY;
+        tScaleX = editPropTitleStartRect.width / titleFinalRect.width / scaleX;
+        tScaleY = editPropTitleStartRect.height / titleFinalRect.height / scaleY;
+      }
+
+      let subTitle: HTMLElement | null = null;
+      let sDeltaX = 0;
+      let sDeltaY = 0;
+      let sScaleX = 1;
+      let sScaleY = 1;
+
+      if (editPropSubRef.current && editPropSubStartRect && scaleX && scaleY) {
+        subTitle = editPropSubRef.current;
+        const subFinalRect = subTitle.getBoundingClientRect();
+        const relX = subFinalRect.left - finalRect.left;
+        const relY = subFinalRect.top - finalRect.top;
+        const childVisOffsetX =
+          editPropSubStartRect.left - (editPropMorphStartRect.left + relX * scaleX);
+        const childVisOffsetY =
+          editPropSubStartRect.top - (editPropMorphStartRect.top + relY * scaleY);
+        sDeltaX = childVisOffsetX / scaleX;
+        sDeltaY = childVisOffsetY / scaleY;
+        sScaleX = editPropSubStartRect.width / subFinalRect.width / scaleX;
+        sScaleY = editPropSubStartRect.height / subFinalRect.height / scaleY;
+      }
 
       modal.style.transition = "none";
       modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
       modal.style.opacity = "1";
       modal.style.transformOrigin = "top left";
 
-      if (title && scaleX && scaleY) {
+      if (title) {
         title.style.transition = "none";
-        title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        title.style.transform = `translate3d(${tDeltaX}px, ${tDeltaY}px, 0) scale(${tScaleX}, ${tScaleY})`;
         title.style.transformOrigin = "top left";
         title.style.color = "#2563eb";
+      }
+
+      if (subTitle) {
+        subTitle.style.transition = "none";
+        subTitle.style.transform = `translate3d(${sDeltaX}px, ${sDeltaY}px, 0) scale(${sScaleX}, ${sScaleY})`;
+        subTitle.style.transformOrigin = "top left";
       }
 
       let timer: NodeJS.Timeout;
@@ -548,21 +720,27 @@ export default function Home() {
       const raf1 = requestAnimationFrame(() => {
         raf2 = requestAnimationFrame(() => {
           modal.style.transition =
-            "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
-          modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+            "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), opacity 340ms cubic-bezier(0.32, 0.72, 0, 1)";
+          modal.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
           modal.style.opacity = "1";
 
           if (title) {
             title.style.transition =
-              "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
-            title.style.transform = "translate3d(0, 0, 0) scale(1)";
+              "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), color 340ms ease";
+            title.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
             title.style.color = "#2563eb";
+          }
+
+          if (subTitle) {
+            subTitle.style.transition =
+              "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), opacity 340ms ease";
+            subTitle.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
           }
 
           timer = setTimeout(() => {
             delete modal.dataset.morphing;
             setEditPropMorphPhase("expanded");
-          }, 320);
+          }, 340);
         });
       });
 
@@ -576,6 +754,7 @@ export default function Home() {
     editingProperty,
     editPropMorphStartRect,
     editPropTitleStartRect,
+    editPropSubStartRect,
     editPropMorphPhase,
   ]);
 
@@ -592,35 +771,69 @@ export default function Home() {
       modal.dataset.morphing = "true";
 
       const finalRect = modal.getBoundingClientRect();
-
-      let tDeltaX = 0;
-      let tDeltaY = 0;
-      let tScale = 1;
-      let title: HTMLElement | null = null;
-
-      if (editUnitTitleRef.current && editUnitTitleStartRect) {
-        title = editUnitTitleRef.current;
-        const titleFinalRect = title.getBoundingClientRect();
-        tDeltaX = editUnitTitleStartRect.left - titleFinalRect.left;
-        tDeltaY = editUnitTitleStartRect.top - titleFinalRect.top;
-        tScale = editUnitTitleStartRect.height / titleFinalRect.height;
-      }
-
       const deltaX = editUnitMorphStartRect.left - finalRect.left;
       const deltaY = editUnitMorphStartRect.top - finalRect.top;
       const scaleX = editUnitMorphStartRect.width / finalRect.width;
       const scaleY = editUnitMorphStartRect.height / finalRect.height;
+
+      let title: HTMLElement | null = null;
+      let tDeltaX = 0;
+      let tDeltaY = 0;
+      let tScaleX = 1;
+      let tScaleY = 1;
+
+      if (editUnitTitleRef.current && editUnitTitleStartRect && scaleX && scaleY) {
+        title = editUnitTitleRef.current;
+        const titleFinalRect = title.getBoundingClientRect();
+        const relX = titleFinalRect.left - finalRect.left;
+        const relY = titleFinalRect.top - finalRect.top;
+        const childVisOffsetX =
+          editUnitTitleStartRect.left - (editUnitMorphStartRect.left + relX * scaleX);
+        const childVisOffsetY =
+          editUnitTitleStartRect.top - (editUnitMorphStartRect.top + relY * scaleY);
+        tDeltaX = childVisOffsetX / scaleX;
+        tDeltaY = childVisOffsetY / scaleY;
+        tScaleX = editUnitTitleStartRect.width / titleFinalRect.width / scaleX;
+        tScaleY = editUnitTitleStartRect.height / titleFinalRect.height / scaleY;
+      }
+
+      let subTitle: HTMLElement | null = null;
+      let sDeltaX = 0;
+      let sDeltaY = 0;
+      let sScaleX = 1;
+      let sScaleY = 1;
+
+      if (editUnitSubRef.current && editUnitSubStartRect && scaleX && scaleY) {
+        subTitle = editUnitSubRef.current;
+        const subFinalRect = subTitle.getBoundingClientRect();
+        const relX = subFinalRect.left - finalRect.left;
+        const relY = subFinalRect.top - finalRect.top;
+        const childVisOffsetX =
+          editUnitSubStartRect.left - (editUnitMorphStartRect.left + relX * scaleX);
+        const childVisOffsetY =
+          editUnitSubStartRect.top - (editUnitMorphStartRect.top + relY * scaleY);
+        sDeltaX = childVisOffsetX / scaleX;
+        sDeltaY = childVisOffsetY / scaleY;
+        sScaleX = editUnitSubStartRect.width / subFinalRect.width / scaleX;
+        sScaleY = editUnitSubStartRect.height / subFinalRect.height / scaleY;
+      }
 
       modal.style.transition = "none";
       modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
       modal.style.opacity = "1";
       modal.style.transformOrigin = "top left";
 
-      if (title && scaleX && scaleY) {
+      if (title) {
         title.style.transition = "none";
-        title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        title.style.transform = `translate3d(${tDeltaX}px, ${tDeltaY}px, 0) scale(${tScaleX}, ${tScaleY})`;
         title.style.transformOrigin = "top left";
         title.style.color = "#2563eb";
+      }
+
+      if (subTitle) {
+        subTitle.style.transition = "none";
+        subTitle.style.transform = `translate3d(${sDeltaX}px, ${sDeltaY}px, 0) scale(${sScaleX}, ${sScaleY})`;
+        subTitle.style.transformOrigin = "top left";
       }
 
       let timer: NodeJS.Timeout;
@@ -628,21 +841,27 @@ export default function Home() {
       const raf1 = requestAnimationFrame(() => {
         raf2 = requestAnimationFrame(() => {
           modal.style.transition =
-            "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
-          modal.style.transform = "translate3d(0, 0, 0) scale(1)";
+            "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), opacity 340ms cubic-bezier(0.32, 0.72, 0, 1)";
+          modal.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
           modal.style.opacity = "1";
 
           if (title) {
             title.style.transition =
-              "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
-            title.style.transform = "translate3d(0, 0, 0) scale(1)";
+              "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), color 340ms ease";
+            title.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
             title.style.color = "#2563eb";
+          }
+
+          if (subTitle) {
+            subTitle.style.transition =
+              "transform 340ms cubic-bezier(0.32, 0.72, 0, 1), opacity 340ms ease";
+            subTitle.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
           }
 
           timer = setTimeout(() => {
             delete modal.dataset.morphing;
             setEditUnitMorphPhase("expanded");
-          }, 320);
+          }, 340);
         });
       });
 
@@ -656,6 +875,7 @@ export default function Home() {
     editingUnit,
     editUnitMorphStartRect,
     editUnitTitleStartRect,
+    editUnitSubStartRect,
     editUnitMorphPhase,
   ]);
 
@@ -1275,16 +1495,15 @@ export default function Home() {
     const animationStartTime = Date.now();
 
     if (e) {
-      const row = e.currentTarget as HTMLElement;
+      const button = e.currentTarget as HTMLElement;
+      const row = (button.closest("li, tr, [data-property-row]") as HTMLElement) || button;
       const nameEl = row.querySelector(".property-name-text") as HTMLElement;
-      const rect = nameEl
-        ? nameEl.getBoundingClientRect()
-        : row.getBoundingClientRect();
+      const cardRect = row.getBoundingClientRect();
       setMorphStartRect({
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
+        left: cardRect.left,
+        top: cardRect.top,
+        width: cardRect.width,
+        height: cardRect.height,
         propertyId: propertyId,
       });
 
@@ -1339,14 +1558,9 @@ export default function Home() {
 
     const rowElement = document.querySelector(
       `[data-property-row="${morphStartRect.propertyId}"]`,
-    );
+    ) as HTMLElement;
     if (rowElement) {
-      const nameEl = rowElement.querySelector(
-        ".property-name-text",
-      ) as HTMLElement;
-      const rect = nameEl
-        ? nameEl.getBoundingClientRect()
-        : rowElement.getBoundingClientRect();
+      const rect = rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -1363,26 +1577,69 @@ export default function Home() {
     const scaleX = latestRect.width / finalRect.width;
     const scaleY = latestRect.height / finalRect.height;
 
+    let title: HTMLElement | null = null;
+    let tDeltaX = 0;
+    let tDeltaY = 0;
+    let tScaleX = 1;
+    let tScaleY = 1;
+
+    if (titleRef.current && titleStartRect && scaleX && scaleY) {
+      title = titleRef.current;
+      const titleFinalRect = title.getBoundingClientRect();
+      const relX = titleFinalRect.left - finalRect.left;
+      const relY = titleFinalRect.top - finalRect.top;
+      const childVisOffsetX =
+        titleStartRect.left - (latestRect.left + relX * scaleX);
+      const childVisOffsetY =
+        titleStartRect.top - (latestRect.top + relY * scaleY);
+      tDeltaX = childVisOffsetX / scaleX;
+      tDeltaY = childVisOffsetY / scaleY;
+      tScaleX = titleStartRect.width / titleFinalRect.width / scaleX;
+      tScaleY = titleStartRect.height / titleFinalRect.height / scaleY;
+    }
+
+    let subTitle: HTMLElement | null = null;
+    let sDeltaX = 0;
+    let sDeltaY = 0;
+    let sScaleX = 1;
+    let sScaleY = 1;
+
+    if (subRef.current && subStartRect && scaleX && scaleY) {
+      subTitle = subRef.current;
+      const subFinalRect = subTitle.getBoundingClientRect();
+      const relX = subFinalRect.left - finalRect.left;
+      const relY = subFinalRect.top - finalRect.top;
+      const childVisOffsetX =
+        subStartRect.left - (latestRect.left + relX * scaleX);
+      const childVisOffsetY =
+        subStartRect.top - (latestRect.top + relY * scaleY);
+      sDeltaX = childVisOffsetX / scaleX;
+      sDeltaY = childVisOffsetY / scaleY;
+      sScaleX = subStartRect.width / subFinalRect.width / scaleX;
+      sScaleY = subStartRect.height / subFinalRect.height / scaleY;
+    }
+
     setMorphPhase("morphing-out");
 
     modal.style.transition =
-      "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
+      "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 320ms cubic-bezier(0.32, 0.72, 0, 1)";
     modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
     modal.style.opacity = "0";
     modal.style.transformOrigin = "top left";
 
-    if (titleRef.current && titleStartRect && scaleX && scaleY) {
-      const title = titleRef.current;
-      const titleFinalRect = title.getBoundingClientRect();
-      const tDeltaX = titleStartRect.left - titleFinalRect.left;
-      const tDeltaY = titleStartRect.top - titleFinalRect.top;
-      const tScale = titleStartRect.height / titleFinalRect.height;
-
+    if (title) {
       title.style.transition =
-        "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
-      title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), color 250ms ease";
+      title.style.transform = `translate3d(${tDeltaX}px, ${tDeltaY}px, 0) scale(${tScaleX}, ${tScaleY})`;
       title.style.transformOrigin = "top left";
       title.style.color = "#2563eb";
+    }
+
+    if (subTitle) {
+      subTitle.style.transition =
+        "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 250ms ease";
+      subTitle.style.transform = `translate3d(${sDeltaX}px, ${sDeltaY}px, 0) scale(${sScaleX}, ${sScaleY})`;
+      subTitle.style.transformOrigin = "top left";
     }
 
     setTimeout(() => {
@@ -1406,17 +1663,14 @@ export default function Home() {
     let latestRect = unitMorphStartRect;
 
     const rowElement =
-      document.querySelector(
+      (document.querySelector(
         `[data-unit-row="${unitMorphStartRect.unitId}"]`,
-      ) ||
-      document.querySelector(
+      ) as HTMLElement) ||
+      (document.querySelector(
         `[data-property-unit-row="${unitMorphStartRect.unitId}"]`,
-      );
+      ) as HTMLElement);
     if (rowElement) {
-      const nameEl = rowElement.querySelector(".unit-name-text") as HTMLElement;
-      const rect = nameEl
-        ? nameEl.getBoundingClientRect()
-        : rowElement.getBoundingClientRect();
+      const rect = rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -1433,26 +1687,69 @@ export default function Home() {
     const scaleX = latestRect.width / finalRect.width;
     const scaleY = latestRect.height / finalRect.height;
 
+    let title: HTMLElement | null = null;
+    let tDeltaX = 0;
+    let tDeltaY = 0;
+    let tScaleX = 1;
+    let tScaleY = 1;
+
+    if (unitTitleRef.current && unitTitleStartRect && scaleX && scaleY) {
+      title = unitTitleRef.current;
+      const titleFinalRect = title.getBoundingClientRect();
+      const relX = titleFinalRect.left - finalRect.left;
+      const relY = titleFinalRect.top - finalRect.top;
+      const childVisOffsetX =
+        unitTitleStartRect.left - (latestRect.left + relX * scaleX);
+      const childVisOffsetY =
+        unitTitleStartRect.top - (latestRect.top + relY * scaleY);
+      tDeltaX = childVisOffsetX / scaleX;
+      tDeltaY = childVisOffsetY / scaleY;
+      tScaleX = unitTitleStartRect.width / titleFinalRect.width / scaleX;
+      tScaleY = unitTitleStartRect.height / titleFinalRect.height / scaleY;
+    }
+
+    let subTitle: HTMLElement | null = null;
+    let sDeltaX = 0;
+    let sDeltaY = 0;
+    let sScaleX = 1;
+    let sScaleY = 1;
+
+    if (unitSubRef.current && unitSubStartRect && scaleX && scaleY) {
+      subTitle = unitSubRef.current;
+      const subFinalRect = subTitle.getBoundingClientRect();
+      const relX = subFinalRect.left - finalRect.left;
+      const relY = subFinalRect.top - finalRect.top;
+      const childVisOffsetX =
+        unitSubStartRect.left - (latestRect.left + relX * scaleX);
+      const childVisOffsetY =
+        unitSubStartRect.top - (latestRect.top + relY * scaleY);
+      sDeltaX = childVisOffsetX / scaleX;
+      sDeltaY = childVisOffsetY / scaleY;
+      sScaleX = unitSubStartRect.width / subFinalRect.width / scaleX;
+      sScaleY = unitSubStartRect.height / subFinalRect.height / scaleY;
+    }
+
     setUnitMorphPhase("morphing-out");
 
     modal.style.transition =
-      "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
+      "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 320ms cubic-bezier(0.32, 0.72, 0, 1)";
     modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
     modal.style.opacity = "0";
     modal.style.transformOrigin = "top left";
 
-    if (unitTitleRef.current && unitTitleStartRect && scaleX && scaleY) {
-      const title = unitTitleRef.current;
-      const titleFinalRect = title.getBoundingClientRect();
-      const tDeltaX = unitTitleStartRect.left - titleFinalRect.left;
-      const tDeltaY = unitTitleStartRect.top - titleFinalRect.top;
-      const tScale = unitTitleStartRect.height / titleFinalRect.height;
-
+    if (title) {
       title.style.transition =
-        "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 320ms ease";
-      title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), color 250ms ease";
+      title.style.transform = `translate3d(${tDeltaX}px, ${tDeltaY}px, 0) scale(${tScaleX}, ${tScaleY})`;
       title.style.transformOrigin = "top left";
       title.style.color = "#2563eb";
+    }
+
+    if (subTitle) {
+      subTitle.style.transition =
+        "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 250ms ease";
+      subTitle.style.transform = `translate3d(${sDeltaX}px, ${sDeltaY}px, 0) scale(${sScaleX}, ${sScaleY})`;
+      subTitle.style.transformOrigin = "top left";
     }
 
     setTimeout(() => {
@@ -1465,20 +1762,14 @@ export default function Home() {
   const handleOpenEditProperty = (p: Property, e?: React.MouseEvent) => {
     if (e) {
       const button = e.currentTarget as HTMLElement;
-      const row = button.closest("li") as HTMLElement;
-      const nameEl = row
-        ? (row.querySelector(".property-name-text") as HTMLElement)
-        : null;
-      const rect = nameEl
-        ? nameEl.getBoundingClientRect()
-        : row
-          ? row.getBoundingClientRect()
-          : button.getBoundingClientRect();
+      const row = (button.closest("li, tr, [data-edit-property-row]") as HTMLElement) || button;
+      const nameEl = row.querySelector(".property-name-text") as HTMLElement;
+      const cardRect = row.getBoundingClientRect();
       setEditPropMorphStartRect({
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
+        left: cardRect.left,
+        top: cardRect.top,
+        width: cardRect.width,
+        height: cardRect.height,
         propertyId: p.id,
       });
 
@@ -1513,14 +1804,9 @@ export default function Home() {
 
     const rowElement = document.querySelector(
       `[data-edit-property-row="${editPropMorphStartRect.propertyId}"]`,
-    );
+    ) as HTMLElement;
     if (rowElement) {
-      const nameEl = rowElement.querySelector(
-        ".property-name-text",
-      ) as HTMLElement;
-      const rect = nameEl
-        ? nameEl.getBoundingClientRect()
-        : rowElement.getBoundingClientRect();
+      const rect = rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -1537,13 +1823,11 @@ export default function Home() {
     const scaleX = latestRect.width / finalRect.width;
     const scaleY = latestRect.height / finalRect.height;
 
-    setEditPropMorphPhase("morphing-out");
-
-    modal.style.transition =
-      "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
-    modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
-    modal.style.opacity = "0";
-    modal.style.transformOrigin = "top left";
+    let title: HTMLElement | null = null;
+    let tDeltaX = 0;
+    let tDeltaY = 0;
+    let tScaleX = 1;
+    let tScaleY = 1;
 
     if (
       editPropTitleRef.current &&
@@ -1551,17 +1835,62 @@ export default function Home() {
       scaleX &&
       scaleY
     ) {
-      const title = editPropTitleRef.current;
+      title = editPropTitleRef.current;
       const titleFinalRect = title.getBoundingClientRect();
-      const tDeltaX = editPropTitleStartRect.left - titleFinalRect.left;
-      const tDeltaY = editPropTitleStartRect.top - titleFinalRect.top;
-      const tScale = editPropTitleStartRect.height / titleFinalRect.height;
+      const relX = titleFinalRect.left - finalRect.left;
+      const relY = titleFinalRect.top - finalRect.top;
+      const childVisOffsetX =
+        editPropTitleStartRect.left - (latestRect.left + relX * scaleX);
+      const childVisOffsetY =
+        editPropTitleStartRect.top - (latestRect.top + relY * scaleY);
+      tDeltaX = childVisOffsetX / scaleX;
+      tDeltaY = childVisOffsetY / scaleY;
+      tScaleX = editPropTitleStartRect.width / titleFinalRect.width / scaleX;
+      tScaleY = editPropTitleStartRect.height / titleFinalRect.height / scaleY;
+    }
 
+    let subTitle: HTMLElement | null = null;
+    let sDeltaX = 0;
+    let sDeltaY = 0;
+    let sScaleX = 1;
+    let sScaleY = 1;
+
+    if (editPropSubRef.current && editPropSubStartRect && scaleX && scaleY) {
+      subTitle = editPropSubRef.current;
+      const subFinalRect = subTitle.getBoundingClientRect();
+      const relX = subFinalRect.left - finalRect.left;
+      const relY = subFinalRect.top - finalRect.top;
+      const childVisOffsetX =
+        editPropSubStartRect.left - (latestRect.left + relX * scaleX);
+      const childVisOffsetY =
+        editPropSubStartRect.top - (latestRect.top + relY * scaleY);
+      sDeltaX = childVisOffsetX / scaleX;
+      sDeltaY = childVisOffsetY / scaleY;
+      sScaleX = editPropSubStartRect.width / subFinalRect.width / scaleX;
+      sScaleY = editPropSubStartRect.height / subFinalRect.height / scaleY;
+    }
+
+    setEditPropMorphPhase("morphing-out");
+
+    modal.style.transition =
+      "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 320ms cubic-bezier(0.32, 0.72, 0, 1)";
+    modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+    modal.style.opacity = "0";
+    modal.style.transformOrigin = "top left";
+
+    if (title) {
       title.style.transition =
-        "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
-      title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), color 250ms ease";
+      title.style.transform = `translate3d(${tDeltaX}px, ${tDeltaY}px, 0) scale(${tScaleX}, ${tScaleY})`;
       title.style.transformOrigin = "top left";
       title.style.color = "#2563eb";
+    }
+
+    if (subTitle) {
+      subTitle.style.transition =
+        "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 250ms ease";
+      subTitle.style.transform = `translate3d(${sDeltaX}px, ${sDeltaY}px, 0) scale(${sScaleX}, ${sScaleY})`;
+      subTitle.style.transformOrigin = "top left";
     }
 
     setTimeout(() => {
@@ -1574,20 +1903,14 @@ export default function Home() {
   const handleOpenEditUnit = (u: Unit, e?: React.MouseEvent) => {
     if (e) {
       const button = e.currentTarget as HTMLElement;
-      const container = button.closest("li, tr") as HTMLElement;
-      const nameEl = container
-        ? (container.querySelector(".unit-name-text") as HTMLElement)
-        : null;
-      const rect = nameEl
-        ? nameEl.getBoundingClientRect()
-        : container
-          ? container.getBoundingClientRect()
-          : button.getBoundingClientRect();
+      const container = (button.closest("li, tr, [data-edit-unit-row], [data-property-edit-unit-row]") as HTMLElement) || button;
+      const nameEl = container.querySelector(".unit-name-text") as HTMLElement;
+      const cardRect = container.getBoundingClientRect();
       setEditUnitMorphStartRect({
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
+        left: cardRect.left,
+        top: cardRect.top,
+        width: cardRect.width,
+        height: cardRect.height,
         unitId: u.id,
       });
 
@@ -1623,17 +1946,14 @@ export default function Home() {
     let latestRect = editUnitMorphStartRect;
 
     const rowElement =
-      document.querySelector(
+      (document.querySelector(
         `[data-edit-unit-row="${editUnitMorphStartRect.unitId}"]`,
-      ) ||
-      document.querySelector(
+      ) as HTMLElement) ||
+      (document.querySelector(
         `[data-property-edit-unit-row="${editUnitMorphStartRect.unitId}"]`,
-      );
+      ) as HTMLElement);
     if (rowElement) {
-      const nameEl = rowElement.querySelector(".unit-name-text") as HTMLElement;
-      const rect = nameEl
-        ? nameEl.getBoundingClientRect()
-        : rowElement.getBoundingClientRect();
+      const rect = rowElement.getBoundingClientRect();
       latestRect = {
         left: rect.left,
         top: rect.top,
@@ -1650,13 +1970,11 @@ export default function Home() {
     const scaleX = latestRect.width / finalRect.width;
     const scaleY = latestRect.height / finalRect.height;
 
-    setEditUnitMorphPhase("morphing-out");
-
-    modal.style.transition =
-      "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms ease";
-    modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
-    modal.style.opacity = "0";
-    modal.style.transformOrigin = "top left";
+    let title: HTMLElement | null = null;
+    let tDeltaX = 0;
+    let tDeltaY = 0;
+    let tScaleX = 1;
+    let tScaleY = 1;
 
     if (
       editUnitTitleRef.current &&
@@ -1664,17 +1982,62 @@ export default function Home() {
       scaleX &&
       scaleY
     ) {
-      const title = editUnitTitleRef.current;
+      title = editUnitTitleRef.current;
       const titleFinalRect = title.getBoundingClientRect();
-      const tDeltaX = editUnitTitleStartRect.left - titleFinalRect.left;
-      const tDeltaY = editUnitTitleStartRect.top - titleFinalRect.top;
-      const tScale = editUnitTitleStartRect.height / titleFinalRect.height;
+      const relX = titleFinalRect.left - finalRect.left;
+      const relY = titleFinalRect.top - finalRect.top;
+      const childVisOffsetX =
+        editUnitTitleStartRect.left - (latestRect.left + relX * scaleX);
+      const childVisOffsetY =
+        editUnitTitleStartRect.top - (latestRect.top + relY * scaleY);
+      tDeltaX = childVisOffsetX / scaleX;
+      tDeltaY = childVisOffsetY / scaleY;
+      tScaleX = editUnitTitleStartRect.width / titleFinalRect.width / scaleX;
+      tScaleY = editUnitTitleStartRect.height / titleFinalRect.height / scaleY;
+    }
 
+    let subTitle: HTMLElement | null = null;
+    let sDeltaX = 0;
+    let sDeltaY = 0;
+    let sScaleX = 1;
+    let sScaleY = 1;
+
+    if (editUnitSubRef.current && editUnitSubStartRect && scaleX && scaleY) {
+      subTitle = editUnitSubRef.current;
+      const subFinalRect = subTitle.getBoundingClientRect();
+      const relX = subFinalRect.left - finalRect.left;
+      const relY = subFinalRect.top - finalRect.top;
+      const childVisOffsetX =
+        editUnitSubStartRect.left - (latestRect.left + relX * scaleX);
+      const childVisOffsetY =
+        editUnitSubStartRect.top - (latestRect.top + relY * scaleY);
+      sDeltaX = childVisOffsetX / scaleX;
+      sDeltaY = childVisOffsetY / scaleY;
+      sScaleX = editUnitSubStartRect.width / subFinalRect.width / scaleX;
+      sScaleY = editUnitSubStartRect.height / subFinalRect.height / scaleY;
+    }
+
+    setEditUnitMorphPhase("morphing-out");
+
+    modal.style.transition =
+      "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 320ms cubic-bezier(0.32, 0.72, 0, 1)";
+    modal.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY})`;
+    modal.style.opacity = "0";
+    modal.style.transformOrigin = "top left";
+
+    if (title) {
       title.style.transition =
-        "transform 320ms cubic-bezier(0.16, 1, 0.3, 1), color 250ms ease";
-      title.style.transform = `translate3d(${tDeltaX / scaleX}px, ${tDeltaY / scaleY}px, 0) scale(${tScale / scaleX}, ${tScale / scaleY})`;
+        "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), color 250ms ease";
+      title.style.transform = `translate3d(${tDeltaX}px, ${tDeltaY}px, 0) scale(${tScaleX}, ${tScaleY})`;
       title.style.transformOrigin = "top left";
       title.style.color = "#2563eb";
+    }
+
+    if (subTitle) {
+      subTitle.style.transition =
+        "transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 250ms ease";
+      subTitle.style.transform = `translate3d(${sDeltaX}px, ${sDeltaY}px, 0) scale(${sScaleX}, ${sScaleY})`;
+      subTitle.style.transformOrigin = "top left";
     }
 
     setTimeout(() => {
@@ -2310,9 +2673,22 @@ export default function Home() {
       />
     );
   }
+  const isAnyModalActive =
+    (morphPhase !== "idle" && morphPhase !== "morphing-out") ||
+    (unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out") ||
+    (editPropMorphPhase !== "idle" && editPropMorphPhase !== "morphing-out") ||
+    (editUnitMorphPhase !== "idle" && editUnitMorphPhase !== "morphing-out");
+
   //Header Section
   return (
-    <main className="min-h-screen w-full bg-[#faf8f5] text-[#0f172a]">
+    <>
+      <main
+        className={`min-h-screen w-full bg-[#faf8f5] text-[#0f172a] transition-all duration-340 ease-[cubic-bezier(0.32,0.72,0,1)] origin-center ${
+          isAnyModalActive
+            ? "scale-[0.98] -translate-y-1 rounded-2xl overflow-hidden shadow-2xl brightness-[0.95]"
+            : "scale-100 translate-y-0 rounded-none brightness-100"
+        }`}
+      >
       <HeaderNav
         apiStatus={apiStatus}
         user={user}
@@ -2759,12 +3135,13 @@ export default function Home() {
           />
         ) : null}
       </div>
+      </main>
 
       {viewingPropertyDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
-            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-320 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+            className={`fixed inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-340 ease-[cubic-bezier(0.32,0.72,0,1)] pointer-events-auto ${
               morphPhase !== "idle" && morphPhase !== "morphing-out"
                 ? "opacity-100"
                 : "opacity-0"
@@ -2775,7 +3152,7 @@ export default function Home() {
           {/* Modal card */}
           <div
             ref={modalRef}
-            className={`w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 ${
+            className={`my-auto w-full max-w-5xl max-h-[84vh] sm:max-h-[86vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0]/80 bg-[#f8fafc] p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 ${
               morphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -2784,6 +3161,8 @@ export default function Home() {
               willChange: "transform",
             }}
           >
+            {/* iOS Pull Handle Bar */}
+            <div className="mx-auto -mt-2 mb-3 h-1.5 w-10 rounded-full bg-[#cbd5e1]/80" />
             {/* Close Button - elevated z-index to sit on top of the z-20 header */}
             <button
               type="button"
@@ -2875,7 +3254,11 @@ export default function Home() {
               {properties.find(
                 (p) => p.id === viewingPropertyDetails.property_id,
               )?.address && (
-                <p className="mt-1.5 text-sm text-[#475569] flex items-center gap-1.5 mb-6">
+                <p
+                  ref={subRef}
+                  className="mt-1.5 text-sm text-[#475569] flex items-center gap-1.5 mb-6"
+                  style={{ display: "inline-flex", willChange: "transform" }}
+                >
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -3408,7 +3791,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
-            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-320 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+            className={`fixed inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-340 ease-[cubic-bezier(0.32,0.72,0,1)] pointer-events-auto ${
               editPropMorphPhase !== "idle" && editPropMorphPhase !== "morphing-out"
                 ? "opacity-100"
                 : "opacity-0"
@@ -3419,7 +3802,7 @@ export default function Home() {
           {/* Modal card */}
           <div
             ref={editPropModalRef}
-            className={`mx-4 w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 ${
+            className={`my-auto w-full max-w-sm max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0]/80 bg-[#f8fafc] p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 ${
               editPropMorphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -3428,6 +3811,8 @@ export default function Home() {
               willChange: "transform",
             }}
           >
+            {/* iOS Pull Handle Bar */}
+            <div className="mx-auto -mt-2 mb-3 h-1.5 w-10 rounded-full bg-[#cbd5e1]/80" />
             {/* Header: Always visible during transition */}
             <div className="mb-4 pr-10 relative z-20">
               <h3
@@ -3509,7 +3894,7 @@ export default function Home() {
           />
 
           {/* Modal card */}
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale">
+          <div className="my-auto w-full max-w-2xl max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale">
             <div className="mb-4 pr-10">
               <h3 className="text-lg font-bold text-[#2563eb]">
                 Write Lease Agreement — {editingLeaseProp.name}
@@ -3575,7 +3960,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
           />
 
           {/* Modal card */}
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale">
+          <div className="my-auto w-full max-w-2xl max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale">
             <div className="mb-4 pr-10">
               <h3 className="text-lg font-bold text-[#2563eb]">
                 Write Lease Agreement — {editingUnitLease.unit_name}
@@ -3688,7 +4073,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
-            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-320 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+            className={`fixed inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-340 ease-[cubic-bezier(0.32,0.72,0,1)] pointer-events-auto ${
               editUnitMorphPhase !== "idle" && editUnitMorphPhase !== "morphing-out"
                 ? "opacity-100"
                 : "opacity-0"
@@ -3699,7 +4084,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
           {/* Modal card */}
           <div
             ref={editUnitModalRef}
-            className={`mx-4 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 ${
+            className={`my-auto w-full max-w-md max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0]/80 bg-[#f8fafc] p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 ${
               editUnitMorphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -3708,6 +4093,8 @@ This agreement is made on [Date] between the Owner and the Tenant...
               willChange: "transform",
             }}
           >
+            {/* iOS Pull Handle Bar */}
+            <div className="mx-auto -mt-2 mb-3 h-1.5 w-10 rounded-full bg-[#cbd5e1]/80" />
             {/* Header: Always visible during transition */}
             <div className="mb-4 pr-10 relative z-20">
               <h3
@@ -3808,7 +4195,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
-            className={`fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-320 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+            className={`fixed inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-340 ease-[cubic-bezier(0.32,0.72,0,1)] pointer-events-auto ${
               unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out"
                 ? "opacity-100"
                 : "opacity-0"
@@ -3819,7 +4206,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
           {/* Modal card */}
           <div
             ref={unitModalRef}
-            className={`w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 ${
+            className={`my-auto w-full max-w-lg max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0]/80 bg-[#f8fafc] p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 ${
               unitMorphPhase === "expanded"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
@@ -3828,6 +4215,8 @@ This agreement is made on [Date] between the Owner and the Tenant...
               willChange: "transform",
             }}
           >
+            {/* iOS Pull Handle Bar */}
+            <div className="mx-auto -mt-2 mb-3 h-1.5 w-10 rounded-full bg-[#cbd5e1]/80" />
             {/* Close Button - elevated z-index */}
             <button
               type="button"
@@ -3869,14 +4258,9 @@ This agreement is made on [Date] between the Owner and the Tenant...
                 {viewingUnitDetails.unit_name}
               </h3>
               <p
+                ref={unitSubRef}
                 className="text-sm text-[#475569]"
-                style={{
-                  opacity:
-                    unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out"
-                      ? 1
-                      : 0,
-                  transition: "opacity 320ms cubic-bezier(0.16, 1, 0.3, 1)",
-                }}
+                style={{ display: "block", willChange: "transform" }}
               >
                 {viewingUnitDetails.property_name}
               </p>
@@ -4110,6 +4494,6 @@ This agreement is made on [Date] between the Owner and the Tenant...
           setShowInvitesModal(true);
         }}
       />
-    </main>
+    </>
   );
 }

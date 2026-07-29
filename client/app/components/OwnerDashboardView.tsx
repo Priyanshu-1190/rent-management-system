@@ -511,7 +511,7 @@ export function OwnerDashboardView({
                     {/* Level 2: Nested Units */}
                     <div
                       id={`tenant-payments-${tenant.tenantId}`}
-                      className={`grid transition-[grid-template-rows,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                      className={`grid transition-[grid-template-rows,border-color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                         isExpanded
                           ? "grid-rows-[1fr] border-t border-[#e2e8f0]"
                           : "grid-rows-[0fr] border-t-0 border-transparent"
@@ -610,7 +610,7 @@ export function OwnerDashboardView({
                                         {unitSummary}
                                       </span>
                                       <svg
-                                        className={`h-4 w-4 text-[#64748b] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                                        className={`h-4 w-4 text-[#64748b] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                                           isUnitExpanded ? "rotate-180" : ""
                                         }`}
                                         viewBox="0 0 24 24"
@@ -625,7 +625,7 @@ export function OwnerDashboardView({
 
                                   {/* Level 3: Rents Table */}
                                   <div
-                                    className={`grid transition-[grid-template-rows,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                                    className={`grid transition-[grid-template-rows,border-color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                                       isUnitExpanded
                                         ? "grid-rows-[1fr] border-t border-[#e2e8f0]"
                                         : "grid-rows-[0fr] border-t-0 border-transparent"
