@@ -373,33 +373,78 @@ export default function Home() {
     }
   }, [notice, user]);
 
-  // Listen for Escape key to smoothly dismiss any active morph modal
+  const isAnyModalActive =
+    (morphPhase !== "idle" && morphPhase !== "morphing-out") ||
+    (unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out") ||
+    (editPropMorphPhase !== "idle" && editPropMorphPhase !== "morphing-out") ||
+    (editUnitMorphPhase !== "idle" && editUnitMorphPhase !== "morphing-out");
+
+  const isAnyModalOpen =
+    isAnyModalActive ||
+    showTenantDirectory ||
+    showInvitesModal ||
+    showLeaseEditModal ||
+    showUnitLeaseModal ||
+    showLogoutConfirm ||
+    showDeleteConfirm ||
+    !!deletingProperty ||
+    !!deletingUnit ||
+    !!loggingPaymentRent ||
+    !!lightboxImage;
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (viewingPropertyDetails && morphPhase !== "morphing-out") {
-          handleClosePropertyDetails();
-        } else if (viewingUnitDetails && unitMorphPhase !== "morphing-out") {
-          handleCloseUnitDetails();
-        } else if (editingProperty && editPropMorphPhase !== "morphing-out") {
-          handleCloseEditProperty();
-        } else if (editingUnit && editUnitMorphPhase !== "morphing-out") {
-          handleCloseEditUnit();
-        }
-      }
+    if (isAnyModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
     };
+  }, [isAnyModalOpen]);
+
+  const handleKeyDownRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  handleKeyDownRef.current = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      if (lightboxImage) {
+        setLightboxImage(null);
+      } else if (unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out") {
+        handleCloseUnitDetails();
+      } else if (editUnitMorphPhase !== "idle" && editUnitMorphPhase !== "morphing-out") {
+        handleCloseEditUnit();
+      } else if (showUnitLeaseModal) {
+        setShowUnitLeaseModal(false);
+        setEditingUnitLease(null);
+      } else if (editPropMorphPhase !== "idle" && editPropMorphPhase !== "morphing-out") {
+        handleCloseEditProperty();
+      } else if (showLeaseEditModal) {
+        setShowLeaseEditModal(false);
+        setEditingLeaseProp(null);
+      } else if (morphPhase !== "idle" && morphPhase !== "morphing-out") {
+        handleClosePropertyDetails();
+      } else if (showTenantDirectory) {
+        setShowTenantDirectory(false);
+      } else if (showInvitesModal) {
+        setShowInvitesModal(false);
+      } else if (loggingPaymentRent) {
+        setLoggingPaymentRent(null);
+      } else if (deletingUnit) {
+        setDeletingUnit(null);
+      } else if (deletingProperty) {
+        setDeletingProperty(null);
+      } else if (showLogoutConfirm) {
+        setShowLogoutConfirm(false);
+      } else if (showDeleteConfirm) {
+        setShowDeleteConfirm(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => handleKeyDownRef.current(e);
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    viewingPropertyDetails,
-    morphPhase,
-    viewingUnitDetails,
-    unitMorphPhase,
-    editingProperty,
-    editPropMorphPhase,
-    editingUnit,
-    editUnitMorphPhase,
-  ]);
+  }, []);
 
   // Morph animation lifecycle management using FLIP for property details
   useLayoutEffect(() => {
@@ -2673,12 +2718,6 @@ export default function Home() {
       />
     );
   }
-  const isAnyModalActive =
-    (morphPhase !== "idle" && morphPhase !== "morphing-out") ||
-    (unitMorphPhase !== "idle" && unitMorphPhase !== "morphing-out") ||
-    (editPropMorphPhase !== "idle" && editPropMorphPhase !== "morphing-out") ||
-    (editUnitMorphPhase !== "idle" && editUnitMorphPhase !== "morphing-out");
-
   //Header Section
   return (
     <>
@@ -3152,8 +3191,9 @@ export default function Home() {
           {/* Modal card */}
           <div
             ref={modalRef}
+            onClick={(e) => e.stopPropagation()}
             className={`my-auto w-full max-w-5xl max-h-[84vh] sm:max-h-[86vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0]/80 bg-[#f8fafc] p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 ${
-              morphPhase === "expanded"
+              morphPhase !== "idle"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
             }`}
@@ -3788,7 +3828,7 @@ export default function Home() {
 
       {/* Edit Property Modal */}
       {editingProperty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
             className={`fixed inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-340 ease-[cubic-bezier(0.32,0.72,0,1)] pointer-events-auto ${
@@ -3802,8 +3842,9 @@ export default function Home() {
           {/* Modal card */}
           <div
             ref={editPropModalRef}
+            onClick={(e) => e.stopPropagation()}
             className={`my-auto w-full max-w-sm max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0]/80 bg-[#f8fafc] p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 ${
-              editPropMorphPhase === "expanded"
+              editPropMorphPhase !== "idle"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
             }`}
@@ -3883,7 +3924,7 @@ export default function Home() {
 
       {/* Lease Agreement Edit Modal */}
       {showLeaseEditModal && editingLeaseProp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Backdrop overlay */}
           <div
             className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-200 animate-backdrop-fade"
@@ -3894,7 +3935,10 @@ export default function Home() {
           />
 
           {/* Modal card */}
-          <div className="my-auto w-full max-w-2xl max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="my-auto w-full max-w-2xl max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale"
+          >
             <div className="mb-4 pr-10">
               <h3 className="text-lg font-bold text-[#2563eb]">
                 Write Lease Agreement — {editingLeaseProp.name}
@@ -3949,7 +3993,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
 
       {/* Unit Lease Agreement Edit Modal */}
       {showUnitLeaseModal && editingUnitLease && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Backdrop overlay */}
           <div
             className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-200 animate-backdrop-fade"
@@ -3960,7 +4004,10 @@ This agreement is made on [Date] between the Owner and the Tenant...
           />
 
           {/* Modal card */}
-          <div className="my-auto w-full max-w-2xl max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="my-auto w-full max-w-2xl max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-6 shadow-2xl relative z-10 animate-modal-scale"
+          >
             <div className="mb-4 pr-10">
               <h3 className="text-lg font-bold text-[#2563eb]">
                 Write Lease Agreement — {editingUnitLease.unit_name}
@@ -4070,7 +4117,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
 
       {/* Edit Unit Modal */}
       {editingUnit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
             className={`fixed inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-340 ease-[cubic-bezier(0.32,0.72,0,1)] pointer-events-auto ${
@@ -4084,8 +4131,9 @@ This agreement is made on [Date] between the Owner and the Tenant...
           {/* Modal card */}
           <div
             ref={editUnitModalRef}
+            onClick={(e) => e.stopPropagation()}
             className={`my-auto w-full max-w-md max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0]/80 bg-[#f8fafc] p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 ${
-              editUnitMorphPhase === "expanded"
+              editUnitMorphPhase !== "idle"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
             }`}
@@ -4192,7 +4240,7 @@ This agreement is made on [Date] between the Owner and the Tenant...
 
       {/* Unit Details Modal */}
       {viewingUnitDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
           {/* Backdrop overlay */}
           <div
             className={`fixed inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-340 ease-[cubic-bezier(0.32,0.72,0,1)] pointer-events-auto ${
@@ -4206,8 +4254,9 @@ This agreement is made on [Date] between the Owner and the Tenant...
           {/* Modal card */}
           <div
             ref={unitModalRef}
+            onClick={(e) => e.stopPropagation()}
             className={`my-auto w-full max-w-lg max-h-[84vh] overflow-y-auto custom-scrollbar rounded-2xl border border-[#e2e8f0]/80 bg-[#f8fafc] p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 ${
-              unitMorphPhase === "expanded"
+              unitMorphPhase !== "idle"
                 ? "pointer-events-auto"
                 : "pointer-events-none"
             }`}
@@ -4298,14 +4347,14 @@ This agreement is made on [Date] between the Owner and the Tenant...
                   <p className="mt-1 text-sm font-medium text-[#0f172a]">
                     Due:{" "}
                     <span className="font-normal text-[#334155]">
-                      Day {viewingUnitDetails.due_day}
+                      Day {viewingUnitDetails.due_day ?? 1}
                     </span>
                   </p>
                   <p className="text-sm font-medium text-[#0f172a]">
                     Late Fee:{" "}
                     <span className="font-normal text-[#334155]">
-                      {viewingUnitDetails.late_fee_percentage}% (Grace:{" "}
-                      {viewingUnitDetails.grace_period_days}d)
+                      {viewingUnitDetails.late_fee_percentage ?? 0}% (Grace:{" "}
+                      {viewingUnitDetails.grace_period_days ?? 0}d)
                     </span>
                   </p>
                 </div>

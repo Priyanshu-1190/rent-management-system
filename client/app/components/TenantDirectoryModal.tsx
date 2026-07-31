@@ -48,10 +48,12 @@ export default function TenantDirectoryModal({
   >("all");
 
   const {
-    data: tenants = [],
+    data,
     error,
     isLoading,
-  } = useSWR<Tenant[]>(isOpen ? "/api/proxy/tenancies" : null, fetcher);
+  } = useSWR(isOpen ? "/api/proxy/tenancies" : null, fetcher);
+
+  const tenants: Tenant[] = Array.isArray(data) ? data : [];
 
   if (!isOpen) return null;
 

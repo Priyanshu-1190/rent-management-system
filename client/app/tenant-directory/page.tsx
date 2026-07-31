@@ -92,10 +92,12 @@ export default function TenantDirectory() {
   >("all");
 
   const {
-    data: tenants = [],
+    data,
     error,
     isLoading,
-  } = useSWR<Tenant[]>("/api/proxy/tenancies", fetcher);
+  } = useSWR("/api/proxy/tenancies", fetcher);
+
+  const tenants: Tenant[] = Array.isArray(data) ? data : [];
 
   const filteredTenants = useMemo(() => {
     switch (activeTab) {
